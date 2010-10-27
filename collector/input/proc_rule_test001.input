@@ -1,0 +1,7 @@
+# info:version module:xt_mp2t version:0.2.0-devel
+# info:time created:1263215354.724570789 now:1263217148.157113795 delta:1793.432543006
+# info:dynamic rule_id:1 streams:4 streams_check:4 max_list_search:0 rnd:4252654206
+# info:config htable_size:100 max-streams:0 list_search_warn_level:20
+bucket:0 dst:224.123.173.2 src:87.72.136.107 dport:5500 sport:50000 pids:10 skips:1023870 discontinuity:108252
+bucket:17 dst:224.123.173.10 src:87.72.133.2 dport:5500 sport:5500 pids:9 skips:2466903 discontinuity:268590
+bucket:49 dst:224.123.173.11 src:87.72.133.2 dport:5500 sport:5500 pids:8 skips:537583 discontinuity:57082
