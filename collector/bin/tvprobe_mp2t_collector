@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -I../lib/
 
 # Perl Example of howto parse /proc/net/xt_mp2t/ data
 
@@ -16,7 +16,7 @@ use Proc::PID::File; # libproc-pid-file-perl
 use File::Basename;
 
 # Hack to get include path to tvprobe::mp2t
-use lib dirname($0);
+# use lib dirname($0);
 use tvprobe::mp2t;
 
 use Trapper;
