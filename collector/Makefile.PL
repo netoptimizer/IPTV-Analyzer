@@ -19,7 +19,8 @@ closedir DIR;
 
 my %attr = (
     NAME      => 'iptv-collector',
-    VERSION   => '0.2.2',
+#    VERSION   => '0.x.x',
+    VERSION_FROM      => 'lib/tvprobe/mp2t.pm', # finds $VERSION
     PREREQ_PM => {
         'Log::Log4perl'   => 0,
 	'Proc::Daemon'    => 0,

@@ -84,7 +84,7 @@ BEGIN {
      our ($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 
      # Package version
-     $VERSION     = "0.8.0";
+     $VERSION     = "0.2.2";
 
      @ISA         = qw(Exporter);
      @EXPORT      = qw(
