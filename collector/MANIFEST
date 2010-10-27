@@ -1,3 +1,4 @@
 bin/tvprobe_mp2t_collector
 lib/tvprobe/mp2t.pm
 lib/Trapper.pm
+MANIFEST
