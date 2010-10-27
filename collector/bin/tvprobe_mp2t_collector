@@ -1,0 +1,291 @@
+#!/usr/bin/perl -w
+
+# Perl Example of howto parse /proc/net/xt_mp2t/ data
+
+use strict;
+use warnings;
+
+use POSIX qw(setsid);
+use sigtrap qw(handler sig_handler normal-signals);
+
+use Data::Dumper;
+
+use Proc::Daemon;    # libproc-daemon-perl
+use Proc::PID::File; # libproc-pid-file-perl
+
+use File::Basename;
+
+# Hack to get include path to tvprobe::mp2t
+use lib dirname($0);
+use tvprobe::mp2t;
+
+use Trapper;
+
+# Logger hack for changing the logging level runtime
+use Log::Log4perl qw(get_logger :levels);
+our $logger = get_logger("tvprobe::mp2t");
+#$logger->level($DEBUG);
+
+# Config options
+our $cfg = get_config();
+our $procname = 'mp2t_collector_daemon';
+our $interval = $cfg->{'collector_interval'} || 10;
+our $heartbeat_interval_ticks = $cfg->{'collector_heartbeat_ticks'} || 60;
+
+# State variables
+our $ticks = 0;
+our $run = 1;
+
+our $restart = 1;
+
+# We need to TIE STDERR to log4perl, because the DB can report strange
+# things.
+#
+# http://search.cpan.org/~mschilli/Log-Log4perl-1.26/lib/Log/Log4perl/FAQ.pm#Some_module_prints_messages_to_STDERR._How_can_I_funnel_them_to_Log::Log4perl?
+#
+
+
+sub daemon()
+{
+    my $pid;
+    my $rundir  = "/var/run/";
+    my $pidfile = $rundir . basename($0) . ".pid";
+    if ( not -w $pidfile) {
+	my $log = "Cannot write to PID file $pidfile";
+	$logger->logcroak($log);
+    }
+
+#    open STDIN,  '< /dev/null' or die "Can't read /dev/null: $!";
+#    open STDOUT, '> /dev/null' or die "Can't write /dev/null: $!";
+#    open STDERR, '> /dev/null' or die "Can't write /dev/null: $!";
+
+    # man fork(2): On success, the PID of the child process is
+    #  returned in the parent, and 0 is returned in the child.
+    #
+    defined($pid = fork) or $logger->logcroak("Can't fork: $!");
+    if ($pid) {
+	open(PID, "> $pidfile")
+	    or $logger->logcroak("Can't open pidfile $pidfile: $!");
+	print PID $pid;
+	close(PID);
+	exit 0;
+    }
+
+    setsid()  or die "Can't start a new session: $!";
+    chdir '/' or die "Can't chdir to /: $!";
+    umask 0   or die "Can't umask: $!";
+
+    open STDIN,  '< /dev/null' or die "Can't read /dev/null: $!";
+    open STDOUT, '> /dev/null' or die "Can't write /dev/null: $!";
+#   open STDERR, '> /dev/null' or die "Can't write /dev/null: $!";
+}
+
+
+sub daemon2()
+{
+    # Problem: perm to /var/run/mp2t_collector_daemon.pl.pid
+    my $rundir  = "/var/run/";
+    my $pidfile = $rundir . basename($0) . ".pid";
+    if ( not -w $pidfile) {
+	my $log = "Cannot write to PID file $pidfile";
+	$logger->logcroak($log);
+    }
+
+    # Daemonize
+    Proc::Daemon::Init();
+    # After this line we cannot output to stderr/stdout
+
+    # Check if already running
+    my $otherpid = Proc::PID::File->running();
+    if ($otherpid > 0) {
+	my $log = "Daemon is already running as PID:[$otherpid]";
+
+	if ($restart) {
+	    my $cnt = kill("TERM", $otherpid);
+	    if ($cnt < 1) {
+		$log .= " - could not kill current exit self!";
+		$logger->error($log);
+		exit(2);
+	    }
+	    $log .= " - KILL and restart!";
+	    $logger->warn($log);
+
+	    sleep(1);
+	    # Write new PID into pid file
+	    if (Proc::PID::File->running()) {
+		$logger->error("Tried killing $otherpid but failed! - exit");
+		exit(3);
+	    }
+
+	} else {
+	    $log .= " - exiting buy buy!";
+	    $logger->warn($log);
+	    exit(1);
+	}
+    } else {
+	$logger->info("Starting tvprobe collector daemon2");
+    }
+}
+
+
+sub daemon3()
+{
+    # Problem: perm to /var/run/mp2t_collector_daemon.pl.pid
+    my $rundir  = "/var/run/";
+    my $pidfile = $rundir . basename($0) . ".pid";
+    if ( -e $pidfile && (not -w $pidfile)) {
+	my $log = "Cannot write to PID file $pidfile";
+	$logger->logcroak($log);
+    }
+
+    open(STDIN,  "+>/dev/null");
+    open(STDOUT, "+>&STDIN");
+#    open(STDERR, "+>&STDIN");
+#    tie *STDERR, "Trapper";
+
+
+#    open STDIN,  '< /dev/null' or die "Can't read /dev/null: $!";
+#    open STDOUT, '> /dev/null' or die "Can't write /dev/null: $!";
+#    open STDERR, '> /dev/null' or die "Can't write /dev/null: $!";
+
+
+    # Daemonize
+    # man fork(2): On success, the PID of the child process is
+    #  returned in the parent, and 0 is returned in the child.
+    #
+    my $pid;
+    defined($pid = fork) or $logger->logcroak("Can't fork: $!");
+    if ($pid) {
+	exit(0);
+    }
+
+    setsid()  or die "Can't start a new session: $!";
+    chdir '/' or die "Can't chdir to /: $!";
+    umask 0   or die "Can't umask: $!";
+
+#   open STDIN,  '< /dev/null' or die "Can't read /dev/null: $!";
+#   open STDOUT, '> /dev/null' or die "Can't write /dev/null: $!";
+#   open STDERR, '> /dev/null' or die "Can't write /dev/null: $!";
+
+    # Check if already running
+    my $otherpid = Proc::PID::File->running();
+    if ($otherpid > 0) {
+	my $log = "Daemon is already running as PID:[$otherpid]";
+
+	if ($restart) {
+	    my $cnt = kill("TERM", $otherpid);
+	    if ($cnt < 1) {
+
+		# Trying to kill again after a delay
+		my $delay = 5;	# = $interval (?)
+		my $logtry = "could not kill, trying again in $delay sec";
+		$logger->error("$log - $logtry");
+		sleep($delay);
+		# Test if the process is running before killing it again
+		# (kill with signal 0 is just a test)
+		if ($otherpid != $$ && kill(0, $otherpid)) {
+		    $cnt = kill("TERM", $otherpid);
+		    if ($cnt < 1) {
+			# Giving up
+			$log .= " - could NOT kill current daemon, exit self!";
+			$logger->fatal($log);
+			exit(2);
+		    }
+		}
+	    }
+	    my $delaydb = 3;
+	    $log .= " - KILL and restart (in $delaydb sec)";
+	    $logger->warn($log);
+
+	    # Wait a bit for the other process to finish db sessions
+	    sleep($delaydb);
+	    # Write new PID into pid file
+	    if (Proc::PID::File->running()) {
+		$logger->fatal("Tried killing pid:$otherpid but failed! - exit");
+		exit(3);
+	    }
+
+	} else {
+	    $log .= " - exiting buy buy!";
+	    $logger->warn($log);
+	    exit(1);
+	}
+    } else {
+	my $ver = $tvprobe::mp2t::VERSION;
+	$logger->info("Started tvprobe collector daemon (child) (version:$ver)");
+    }
+}
+
+
+sub sig_handler {
+    $logger->info("Going to exit due to kill signal");
+    heartbeat_update();
+    close_daemon_sessions();
+    close_stream_sessions();
+    $run = 0;
+}
+
+#http://search.cpan.org/~mschilli/Log-Log4perl-1.26/lib/Log/Log4perl/FAQ.pm#My_program_already_uses_warn%28%29_and_die%28%29._How_can_I_switch_to_Log4perl?
+
+$SIG{__WARN__} = sub {
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
+#    WARN @_;
+    $logger->warn(@_);
+};
+
+$SIG{__DIE__} = sub {
+    if($^S) {
+	# We're in an eval {} and don't want log
+	# this message but catch it later
+	return;
+    }
+    $Log::Log4perl::caller_depth++;
+#    LOGDIE @_;
+    $logger->logdie(@_);
+};
+
+
+#tie *STDERR, "Trapper";
+#tie *STDERR, "tvprobe::mp2t";
+
+## Testing outputs
+#print        "TEST1:stdout\n";
+#print STDERR "TEST1:stderr\n";
+#warn         "TEST1:warn()\n";
+
+my $ver = $tvprobe::mp2t::VERSION;
+$logger->info("Starting tvprobe collector daemon (parent) (version:$ver)");
+
+
+# Fork of this process
+#daemon();
+#daemon2();
+daemon3();
+
+## Testing output after the child process has been forked
+#print        "TEST2:stdout\n";
+#print STDERR "TEST2:stderr\n";
+#warn         "TEST2:warn()\n";
+
+# tvprobe::mp2t
+db_connect();
+
+# The loop
+while ($run) {
+
+    # Process all inputs according to the config file
+    process_inputs();
+
+    sleep($interval);
+    $ticks++;
+
+    if (($ticks % $heartbeat_interval_ticks) == 0) {
+	heartbeat_update();
+    }
+}
+
+$logger->info("Stopping tvprobe collector daemon (version:$ver)");
+
+db_commit();
+db_disconnect();
+exit;

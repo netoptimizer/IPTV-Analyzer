@@ -1,0 +1,35 @@
+use ExtUtils::MakeMaker;
+
+# EXE_FILES is a bit strange, we need it getting the bin/ files
+# copied, but is also means that these files are getting copied to the
+# dir blib/script/ (which I dont understand the purpose of).
+our @exe_files;
+#push @exe_files, 'bin/tvprobe_mp2t_collector';
+
+# Automatically find files in "bin" directory
+my $bindir="bin";
+opendir (DIR, $bindir) or warn "Couldn't open directory, $!";
+while ($file = readdir(DIR))
+{
+    next if ($file =~ m/^\./);
+    print "Found bin file: $file\n";
+    push @exe_files, "$bindir/$file";
+}
+closedir DIR;
+
+my %attr = (
+    NAME      => 'collector',
+    VERSION   => '0.2.2',
+    PREREQ_PM => {
+        'Log::Log4perl'   => 1,
+	'Proc::Daemon'    => 1,
+	'Proc::PID::File' => 1,
+    },
+    PL_FILES  => {},    # Prevent old MakeMaker from running Build.PL
+    EXE_FILES => \@exe_files,
+#    'dist'    => {COMPRESS => 'gzip', SUFFIX => 'gz'},
+#   realclean => {FILES => join ' ', @clean_files},
+    AUTHOR    => 'Jesper Dangaard Brouer',
+    ABSTRACT  => 'IPTV-analyzer mp2t Collector daemon',
+#    INSTALLDIRS => 'site',
+);
