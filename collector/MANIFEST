@@ -1,6 +1,9 @@
-bin/tvprobe_mp2t_collector
+bin/iptv_collector_mp2t
+bin/tvprobe.conf
 etc/log4perl.conf.example
 etc/tvprobe.conf.example
+input/proc_rule_test001.input
+input/README
 lib/Trapper.pm
 lib/tvprobe/mp2t.pm
 Makefile.PL
