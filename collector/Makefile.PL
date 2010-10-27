@@ -18,7 +18,7 @@ while ($file = readdir(DIR))
 closedir DIR;
 
 my %attr = (
-    NAME      => 'collector',
+    NAME      => 'iptv-collector',
     VERSION   => '0.2.2',
     PREREQ_PM => {
         'Log::Log4perl'   => 0,
