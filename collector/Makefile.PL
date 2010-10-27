@@ -21,9 +21,9 @@ my %attr = (
     NAME      => 'collector',
     VERSION   => '0.2.2',
     PREREQ_PM => {
-        'Log::Log4perl'   => 1,
-	'Proc::Daemon'    => 1,
-	'Proc::PID::File' => 1,
+        'Log::Log4perl'   => 0,
+	'Proc::Daemon'    => 0,
+	'Proc::PID::File' => 0,
     },
     PL_FILES  => {},    # Prevent old MakeMaker from running Build.PL
     EXE_FILES => \@exe_files,
@@ -33,3 +33,8 @@ my %attr = (
     ABSTRACT  => 'IPTV-analyzer mp2t Collector daemon',
 #    INSTALLDIRS => 'site',
 );
+
+(my $mmv = ExtUtils::MakeMaker->VERSION) =~ s/_//g;
+$mmv >= 6.31 and $attr{LICENSE} = 'GPL';
+
+WriteMakefile (%attr);
