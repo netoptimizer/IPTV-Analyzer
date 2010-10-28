@@ -1,0 +1,21 @@
+
+2009-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.2.0-devel.
+
+	  Significant changes to the proc file output.  Now everything in
+	  the proc file consists of "key:value" pairs seperated with
+	  spaces.
+
+2009-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* [1555] Version 0.1.6.
+
+	  This version corrospond to the version currently (14/10-2009)
+	  running in production on tvprobe002a and tvprobe003a.cxnet.dk.
+	  This version needs some bug fixes, but I want a checkpoint and
+	  a tagged SVN release.
+
+2009-06-29  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* [1143] Version 0.1.5
