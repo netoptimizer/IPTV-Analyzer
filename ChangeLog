@@ -1,4 +1,19 @@
 
+Recent changes
+
+	* Converting from SVN to GIT
+
+	The project is being prepared for going public.  The internal SVN
+	code is converted to a GIT repository, for making it easier to
+	cooperate with external developers.
+
+2010-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.2.1-devel.
+
+	  Update the iptables module to be compatible with kerenl 2.6.35.
+	  Send the iptables code for review during Netfilter Workshop 2010.
+
 2009-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.2.0-devel.
@@ -9,7 +24,7 @@
 
 2009-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
 
-	* [1555] Version 0.1.6.
+	* SVN:[1555] Version 0.1.6.
 
 	  This version corrospond to the version currently (14/10-2009)
 	  running in production on tvprobe002a and tvprobe003a.cxnet.dk.
@@ -18,4 +33,4 @@
 
 2009-06-29  Jesper Dangaard Brouer <hawk@comx.dk>
 
-	* [1143] Version 0.1.5
+	* SVN:[1143] Version 0.1.5
