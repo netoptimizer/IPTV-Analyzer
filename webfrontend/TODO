@@ -1,0 +1,4 @@
+
+There need to exist a writable directory under pages/graphs/.
+This poses a problems (1) security issues, (2) cleanup problem,
+as the graph file names are timestamped.

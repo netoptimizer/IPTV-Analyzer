@@ -1,0 +1,14 @@
+#
+# For this to work, remember to enable:
+#   AllowOverride Limit
+#
+
+<Files "webfrontend.ini">
+    Order deny,allow
+    Deny from all
+</Files>
+
+<FilesMatch "\.(ini|conf|inc)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>

@@ -1,0 +1,76 @@
+body         { font-family: Verdana, Arial, sans-serif;
+               font-size: 11px;
+               color: #000000;
+               background: #FFFFFF }
+a            { text-decoration: none; }
+a:link       { color: #0000FF; background: transparent }
+a:visited    { color: #000077; background: transparent }
+a:hover      { text-decoration: underline; }
+a:active     { color: #FF0000; background: transparent }
+
+body.menuleft { background: #FFFFFF url('../general/column_leftside-dontscalewidth.png') repeat-y fixed; }
+body.menuright { background: #FFFFFF url('../general/column_rightshadow-dontscalewidth.png') repeat-y fixed; }
+
+/* All headings share the same color */
+h1, h2, h3, h4, h5, h6 { color: #6F889C; background: transparent }
+h1           { font-size: 24px; margin-top: 32px; margin-bottom: 12px }
+h2           { font-size: 19px; margin-top: 32px; margin-bottom: 10px }
+h3           { font-size: 16px; margin-top: 16px; margin-bottom: 2px }
+h4           { font-size: 14px; margin-top: 12px; margin-bottom: 0px }
+h5           { font-size: 13px; margin-top: 10px; margin-bottom: 0px }
+
+p            { margin-top: 0px; margin-bottom: 12px }
+ul           { margin-top: 12px; margin-bottom: 12px }
+li           { margin-top: 12px; margin-bottom: 12px }
+kbd, code, samp { font-family: Courier, monospace }
+
+pre          { font-family: Courier, monospace;
+               padding-top: 1ex; padding-bottom: 1ex;
+               padding-left: 1ex; padding-right: 1ex;
+               color: #000000; background: #F4F4F4;
+               border: 1px solid #D0D0D0; }
+pre code em  { color: red; background: #E8E8E8; font-style: normal }
+pre code del { font-style: normal; text-decoration: line-through }
+
+p.center     { text-align: center }
+p.note       { padding: 0.5ex; color: #000000; background: #AFC8DC; }
+p.figure     { text-align: center }
+p.figuredesc { text-align: center; font-style: italic;
+	       margin-left: 10%; margin-right: 10% }
+p.caption    { font-style: italic; margin-bottom: 5px }
+
+caption, th  { color: #6F889C; background: transparent }
+caption      { font-size: 12px; font-weight: bold;
+               margin-top: 12px; margin-bottom: 4px }
+
+table        { font-size: 11px; border-collapse: collapse;
+               margin-top: 0px; margin-bottom: 12px; border-color: #6F889C; }
+th, td       { border-width: 1px; border-style: solid;
+               vertical-align: baseline; border-color: #6F889C; }
+th           { padding: 3px; background: #E8E8E8 }
+th.hidden    { border-style: none; color: #FFFFFF; background: #FFFFFF }
+th.noframe   { border-style: none; text-align: left;
+	       padding-left: 0px; padding-right: 6px;
+	       color: #000000; background: #FFFFFF }
+td           { padding: 2px }
+td.noframe   { border-style: none; background: #FFFFFF }
+
+/* List elements in tables */
+td ol        { margin-top: 0px; margin-bottom: 0px }
+td li        { margin-top: 0px; margin-bottom: 0px }
+td p         { margin-top: 12px; margin-bottom: 0px; }
+
+div.main     { width: 850px;
+               height: 81px;
+               background: url('../general/main.jpg') no-repeat; }
+
+div.group    { clear: both }
+div.left     { float: left; margin-right: 10px }
+div.right    { float: right; margin-left: 10px }
+
+img.left     { float: left }
+img.right    { float: right }
+img.dialog-left   { margin-right: 10px; float: left }
+img.dialog-right  { margin-left: 10px; float: right }
+img.inline   { vertical-align: top }
+
