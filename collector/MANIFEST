@@ -1,5 +1,4 @@
-bin/iptv_collector_mp2t
-bin/tvprobe.conf
+bin/iptv-collector
 etc/log4perl.conf.example
 etc/tvprobe.conf.example
 input/proc_rule_test001.input
