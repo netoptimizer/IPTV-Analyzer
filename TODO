@@ -1,0 +1,33 @@
+
+= Before release =
+
+Stuff I/we need to change before a release
+
+== iptables-module ==
+
+Add README file, for desc stuff about that the kernel module does not
+require recompiling of you kernel.  But it does require the kernel
+source as its uses the kernel makefile system.  It also need the
+correct symbol table to hook into iptables.
+
+Also describe the interaction with iptables userspace part, where we
+simply generate a dyn-loadable module iptables will use.
+
+Implement 'make install'
+
+Rename module from 'xt_mp2t' to 'xt_mpeg2ts'
+
+
+== Database ==
+
+FIXME: The database layout is completly missing!
+Without that, the collector is none functional!
+
+
+== Collector ==
+
+The ComX internal name were 'tvprobe', we have desited to change the
+name to 'iptv-analyzer'.
+
+We need to rename a lot of stuff. e.g. the module include path, the
+config file name, etc.
