@@ -114,13 +114,15 @@ BEGIN {
 sub load_config {
     my $cfgfile = shift || "tvprobe.conf";
     my $cfgdir;
-    if ( -e "/etc/${cfgfile}" ) {
-	$cfgdir = "/etc/";
+    my $cfgdir_default = "/etc/";
+    if ( -e "${cfgdir_default}${cfgfile}" ) {
+	$cfgdir = $cfgdir_default;
     } else {
 	# Use the config from the dir of the script
 	$cfgdir = dirname($0);
-	my $l = "Using config from dir of script: ${cfgdir}/${cfgfile}";
-	$logger->info($l);
+	my $l = "Cannot find config file ${cfgdir_default}${cfgfile} - ";
+	   $l.= "instead use config from dir of script: ${cfgdir}/${cfgfile}";
+	$logger->warn($l);
     }
     $cfg = Config::File::read_config_file("${cfgdir}/${cfgfile}");
     validate_config(); # needs logging module loaded
