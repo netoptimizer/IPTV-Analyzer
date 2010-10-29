@@ -31,3 +31,7 @@ name to 'iptv-analyzer'.
 
 We need to rename a lot of stuff. e.g. the module include path, the
 config file name, etc.
+
+== License ==
+
+Add GNU license files.
