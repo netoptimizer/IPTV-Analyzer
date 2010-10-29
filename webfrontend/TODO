@@ -1,4 +1,14 @@
 
+
+== Issue: writable graphs dir ==
+
 There need to exist a writable directory under pages/graphs/.
 This poses a problems (1) security issues, (2) cleanup problem,
 as the graph file names are timestamped.
+
+== Protection of config file ==
+
+The config file 'webfrontend.ini' contains the database password.
+Currently, its placed directly in the public webdir.  The current way
+to protect this file, is by using a .htaccess file in this directory.
+But the sysadm must have enabled Apache config "AllowOverride Limit".
