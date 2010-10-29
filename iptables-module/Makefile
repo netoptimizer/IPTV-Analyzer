@@ -9,7 +9,7 @@
 # -------
 LIB_TARGETS := libxt_mp2t.so
 obj-m += xt_mp2t.o
-obj-m += seq_example.o
+#obj-m += seq_example.o
 
 # Environment variables that can be overwritten/redefined
 # --------
