@@ -1,0 +1,29 @@
+
+= IPTV-collector daemon =
+
+The IPTV-collector daemon is part of the IPTV-analyzer project.
+
+The IPTV-collector daemon is written in Perl.  To follow through on
+the Perl path, we use a Perl CPAN style MakeMaker setup.
+
+The basic command to produce a makefile is:
+
+ perl Makefile.PL
+
+
+== DEPENDENCIES ==
+
+The dependencies will hopefully be detected for you when generating
+the makefile.
+
+== CONFIG FILES ==
+
+Example config files are available under "etc" directory.
+
+
+== COPYRIGHT AND LICENCE ==
+
+Copyright (C) 2006-2010 by Jesper Dangaard Brouer <hawk@comx.dk>
+
+Under GPL
+(TODO: Add GPL snip)
