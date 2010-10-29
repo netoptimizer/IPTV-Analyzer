@@ -1,11 +1,16 @@
 
 Recent changes
 
+2010-10-29  Jesper Dangaard Brouer <hawk@comx.dk>
+
 	* Converting from SVN to GIT
 
 	The project is being prepared for going public.  The internal SVN
 	code is converted to a GIT repository, for making it easier to
 	cooperate with external developers.
+
+	An SVN tag has been created at revision 2303, to mark the point
+	where no further changes should go into SVN.
 
 2010-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
 
