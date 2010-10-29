@@ -51,6 +51,7 @@ input[rule_eth42][switchtype] = HP9300
 input[rule_eth42][input_ip]   = 192.168.16.42
 input[rule_eth42][input_dev]  = eth42
 
+# Remember: Change to use complete path as the daemon chdir's to /
 input[test1][procfile] = ../input/proc_rule_test001.input
 input[test1][shortloc] = cph
 input[test1][switch]   = switch002a
