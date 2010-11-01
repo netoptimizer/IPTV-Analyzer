@@ -16,6 +16,24 @@ The basic command to produce a makefile is:
 The dependencies will hopefully be detected for you when generating
 the makefile.
 
+=== Debian packages ===
+
+The following Debian packages are needed by the collector daemon:
+
+* libproc-daemon-perl
+* libproc-pid-file-perl
+* libconfig-file-perl
+* libdata-compare-perl
+   (libnumber-compare-perl libtext-glob-perl libfile-find-rule-perl)
+* libdbi-perl
+   (libnet-daemon-perl  libplrpc-perl)
+* libdbd-mysql-perl
+* liblog-log4perl-perl
+   (libipc-shareable-perl liblog-dispatch-perl  libparams-validate-perl)
+* mysql-client
+* mysql-server
+
+
 == CONFIG FILES ==
 
 Example config files are available under "etc" directory.
