@@ -1,0 +1,851 @@
+~~ -*-text-*-
+
+       -------------------------------------------------------
+			 Our own IPTV probe:
+		     Tools for reporting on drops
+       -------------------------------------------------------
+		 Jesper Dangaard Brouer (jdb@comx.dk)
+       -------------------------------------------------------
+        $LastChangedRevision: 1815 $
+        $Date: 2010-01-29 14:20:39 +0100 (Fri, 29 Jan 2010) $
+       -------------------------------------------------------
+
+WARNING
+~~~~~~~
+
+ THIS DOC IS CONFUSING -- REWRITE!
+
+ This doc was the working document while designing the database
+ layout... I need to rewrite the document!
+
+
+Intro
+~~~~~~
+
+ Notes and ideas for howto make a database for storing drop events for
+ some kind of User Interface (UI) for presenting the drops detected by
+ the iptables-module.
+
+
+Database
+~~~~~~~~
+
+* Create the database
+~~~~~~~~~~~~~~~~~~~~~
+
++-----------
+ drop database if exists tvprobe;
+ create database tvprobe;
+ grant all on tvprobe.* to 'tvprobe'@'localhost' identified by 'CHANGEPASSWORD';
+ flush privileges;
++-----------
+
+ Grant remote access.
+
++------------
+ grant SELECT, INSERT, UPDATE, EXECUTE on tvprobe.*
+       to 'tvprobe'@'HOSTNAME.yourdomain.dk'
+       identified by 'CHANGEPASSWORD';
+
+ flush privileges;
++------------
+
+
+* IP address vs. MySQL
+~~~~~~~~~~~~~~~~~~~~~~~
+
+ Q: Storing IP address in my MySQL?
+ A: Choice using VARCHAR(15) for our purpose.
+
+ Using a simple "INT(10) UNSIGNED" would be a compact and efficient
+ data-type for IP-addresses as it would correspond to an 32-bit
+ unsigned int in C, but what about MySQL?
+
+ MySQL has function like INET_NTOA(), which returns the IP address in
+ a human-readable form, from a numeric value.  Thus, we should be able
+ to work with the type and display its in human-readable form.
+
+ I think that the right choice for us it to store the IP as an
+ VARCHAR(15), its probably not the most space efficient format.  But
+ given our usage pattern I think this is the easies to work with:
+
+  * (1) We have to convert the IP to a human-readable when displaying
+        the IP, and
+
+  * (2) have to parse/read the IP address (currently) from
+        /proc/net/xt_mp2t/ where its a human-readable IP, thus we need
+        to convert it before its INSERT'ed.
+
+ Given that we have the same format for input and output, the
+ conversion is basically a waste of processing time.  And we don't
+ need to do IP-addr manipulations (where the 32-bit format makes
+ sense).
+
+ We could use INET_ATON() on INSERTs, and INET_NTOA() for SELECTs, but
+ this conversion is only for saving space, which probably isn't very
+ interesting given that the database will probably have storing
+ overheads that makes this small save insignificant.
+
+
+* Identification of a probe?
+~~~~~~~~~~~~~~~~
+
+ How is a probe identified?  Notice that a probe can have several
+ interfaces/inputs that can monitor multicast traffic.
+
+  probe_ip + input_name/id
+
+ Also need a probe location. Should the location be tied to the
+ interface/input as we could have very long cables...
+
+
+* Table: log_drops
+~~~~~~~
+
+ The idea with "prev_id", is that it will be easier to locate the
+ previous record we need we can subtract from skips, to see the actual
+ drops.
+
++----------
+mysql -u tvprobe -pCHANGEPASSWORD tvprobe
+
+DROP TABLE IF EXISTS `log_drops`;
+CREATE TABLE `log_drops` (
+  `id`              BIGINT   UNSIGNED NOT NULL auto_increment,
+  `prev_id`         BIGINT   UNSIGNED default NULL,
+  `multicast_dst`   CHAR(15)          NOT NULL,
+  `ip_src`          CHAR(15)          default NULL,
+  `daemon_pid`      SMALLINT UNSIGNED default NULL,
+  stream_session_id BIGINT UNSIGNED   NOT NULL default 0,
+  `record_time`     TIMESTAMP         NOT NULL default CURRENT_TIMESTAMP,
+  `probe_id`        INT               NOT NULL default 0,
+  daemon_session_id INT UNSIGNED      NOT NULL default 0,
+  `skips`           BIGINT   UNSIGNED default NULL,
+  `discontinuity`   BIGINT   UNSIGNED default NULL,
+  `delta_skips`     INT      UNSIGNED NOT NULL default 0,
+  `delta_discon`    INT      UNSIGNED NOT NULL default 0,
+  `port_dst`        SMALLINT UNSIGNED default NULL,
+  `port_src`        SMALLINT UNSIGNED default NULL,
+  `pids`            SMALLINT UNSIGNED default NULL,
+  `last_poll`       TIMESTAMP         default 0,
+  `probe_time`      TIMESTAMP         default 0,
+  `delta_poll`	    INT      UNSIGNED default NULL,
+  `ttl`             TINYINT  UNSIGNED default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `idx_time_mc` (`record_time`,`multicast_dst`)
+) ENGINE=InnoDB;
+
+DESC log_drops;
++----------
+
+ Need a "timestamp" records from last time the proc file was read,
+ name "last_poll".
+
+ "daemon_pid": This is the process pid from the daemon, this is saved
+ to be-able-to catch error cases where two daemons (faulty) are
+ running on the server.  This can also be used for other more
+ important things. E.g. identifying the period the probe has been
+ running/active in.  FIXME, the "daemon_pid" can collide, this must be
+ fixed, one fix could be to create a side-table with
+ daemon_session_id's.
+
+ TODO: Need a method to detect (see from a DB view) if a collector has
+ stopped giving us data.  The reason is, that when comparing probes it
+ might be misleading if one of the probes has not collected data for a
+ while...
+
+
+ In order to be able to consolidate data, I want to have a unique
+ stream id (stream_session_id), which identifies a period where a
+ stream is in a consistent recording period, e.g. where drops counters
+ (skips and discontinuity) are increasing.
+
+
+** Alter table
+~~~~~~~~~~~~~
+
+ The delta values "delta_skips" and "delta_discon", should not be
+ allowed to contain NULL values, because it makes them anoing to do
+ calculations on e.g. sum() as NULL + 42 = NULL.  Thus, all select
+ would need to de-select NOT NULL values everytime.
+
++-----------
+ ALTER TABLE `log_drops` modify delta_skips INT UNSIGNED NOT NULL default 0;
+
+ UPDATE log_drops set delta_skips = 0
+ WHERE delta_skips is NULL;
+
+ ALTER TABLE `log_drops` modify delta_discon INT UNSIGNED NOT NULL default 0;
++-----------
+
+ Extra daemon_session_id
+
++-----------
+ ALTER TABLE `log_drops` ADD daemon_session_id INT UNSIGNED NOT NULL default 0
++-----------
+
+ Extra stream_session_id
+
++-----------
+ ALTER TABLE `log_drops` ADD stream_session_id BIGINT UNSIGNED NOT NULL default 0
++-----------
+
+ Fix probe_id to not allow NULL values.
+
++-----------
+ ALTER TABLE `log_drops` MODIFY `probe_id` INT NOT NULL default 0,
++-----------
+
+
+** select(1) without prev_id
+~~~~~~~~~~~~~~
+
++------------------------
+select l1.record_time, l1.skips new_skips, l2.skips pre_skips, l1.skips-l2.skips del_skips
+from log_drops l1, log_drops l2
+where l1.multicast_dst = l2.multicast_dst
+and l1.probe_input = l2.probe_input
+and l2.id = ( select max(ltmp.id) from log_drops ltmp
+                 where ltmp.id < l1.id
+                 and   ltmp.multicast_dst = l1.multicast_dst
+                 and   ltmp.probe_input   = l1.probe_input )
+and l1.multicast_dst='233.123.173.12' and l1.probe_input='fake'
++------------------------
+
+** select(2) without prev_id
+~~~~~~~~~~~~~~
+
++--------------
+select l1.multicast_dst, l1.probe_input, l1.record_time,
+        l1.skips new_skips, l2.skips pre_skips, l1.skips-l2.skips del_skips
+from log_drops l1, log_drops l2
+where l1.multicast_dst = l2.multicast_dst
+and l1.probe_input = l2.probe_input
+and l2.id = ( select max(ltmp.id) from log_drops ltmp
+                 where ltmp.id < l1.id
+                 and   ltmp.multicast_dst = l1.multicast_dst
+                 and   ltmp.probe_input   = l1.probe_input )
+order by l1.multicast_dst, l1.probe_input, l1.record_time
++--------------
+
+** select with prev_id
+~~~~~~~~~~~~~~~~~~~~~~
+
++--------
+ SELECT l1.multicast_dst, l1.probe_input, l1.record_time,
+        l1.skips new_skips, l2.skips pre_skips,
+	l1.skips-l2.skips delta_skips
+ FROM log_drops l1, log_drops l2
+ WHERE l1.multicast_dst = l2.multicast_dst
+   and l1.probe_input = l2.probe_input
+   and l2.id = l1.prev_id;
++--------
+
+* Table: log_event
+~~~~~~~~~~~~~~~~~~
+
+ Redesign and rename of table "log_drops" to "log_event".
+
++----------
+#DROP TABLE IF EXISTS log_event;
+ CREATE TABLE log_event (
+  id                BIGINT UNSIGNED   NOT NULL auto_increment,
+  stream_session_id BIGINT UNSIGNED   NOT NULL default 0,
+  record_time       TIMESTAMP         NOT NULL default CURRENT_TIMESTAMP,
+
+  probe_id          INT               NOT NULL default 0,
+  daemon_session_id INT UNSIGNED      NOT NULL default 0,
+
+  skips             BIGINT   UNSIGNED NOT NULL default 0,
+  discontinuity     BIGINT   UNSIGNED NOT NULL default 0,
+  errsec            INT      UNSIGNED NOT NULL default 0,
+  delta_skips       INT      UNSIGNED NOT NULL default 0,
+  delta_discon      INT      UNSIGNED NOT NULL default 0,
+  delta_errsec      INT      UNSIGNED NOT NULL default 0,
+
+  bytes             BIGINT   UNSIGNED default 0,
+  packets           BIGINT   UNSIGNED default 0,
+
+  event_type        SMALLINT UNSIGNED NOT NULL default 1,
+  pids              SMALLINT UNSIGNED NOT NULL default 0,
+
+  delta_poll        INT      UNSIGNED default NULL,
+  last_poll         TIMESTAMP         default 0,
+  probe_time        TIMESTAMP         default 0,
+
+  multicast_dst     CHAR(15)          NOT NULL,
+  ip_src            CHAR(15)          default NULL,
+
+  ttl               SMALLINT UNSIGNED default 0,
+
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB;
++----------
+
+ The "multicast_dst" and "ip_src" are to be removed, and is only
+ needed to make the transition for the PHP web-frontend "easier" as we
+ can postpone fixing/changing it too much.
+
+
+* Table: probe_input_info
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Record some info per mp2t proc file.
+
+ Data available in proc file:
+
++-------
+# info:version module:xt_mp2t version:0.2.0-devel
+# info:time created:1263552854.966739834 now:1263909078.558329162 delta:356223.591589328
+# info:dynamic rule_id:2 streams:103 streams_check:103 max_list_search:0 rnd:304889216
+# info:config htable_size:100 max-streams:0 list_search_warn_level:20
++-------
+
+ Don't know what table design to choose.
+
+
+
+* Table: probes
+~~~~~~~~~~~~~~~
+
+ To save space in each log record/entry, it would be smarter to have a
+ table "probes" that has a probe id, which is used in table
+ "log_drops".  This table can then contain the textual description of
+ the probe e.g "probe_ip", "probe_input", "location", etc.
+
++----------
+DROP TABLE IF EXISTS `probes`;
+CREATE TABLE `probes` (
+  `id`          INT          NOT NULL auto_increment,
+  `ip`          VARCHAR(15)  NOT NULL,
+  `input`       VARCHAR(100) NOT NULL,
+  `shortloc`    VARCHAR(50)  default "unknown",
+  `switch`      VARCHAR(50)  default "unknown",
+  `name`        VARCHAR(100) default "unknown",
+  `description` VARCHAR(100) default "unknown",
+  `location`    VARCHAR(100) default "unknown",
+  `address`     VARCHAR(100) default "unknown",
+  `distance`    INT          default 0,
+  `input_ip`    VARCHAR(15)  default "",
+  `input_dev`   VARCHAR(16)  default "",
+  `procfile`    VARCHAR(100) default NULL,
+  `switchport`  VARCHAR(50)  default "",
+  `switchtype`  VARCHAR(50)  default "",
+  `hidden`	ENUM('no', 'yes') NOT NULL default 'no',
+  KEY `idx_identify` (`ip`, `input`, `shortloc`, `switch`),
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB;
+DESC probes;
++----------
+
+ The 'distance', might be unnecessary as we can use the TTL value from
+ the log_drops table to see the real distance to the source (for each
+ multicast stream).
+
+** Alter table
+~~~~~~~~~~~~~~
+
+ Adjustments need on production.  Due to redesign the configuration
+ file tvprobe.conf definition of "inputs".
+
+ Old table:
+
++----------
+DROP TABLE IF EXISTS `probes`;
+CREATE TABLE `probes` (
+  `id`          INT          NOT NULL auto_increment,
+  `ip`          VARCHAR(15)  default NULL,
+  `input`       VARCHAR(100) default NULL,
+  `name`        VARCHAR(100) default NULL,
+  `location`    VARCHAR(100) default NULL,
+  `distance`    INT          default 0,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB;
+DESC probes;
++----------
+
++-----------
+ ALTER TABLE `probes` MODIFY `ip`       VARCHAR(15)  NOT NULL;
+ ALTER TABLE `probes` MODIFY `input`    VARCHAR(100) NOT NULL;
+ ALTER TABLE `probes` MODIFY `name`     VARCHAR(100) default "unknown",
+ ALTER TABLE `probes` MODIFY `location` VARCHAR(100) default "unknown",
+
+ ALTER TABLE `probes` ADD `shortloc`    VARCHAR(50)  default "unknown";
+ ALTER TABLE `probes` ADD `switch`      VARCHAR(50)  default "unknown";
+ ALTER TABLE `probes` ADD `description` VARCHAR(100) default "unknown";
+ ALTER TABLE `probes` ADD `address`     VARCHAR(100) default "unknown";
+ ALTER TABLE `probes` ADD `input_ip`    VARCHAR(15)  default "";
+ ALTER TABLE `probes` ADD `input_dev`   VARCHAR(16)  default "";
+ ALTER TABLE `probes` ADD `procfile`    VARCHAR(100) default NULL;
+ ALTER TABLE `probes` ADD `switchport`  VARCHAR(50)  default "";
+ ALTER TABLE `probes` ADD `switchtype`  VARCHAR(50)  default "";
+ ALTER TABLE `probes` ADD `hidden`	ENUM('no', 'yes') NOT NULL default 'no';
+
+ ALTER TABLE `probes` ADD KEY `idx_identify`
+   (`ip`, `input`, `shortloc`, `switch`);
++-----------
+
+ Needs updating of tables probes on "tvprobe004a.yourdomain.dk".
+
++-------
+ mysql> select * from probes;
+ +----+----------------+------------+-------------+----------+----------+
+ | id | ip             | input      | name        | location | distance |
+ +----+----------------+------------+-------------+----------+----------+
+ |  1 | 8.72.231.69    | albcr1     | tvprobe001a | alb      |     NULL |
+ |  2 | 8.72.231.69    | albcs35    | tvprobe001a | alb      |     NULL |
+ |  3 | 8.233.225.30   | rule_eth3  | tvprobe002a | arnakke  |     NULL |
+ |  4 | 8.161.132.186  | tgccs1_e13 | tvprobe004a | tgc      |     NULL |
+ |  5 | 192.168.16.42  | rule_test  | firesoul    | alb      |     NULL |
+ |  6 | 8.71.82.38     | seas_nve   | tvprobe003a | SEAS-NVE |     NULL |
+ +----+----------------+------------+-------------+----------+----------+
++-------
+
++--------
+  UPDATE probes
+  SET shortloc = 'alb', switch = 'albcr1', input = 'rule_eth3'
+  WHERE id = 1;
+
+  UPDATE probes
+  SET shortloc = 'alb', switch = 'albcs35', input = 'rule_eth2'
+  WHERE id = 2;
+
+  UPDATE probes
+  SET shortloc = 'dansknet', switch = 'switch001'
+  WHERE id = 3;
+
+  UPDATE probes
+  SET shortloc = 'tgc', switch = 'tgccs1', input = 'rule_eth3'
+  WHERE id = 4;
+
+  UPDATE probes
+  SET shortloc = 'alb', switch = 'albcr3'
+  WHERE id = 5;
+
+  UPDATE probes
+  SET shortloc = 'seas-nve', switch = 'switch001', input = 'rule_eth3'
+  WHERE id = 6;
++--------
+
+
+* Table: daemon_session
+~~~~~~~~~~~~~~~~~~~~~~~
+
++-------------
+#DROP TABLE IF EXISTS daemon_session;
+CREATE TABLE daemon_session (
+  id            INT      UNSIGNED NOT NULL auto_increment,
+  start_time    TIMESTAMP         NOT NULL default CURRENT_TIMESTAMP,
+  stop_time     TIMESTAMP         NOT NULL default 0,
+  heartbeat     TIMESTAMP         NOT NULL default 0,
+  probe_id      INT               default NULL,
+  daemon_pid    SMALLINT UNSIGNED default NULL,
+  mp2t_created  TIMESTAMP         NOT NULL default 0,
+  mp2t_version  VARCHAR(50),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
++-------------
+
+ Force the auto_increment to start at 2^16, to keep compatible with
+ daemon_pid migration.
+
++-------------
+INSERT INTO daemon_session (id) VALUES (65536);
++-------------
+
+* Table: stream_session
+~~~~~~~~~~~~~~~~~~~~~~~
+
+ In order to be able to consolidate data, I want to have a unique
+ stream id (stream_session_id), which identifies a period where a
+ stream is in a consistent recording period, e.g. where drops counters
+ (skips and discontinuity) are increasing.
+
++-------------
+#DROP TABLE IF EXISTS stream_session;
+CREATE TABLE stream_session (
+  id                BIGINT UNSIGNED   NOT NULL auto_increment,
+  probe_id          INT               NOT NULL default 0,
+  daemon_session_id INT UNSIGNED      NOT NULL default 0,
+  start_time        TIMESTAMP         NOT NULL default CURRENT_TIMESTAMP,
+  stop_time         TIMESTAMP         NOT NULL default 0,
+  multicast_dst     CHAR(15)          NOT NULL,
+  ip_src            CHAR(15)          default NULL,
+  port_dst          SMALLINT UNSIGNED default NULL,
+  port_src          SMALLINT UNSIGNED default NULL,
+  logid_begin       BIGINT UNSIGNED   NOT NULL default 0,
+  logid_end         BIGINT UNSIGNED   NOT NULL default 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
++-------------
+
+ Extra info for a stream, which possible could be move from the
+ "log_drops" table to this, or just be keept as redundant info?
+
+  multicast_dst
+  ip_src
+  port_dst
+  port_src
+
+ Extra performance tricks could be to have fields for storing the
+ begin and end id from the log_drops table.  This could (possibly) be
+ updated on the database side as trickers.  This could make it very
+ fast to create a channel drop overview for this multicast stream.
+
+
+* select
+~~~~~~~~
+
++---------
+ SELECT record_time, multicast_dst, delta_skips, delta_discon,
+ 	probes.name, probes.location, probes.input
+ FROM   log_drops, probes
+ WHERE  probes.id = probe_id
+   AND  delta_skips is NOT NULL
+ ORDER BY record_time;
++---------
+
+
++---------
+ SELECT multicast_dst, probes.name, record_time, delta_skips, delta_discon,
+ 	probes.input
+ FROM   log_drops, probes
+ WHERE  probes.id = probe_id
+   AND  delta_skips is NOT NULL
+ ORDER BY INET_ATON(multicast_dst), record_time;
++---------
+
+
+
+
+* Smart DB select
+~~~~~~~~~~~~~~~~~
+
+ Describe the smart select ODM@comx.dk made...
+
++--------
+ SELECT *, floor((hour(record_time)*60+minute(record_time))/5) timeslot
+ FROM   log_drops
+ WHERE  multicast_dst = '233.123.173.122'
+   AND  record_time between '2010-01-23' and '2010-01-24'
+;
++--------
+
+
++---------
+ SELECT floor((hour(record_time)*60+minute(record_time))/5) timeslot,
+ 	record_time, multicast_dst, probes.name,
+	delta_skips, delta_discon, probes.input
+ FROM   log_drops, probes
+ WHERE  probes.id = probe_id
+   AND  multicast_dst = '233.123.173.122'
+   AND  record_time between '2010-01-23' and '2010-01-24'
+ ORDER BY timeslot
+;
++---------
+
+
++----------
+ SELECT floor((hour(record_time)*60+minute(record_time))/10) timeslot,
+ 	record_time, multicast_dst, probes.name,
+	sum(delta_skips), sum(delta_discon), probes.input,
+	sum(probe_time - last_poll)
+ FROM   log_drops, probes
+ WHERE  probes.id = probe_id
+   AND  delta_skips IS NOT NULL
+   AND  multicast_dst = '233.123.173.122'
+   AND  record_time between '2010-01-23' and '2010-01-24'
+ GROUP BY probes.name, probes.input, timeslot
+ ORDER BY timeslot
+;
++----------
+
+ Looking at "tvprobe002a" progress over several days.
+
++-----------
+SELECT DATE(record_time) as datoen,
+       sum(delta_skips), sum(delta_discon),
+       probes.name
+FROM   log_drops, probes
+WHERE  probes.id = probe_id
+  AND  delta_skips is NOT NULL
+  AND  probes.name = "tvprobe002a"
+GROUP BY datoen
+;
++-----------
+
+ Grouping by the date and the hour.
+
++-----------
+SELECT DATE(record_time) as datoen, hour(record_time) as the_hour,
+       sum(delta_skips), sum(delta_discon),
+       probes.name, probes.input
+FROM   log_drops, probes
+WHERE  probes.id = probe_id
+  AND  delta_skips is NOT NULL
+  AND  probes.name = "tvprobe002a"
+GROUP BY datoen, the_hour
++-----------
+
+ Look at all probes per day.
+
++--------
+SELECT DATE(record_time) as datoen,
+       sum(delta_skips), sum(delta_discon),
+       probes.name
+FROM   log_drops, probes
+WHERE  probes.id = probe_id
+  AND  delta_skips is NOT NULL
+GROUP BY datoen, probe_id
+;
++--------
+
+
+
+
+NOTES:
+~~~~~~
+
+ Idea: Also need a page with a per streamer source.
+
+
+
+SELECTs playground
+~~~~~~~~~~~~~~~~~~
+
++------
+ SELECT multicast_dst, delta_skips, record_time, last_poll,
+  record_time - last_poll,
+  TIMESTAMPDIFF(SECOND, last_poll, record_time)
+ FROM log_drops
+ WHERE record_time
+   BETWEEN '2010-01-25 10:00:00'
+       AND DATE_ADD('2010-01-25', INTERVAL 3 DAY)
+ LIMIT 30;
++------
+
+ Count
+
++---------
+ SELECT count(distinct multicast_dst), probes.name, probes.switch, probes.id
+ FROM   log_drops, probes
+ WHERE probes.id = probe_id
+   AND
+   record_time
+   BETWEEN '2010-01-25 10:00:00'
+       AND DATE_ADD('2010-01-25', INTERVAL 3 DAY)
+ GROUP BY probes.id;
++----------
+
++------
+ SELECT multicast_dst, count(multicast_dst) as records,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as discon,
+	probes.name, probes.switch, probes.id
+ FROM   log_drops, probes
+ WHERE probes.id = probe_id
+  AND  probes.id = 4
+  AND
+   record_time
+   BETWEEN '2010-01-25 10:00:00'
+       AND DATE_ADD('2010-01-25', INTERVAL 3 DAY)
+ GROUP BY multicast_dst
+ ORDER BY discon;
++------
+
+ Selecting data on a single channel on a specific probe.
+
++----------
+ SELECT UNIX_TIMESTAMP(record_time) DIV 3600 as bucket,
+ 	multicast_dst,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	count(multicast_dst) as records,
+        probes.name,
+        probes.switch,
+	UNIX_TIMESTAMP(record_time) as timestamp,
+        record_time,
+        max(record_time) as recmax,
+        UNIX_TIMESTAMP(min(record_time)) as timemin,
+        UNIX_TIMESTAMP(max(record_time)) as timemax,
+        TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period
+ FROM   log_drops, probes
+ WHERE  multicast_dst = "233.123.173.130"
+   AND  probes.id = probe_id
+   AND  probes.id = '1'
+ GROUP BY bucket
+ ORDER BY probe_id
+;
++----------
+
+ Selecting data on a single channel on a specific probe, without using
+ the table 'probes'.
+
++-----
+ SELECT UNIX_TIMESTAMP(record_time) DIV 3600 as bucket,
+ 	multicast_dst,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	count(multicast_dst) as records,
+	UNIX_TIMESTAMP(record_time) as timestamp,
+        UNIX_TIMESTAMP(min(record_time)) as timemin,
+        UNIX_TIMESTAMP(max(record_time)) as timemax,
+        TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period
+ FROM   log_drops
+ WHERE  multicast_dst = "233.123.173.130"
+   AND  probe_id = '1'
+ GROUP BY bucket
+;
++-----
+
+ Selecting data on a single channel without using the table 'probes'.
+
+
++-------
+ SELECT UNIX_TIMESTAMP(record_time) DIV 3600 as bucket,
+        probe_id,
+ 	multicast_dst,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	count(multicast_dst) as records,
+	UNIX_TIMESTAMP(record_time) as timestamp,
+        UNIX_TIMESTAMP(min(record_time)) as timemin,
+        UNIX_TIMESTAMP(max(record_time)) as timemax,
+        TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period
+ FROM   log_drops
+ WHERE  multicast_dst = "233.123.173.130"
+   AND  probe_id = '1'
+ GROUP BY bucket
+ ORDER BY probe_id, timestamp
+;
++-------
+
+
+ Info on a single channel
+
++---------
+ SELECT probe_id,
+ 	multicast_dst,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	count(multicast_dst) as records,
+	UNIX_TIMESTAMP(record_time) as timestamp,
+        UNIX_TIMESTAMP(min(record_time)) as timemin,
+        UNIX_TIMESTAMP(max(record_time)) as timemax,
+        TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period
+ FROM   log_drops
+ WHERE  multicast_dst = "233.123.173.130"
+ GROUP BY probe_id
+;
++---------
+
++---------
+ SELECT probe_id,
+        probes.distance,
+	probes.name,
+	probes.switch,
+	probes.shortloc,
+ 	multicast_dst,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	count(multicast_dst) as records,
+        UNIX_TIMESTAMP(min(record_time)) as timemin,
+        UNIX_TIMESTAMP(max(record_time)) as timemax,
+        min(record_time) as datemin,
+        max(record_time) as datemax,
+        TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period
+ FROM   log_drops, probes
+ WHERE  multicast_dst = "233.123.173.130"
+    AND probe_id = probes.id
+    AND probes.hidden <> 'yes'
+ GROUP BY probe_id
+ ORDER BY probes.distance
+;
++---------
+
+
+
+ Trying to find the "actual" period the probe has been online...
+
++-------
+ SELECT probe_id,
+	daemon_pid,
+        probes.distance,
+	probes.name,
+ 	multicast_dst,
+ 	delta_skips  as skips,
+        delta_discon as drops,
+	multicast_dst as records,
+        TIMESTAMPDIFF(SECOND, last_poll, probe_time) as interv,
+	last_poll,
+	record_time,
+	probe_time
+ FROM   log_drops, probes
+ WHERE  multicast_dst = "233.123.173.130"
+    AND probe_id = probes.id
+    AND probes.hidden <> 'yes'
+    AND probe_id = 1
+    AND last_poll <> 0
+    AND probe_time <> 0
+;
++-------
+
+ Trying to find the "actual" period the probe has been online... by
+ grouping by the daemon_pid, as if the daemon_pid changes then the
+ daemon was restarted.
+
+ ... PROBLEM the daemon_pid might collide at some point, we need a
+ more unique id.  ODM proposes a "session" table with a autoinc, that
+ the probe requests upon startup.
+
++----------
+ SELECT probe_id,
+	daemon_pid,
+        probes.distance,
+	probes.name,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	multicast_dst,
+	count(daemon_pid) as records,
+        sum(TIMESTAMPDIFF(SECOND, last_poll, probe_time)) as interv,
+	last_poll,
+	TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period,
+	min(record_time),
+	max(record_time)
+ FROM   log_drops, probes
+ WHERE  multicast_dst = "233.123.173.130"
+    AND probe_id = probes.id
+    AND probes.hidden <> 'yes'
+    AND probe_id = 1
+ GROUP BY daemon_pid
+ ORDER BY probe_id
+;
++---------
+
+ Use the above SELECT as as a temp-table an sum up the periods.
+
++---------
+SELECT *, sum(daemon.period) as online_period
+FROM (
+  SELECT probe_id,
+	daemon_pid,
+        probes.distance,
+	probes.name,
+	probes.switch,
+ 	sum(delta_skips)  as skips,
+        sum(delta_discon) as drops,
+	multicast_dst,
+	count(daemon_pid) as records,
+        sum(TIMESTAMPDIFF(SECOND, last_poll, probe_time)) as interv,
+	last_poll,
+	TIMESTAMPDIFF(SECOND, min(record_time),	max(record_time)) as period,
+	min(record_time),
+	max(record_time)
+ FROM   log_drops, probes
+ WHERE  multicast_dst = "233.123.173.130"
+    AND probe_id = probes.id
+    AND probes.hidden <> 'yes'
+    AND probe_id = 1
+ GROUP BY daemon_pid) daemon
+GROUP BY probe_id;
++----------
