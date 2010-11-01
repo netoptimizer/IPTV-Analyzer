@@ -1,0 +1,94 @@
+~~ -*-text-*-
+
+       -------------------------------------------------------
+		      Web-interface dependencies
+		      (for our own IPTV probes)
+       -------------------------------------------------------
+		 Jesper Dangaard Brouer (jdb@comx.dk)
+       -------------------------------------------------------
+        $LastChangedRevision$
+        $Date$
+       -------------------------------------------------------
+
+Intro
+~~~~~
+
+ This document describe/list the Debian package dependencies for the
+ web frontend interface (for our own IPTV probes).
+
+
+Packages and software
+~~~~~~~~~~~~~~~~~~~~~
+
+* Webserver and PHP
+~~~~~~~~~~~~~~~~~~~
+
+ Apache and PHP
+
+ sudo aptitude install php5 php5-gd php5-mysql
+
+
+* PEAR - PHP Extension and Application Repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Need to install PEAR.
+
+ sudo aptitude install php-pear
+
+
+** PEAR module: Image_Graph
+  ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ The module "Image_Graph" is used for generating the graphs.
+
+  pear/Image_Graph dependencies:
+    pear/Image_Canvas,
+    pear/Numbers_Roman,
+    pear/Numbers_Words
+
+
+ Need to call "upgrade-all" to get upgraded the installer, else its
+ not possible to install "Image_Canvas".
+
+ Pear install commands:
+
++--------
+  sudo pear upgrade-all
+
+  sudo pear install --alldeps Image_Color-alpha
+
+  sudo pear install --alldeps Image_Canvas-alpha
+
+  sudo pear install --alldeps Image_Graph-alpha
+
+  sudo pear install --alldeps Log
++--------
+
+
+** Image_Graph: Issues with fonts under Linux:
+ ~~~~~~~~~~~~~~
+
+  http://web.archive.org/web/20071123171133rn_1/www.outwardmotion.com/outwardmotion/imagegraph.php
+
+  aptitude install ttf-freefont
+
++------
+ $myfont = '/usr/share/fonts/truetype/freefont/FreeSerif.ttf';
+ $Font =& $Graph->addNew('font', $myfont);
+ //$Font =& $Graph->addNew('font', 'Verdana');
+ //$Font =& $Graph->addNew('font', 'Helvetica');
+ // set the font size
+ $Font->setSize(8);
+ $Graph->setFont($Font);
++------
+
+
+Docs on the PHP graph module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ PHP graph module
+
+ http://pear.veggerby.dk/wiki/image_graph:getting_started_guide
+
+ http://pear.php.net/package/Image_Graph
+
