@@ -66,7 +66,7 @@ The possible bit values can be see in kernel source version of:
   kernel-src/include/linux/netdevice.h
 
 
-=== msg_level: RX_STATUS ===
+=== Syslogging drops ===
 
 Enabling the RX_STATUS bit (0x0800) in msg_level, results in the
 module will printk when it detects CC-skips and
