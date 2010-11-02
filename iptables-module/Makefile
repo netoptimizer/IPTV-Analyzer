@@ -39,9 +39,13 @@ KBUILD_CFLAGS+=-g -O2 -fno-inline
 
 PWD = $(shell pwd)
 
+# FIXME: Don't assume that iptables are located in /usr/local/sbin
+
 iptables_version = $(shell (/usr/local/sbin/iptables -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 
+# TODO: Add a version check, that tell/warn people if the iptables
+#       version is below 1.4.3 (as we depend >= 1.4.3)
 
 
 all: lib modules
