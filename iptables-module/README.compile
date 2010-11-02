@@ -1,54 +1,86 @@
 
+= Howto Compile =
 
-Developers setup
-~~~~~~~~~~~~~~~~
+This is a quick howto, on getting the iptables module compiled.
+Including howto install an newer/compatible iptables version.
 
- I'm using GNU 'stow' to handle my out-of-distro installed software.
+I'm using GNU tool 'stow' to handle my out-of-distro installed
+software.  To follow these compile instructions, you should have stow
+installed on your machine.
 
- Download iptables tar-ball:
 
-   wget http://www.netfilter.org/projects/iptables/files/iptables-1.4.3.2.tar.bz2
+== Compiling and installing iptables v1.4.3.2 ==
 
- Install iptables in /usr/local/stow/iptables-1.4.3.2.
- Note, when compiling iptables set 'prefix=/usr/local/' and then when
- installing the prefix should be redefined to the stow path:
+This iptables module requires minimum iptables 1.4.3.
 
-   ./configure --prefix=/usr/local/
-   make
-   make prefix=/usr/local/stow/iptables-1.4.3.2 install
+Download iptables tar-ball:
 
- Make a fake stow software package by creating directory:
+  wget http://www.netfilter.org/projects/iptables/files/iptables-1.4.3.2.tar.bz2
 
-   mkdir /usr/local/stow/mp2t_development_fake/
+Unpack the source, somewhere.
 
- And create the directories libexec/xtables/ within.
+Note, when compiling iptables set 'prefix=/usr/local/' and then when
+installing the prefix should be redefined to the stow path.
 
-   mkdir -p /usr/local/stow/mp2t_development_fake/libexec/xtables/
-   cd       /usr/local/stow/mp2t_development_fake/libexec/xtables/
+  ./configure --prefix=/usr/local/
+  make
 
- Create a symlink from this directory to your development edition of
- the file 'libxt_mp2t.so'
+Due to stow, install iptables in /usr/local/stow/iptables-1.4.3.2, by
+redefining "prefix".
 
-   ln -s /home/jdb/svn/dcu/kernel/modules/iptables_mpeg2ts/libxt_mp2t.so .
+  make prefix=/usr/local/stow/iptables-1.4.3.2 install
 
- Or the 'libxt_mp2t.so' installed in '/lib/modules/xt_mp2t' (by the
- remote-install.sh script).
+Activate the software via stow:
 
-   ln -s /lib/modules/xt_mp2t/libxt_mp2t.so \
-         /usr/local/stow/mp2t_development_fake/libexec/xtables/
+  cd /usr/local/stow/
+  stow iptables-1.4.3.2
 
- (Development tree:)
 
-   cd ~/svn/
-   svn co http://svn.cxnet.dk/svn/dcu/trunk dcu
 
- Install (linkin) the stow software package 'mp2t_development_fake'.
+== Developement tree ==
 
-   cd /usr/local/stow
-   stow mp2t_development_fake
+Get the development git development tree here:
 
- Remember to manually rmmod and insmod the kernel module it self.
+ git clone git://people.netfilter.org/hawk/iptv-analyzer.git
 
-   rmmod xt_mp2t
-   insmod ./xt_mp2t.ko
+(FIXME: Move this to the new domain iptv-analyzer.org)
+
+
+== Reloading kernel module ==
+
+Remember to manually rmmod and insmod the kernel module it self.
+
+  rmmod xt_mp2t
+  insmod ./xt_mp2t.ko
+
+
+== Trick: Fake stow install ==
+
+Make a fake stow software package for the development version of the
+source.
+
+Create directory:
+
+  mkdir /usr/local/stow/mp2t_development_fake/
+
+And create the directories libexec/xtables/ within.
+
+  mkdir -p /usr/local/stow/mp2t_development_fake/libexec/xtables/
+  cd       /usr/local/stow/mp2t_development_fake/libexec/xtables/
+
+Create a symlink from this directory to your development edition of
+the file 'libxt_mp2t.so'
+
+  ln -s ~/git/iptv-analyzer/iptables-module/libxt_mp2t.so .
+
+Or the 'libxt_mp2t.so' installed in '/lib/modules/xt_mp2t' (by the
+remote-install.sh script).
+
+  ln -s /lib/modules/xt_mp2t/libxt_mp2t.so \
+        /usr/local/stow/mp2t_development_fake/libexec/xtables/
+
+Install (linkin) the stow software package 'mp2t_development_fake'.
+
+ cd /usr/local/stow
+ stow mp2t_development_fake
 
