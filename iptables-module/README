@@ -1,10 +1,21 @@
 
-TODO: This README file is kind of incomplete....
-
 = iptables kernel module =
 
 This xt_mp2t iptables kernel module analyses the contents of MPEG2
 Transport Stream (TS) packets, and can detect TS/CC packet drops.
+
+== Dependencies ==
+
+Minimum iptables version >= 1.4.3, is required by iptables userspace
+part of the module.
+
+The iptables developer include files are also required (specifically
+xtables.h).
+
+No patching of the Linux kernel is required, but the kernel source is
+required.  The module takes advantage of the kernel build/make system.
+
+Minimum kernel version required is 2.6.28 (due to some RCU changes).
 
 
 == Example: iptables rule ==
