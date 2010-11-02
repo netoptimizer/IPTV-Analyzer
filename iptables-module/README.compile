@@ -13,7 +13,11 @@ installed on your machine.
 
 This iptables module requires minimum iptables 1.4.3.
 
-Download iptables tar-ball:
+The following describes the procedure for getting iptables v1.4.3.2
+installed on your system, via downloading, unpacking, compiling and
+installing from the source.
+
+Download iptables source code tarball:
 
   cd ~/download/
   wget http://www.netfilter.org/projects/iptables/files/iptables-1.4.3.2.tar.bz2
@@ -52,49 +56,32 @@ Get the development git development tree here:
  git clone git://people.netfilter.org/hawk/iptv-analyzer.git
 
 
-=== Compiling the kernel module ===
+=== Compiling the userspace iptables module ===
 
-No patching of the Linux kernel is required, but the kernel source is
-required.  The module takes advantage of the kernel build/make system.
+The default make command tries to compile both the iptables userspace
+library and kernel module.  If you only want to compile the iptables
+userspace library call:
 
-Minimum kernel version required is 2.6.28 (due to some RCU changes).
+  make lib
 
-The makefile tries to detect the kernel source via the symlink in:
+Every iptables extension/module is based upon a dynamically loadable
+library file (suffix .so).  These libraries/modules are installed in
+e.g. /usr/local/libexec/xtables/ and are loaded by iptables when
+needed.
 
- /lib/modules/2.6.xx/build
+Thus, the makefile trick is "simply" to create an iptables dynamically
+loadable library "out-of-tree".
 
-The kernel version is extracted by calling 'uname -r' in the makefile.
+All the details can be found in the excellent document titled:
+"Writing Netfilter modules" by Jan Engelhardt:
 
-But its also possibly to compile against another kernel than the
-current running version, by calling:
-
- make KERNEL_DIR=~/git/kernel/davem/net-next-2.6/
-
-If you have a fresh kernel source you might need to call:
-
- make oldconfig
- make prepare
- make modules_prepare
-
-TODO/Issue?: Is it possible to link against a fresh source? As the
-module needs to know the C "extern" adresses.
-
-Another trick, 64-bit vs 32-bit kernel.  The current Makefile assumes
-you want to compile against a 64-bit kernel. This is due to the
-ARCH=x86_64 define. To compile against a 32-bit version just call:
-
- make ARCH=x86
+  http://jengelh.medozas.de/documents/Netfilter_Modules.pdf
 
 
-== Reloading kernel module ==
+=== Trick: Fake stow install ===
 
-Remember to manually rmmod and insmod the kernel module it self.
-
-  rmmod xt_mp2t
-  insmod ./xt_mp2t.ko
-
-
-== Trick: Fake stow install ==
+TODO: Currently the Makefile does not contain an install target for
+the userspace iptables library.  Below is the manual procedure.
 
 Make a fake stow software package for the development version of the
 source.
@@ -113,14 +100,61 @@ the file 'libxt_mp2t.so'
 
   ln -s ~/git/iptv-analyzer/iptables-module/libxt_mp2t.so .
 
-Or the 'libxt_mp2t.so' installed in '/lib/modules/xt_mp2t' (by the
-remote-install.sh script).
+Activate the stow software package 'mp2t_development_fake'.
 
-  ln -s /lib/modules/xt_mp2t/libxt_mp2t.so \
-        /usr/local/stow/mp2t_development_fake/libexec/xtables/
+  cd /usr/local/stow
+  stow mp2t_development_fake
 
-Install (linkin) the stow software package 'mp2t_development_fake'.
 
- cd /usr/local/stow
- stow mp2t_development_fake
+== Compiling the kernel module ==
+
+No patching of the Linux kernel is required, but the kernel source is
+required.  The module takes advantage of the kernel build/make system.
+
+Minimum kernel version required is 2.6.28 (due to some RCU changes).
+
+If you only want to compile the kernel module call:
+
+  make modules
+
+The Makefile tries to detect the kernel source via the symlink in:
+
+  /lib/modules/2.6.xx/build
+
+The kernel version is extracted by calling 'uname -r' in the makefile.
+
+But its also possibly to compile against another kernel than the
+current running version, by calling:
+
+  make KERNEL_DIR=~/git/kernel/davem/net-next-2.6/
+
+If you have a fresh kernel source you might need to call:
+
+  make oldconfig
+  make prepare
+  make modules_prepare
+
+TODO/Issue?: Is it possible to link against a fresh source? As the
+module needs to know the C "extern" adresses.
+
+Another trick, 64-bit vs 32-bit kernel.  The current Makefile assumes
+you want to compile against a 64-bit kernel. This is due to the
+ARCH=x86_64 define. To compile against a 32-bit version just call:
+
+  make ARCH=x86
+
+When the kernel module has been compiled successfully, its possibly to
+install the kernel module via:
+
+  make modules_install
+
+This will install the kernel module into /lib/modules/2.6.xx/extra/
+(via a call to the kernel build system).
+
+=== Reloading kernel module ===
+
+Remember to manually rmmod and insmod the kernel module it self.
+
+  rmmod xt_mp2t
+  insmod ./xt_mp2t.ko
 
