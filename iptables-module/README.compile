@@ -74,6 +74,7 @@ If you have a fresh kernel source you might need to call:
 
  make oldconfig
  make prepare
+ make modules_prepare
 
 TODO/Issue?: Is it possible to link against a fresh source? As the
 module needs to know the C "extern" adresses.
