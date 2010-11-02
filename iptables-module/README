@@ -17,6 +17,7 @@ required.  The module takes advantage of the kernel build/make system.
 
 Minimum kernel version required is 2.6.28 (due to some RCU changes).
 
+See: the README.compile file for further instructions.
 
 == Example: iptables rule ==
 

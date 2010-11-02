@@ -44,14 +44,45 @@ Check the version
  /usr/local/sbin/iptables -V
 
 
-
 == Developement tree ==
 
 Get the development git development tree here:
+(FIXME: Move this to the new domain iptv-analyzer.org)
 
  git clone git://people.netfilter.org/hawk/iptv-analyzer.git
 
-(FIXME: Move this to the new domain iptv-analyzer.org)
+
+=== Compiling the kernel module ===
+
+No patching of the Linux kernel is required, but the kernel source is
+required.  The module takes advantage of the kernel build/make system.
+
+Minimum kernel version required is 2.6.28 (due to some RCU changes).
+
+The makefile tries to detect the kernel source via the symlink in:
+
+ /lib/modules/2.6.xx/build
+
+The kernel version is extracted by calling 'uname -r' in the makefile.
+
+But its also possibly to compile against another kernel than the
+current running version, by calling:
+
+ make KERNEL_DIR=~/git/kernel/davem/net-next-2.6/
+
+If you have a fresh kernel source you might need to call:
+
+ make oldconfig
+ make prepare
+
+TODO/Issue?: Is it possible to link against a fresh source? As the
+module needs to know the C "extern" adresses.
+
+Another trick, 64-bit vs 32-bit kernel.  The current Makefile assumes
+you want to compile against a 64-bit kernel. This is due to the
+ARCH=x86_64 define. To compile against a 32-bit version just call:
+
+ make ARCH=x86
 
 
 == Reloading kernel module ==
