@@ -15,9 +15,14 @@ This iptables module requires minimum iptables 1.4.3.
 
 Download iptables tar-ball:
 
+  cd ~/download/
   wget http://www.netfilter.org/projects/iptables/files/iptables-1.4.3.2.tar.bz2
 
-Unpack the source, somewhere.
+Unpack the source
+
+  cd ~/tools/
+  tar jxvf ~/download/iptables-1.4.3.2.tar.bz2
+  cd iptables-1.4.3.2/
 
 Note, when compiling iptables set 'prefix=/usr/local/' and then when
 installing the prefix should be redefined to the stow path.
@@ -34,6 +39,9 @@ Activate the software via stow:
 
   cd /usr/local/stow/
   stow iptables-1.4.3.2
+
+Check the version
+ /usr/local/sbin/iptables -V
 
 
 
