@@ -1,0 +1,54 @@
+
+
+Developers setup
+~~~~~~~~~~~~~~~~
+
+ I'm using GNU 'stow' to handle my out-of-distro installed software.
+
+ Download iptables tar-ball:
+
+   wget http://www.netfilter.org/projects/iptables/files/iptables-1.4.3.2.tar.bz2
+
+ Install iptables in /usr/local/stow/iptables-1.4.3.2.
+ Note, when compiling iptables set 'prefix=/usr/local/' and then when
+ installing the prefix should be redefined to the stow path:
+
+   ./configure --prefix=/usr/local/
+   make
+   make prefix=/usr/local/stow/iptables-1.4.3.2 install
+
+ Make a fake stow software package by creating directory:
+
+   mkdir /usr/local/stow/mp2t_development_fake/
+
+ And create the directories libexec/xtables/ within.
+
+   mkdir -p /usr/local/stow/mp2t_development_fake/libexec/xtables/
+   cd       /usr/local/stow/mp2t_development_fake/libexec/xtables/
+
+ Create a symlink from this directory to your development edition of
+ the file 'libxt_mp2t.so'
+
+   ln -s /home/jdb/svn/dcu/kernel/modules/iptables_mpeg2ts/libxt_mp2t.so .
+
+ Or the 'libxt_mp2t.so' installed in '/lib/modules/xt_mp2t' (by the
+ remote-install.sh script).
+
+   ln -s /lib/modules/xt_mp2t/libxt_mp2t.so \
+         /usr/local/stow/mp2t_development_fake/libexec/xtables/
+
+ (Development tree:)
+
+   cd ~/svn/
+   svn co http://svn.cxnet.dk/svn/dcu/trunk dcu
+
+ Install (linkin) the stow software package 'mp2t_development_fake'.
+
+   cd /usr/local/stow
+   stow mp2t_development_fake
+
+ Remember to manually rmmod and insmod the kernel module it self.
+
+   rmmod xt_mp2t
+   insmod ./xt_mp2t.ko
+
