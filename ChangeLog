@@ -5,7 +5,7 @@ Recent changes
 
 	* Version 0.3.0-devel.
 
-	The version change is only a developers release.  I just want to
+	This version change is only a developers release.  I just want to
 	make sure that the SVN and GIT version uses a different version,
 	to avoid confusion.
 
@@ -24,7 +24,7 @@ Recent changes
 
 	* Version 0.2.1-devel.
 
-	  Update the iptables module to be compatible with kerenl 2.6.35.
+	  Update the iptables module to be compatible with kernel 2.6.35.
 	  Send the iptables code for review during Netfilter Workshop 2010.
 
 2009-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
@@ -32,14 +32,14 @@ Recent changes
 	* Version 0.2.0-devel.
 
 	  Significant changes to the proc file output.  Now everything in
-	  the proc file consists of "key:value" pairs seperated with
+	  the proc file consists of "key:value" pairs separated with
 	  spaces.
 
 2009-10-15  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* SVN:[1555] Version 0.1.6.
 
-	  This version corrospond to the version currently (14/10-2009)
+	  This version correspond to the version currently (14/10-2009)
 	  running in production on tvprobe002a and tvprobe003a.cxnet.dk.
 	  This version needs some bug fixes, but I want a checkpoint and
 	  a tagged SVN release.
