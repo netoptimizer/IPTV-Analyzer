@@ -54,6 +54,9 @@ modules:
 	@echo -e "\n  -=-=-=-=- Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
+modules_install:
+	@echo -e "\n  -=-=-=-=- INSTALL Kernel modules -=-=-=-=-"
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install
 
 sparse:
 	@echo -e "\n  -=-=-=-=- SPARSE CHECK: Kernel modules -=-=-=-=-"
