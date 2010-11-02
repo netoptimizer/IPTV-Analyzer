@@ -1,0 +1,52 @@
+
+= Lab setup =
+
+Its possible to setup a simple IPTV testlab using Open Source
+components.  And you can even introduce and control the packets drops.
+
+Here are some useful commands to make a testlab setup, where we can
+generate a multicast signal (MPEG2 Transport Stream) signal and
+control the loss rate.
+
+
+== Create a mp2t ts packet multicast stream ==
+
+Using VLC to create a multicast stream from a file:
+
+  vlc ~/dvdrip/Far_Til_Fire.ts -I rc --sout \
+   '#duplicate{dst=std{access=udp,mux=ts,dst=239.254.1.1:5500}}'
+
+
+Recode a stream from a file:
+
+  vlc ~/Xx27RyOnruU.flv --ttl 5 -I rc --sout \
+   '#transcode{vcodec=mp4v,vb=1024,scale=1,acodec=mpga,ab=192,channels=2}:duplicate{dst=std{access=udp,mux=ts,dst=239.254.1.1:5500}}'
+
+
+Send a incomming multicast stream out again using another multicast
+address:
+
+
+  vlc --ttl 10 udp/ts://@239.123.173.3:5500 --sout \
+  '#duplicate{dst=std{access=udp,mux=ts,dst=239.254.1.1:5500}}' -I rc
+
+
+
+== Dropping packets on purpose ==
+
+Create a 0.1 percent packet loss on eth6
+
+  tc qdisc add    dev eth6 root netem loss 0.1%
+
+
+Next, change the packet loss percent on eth6 to 1.1 percent, and
+introduce a "burst" of loss
+
+  tc qdisc change dev eth6 root netem loss 1.1% 25%
+
+Think it means give it a 25 percent change that the next packet drop
+occur close to this one. (see explaination:
+http://www.linuxfoundation.org/en/Net:Netem section: "Packet loss").
+With their formulation, this will cause 1.1% of packets to be lost,
+and each successive probability depends by a quarter on the last one.
+
