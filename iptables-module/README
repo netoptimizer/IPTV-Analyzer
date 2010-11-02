@@ -1,0 +1,111 @@
+
+TODO: This README file is kind of incomplete....
+
+= iptables kernel module =
+
+This xt_mp2t iptables kernel module analyses the contents of MPEG2
+Transport Stream (TS) packets, and can detect TS/CC packet drops.
+
+
+== Example: iptables rule ==
+
+An iptables rules that matches all MPEG2 TS traffic.
+
+  iptables -t mangle -I PREROUTING -p udp -m mp2t
+
+Notice how its necessary to add '-p udp' as the match module only
+accepts UDP traffic.
+
+
+== Proc file containing stats ==
+
+When creating a 'mp2t' iptables rule, a corresponding proc file is
+created in /proc/net/xt_mp2t/rule_NAME.
+
+* This file contains the stats.
+
+When creating the iptables rule, its possible to specify a '--name'
+for the proc file, which will replace the "NAME" (in rule_NAME).
+
+If no '--name' is specified then the rule "NAME" will be an
+increasing number, that corrosponds the number of "mp2t" rules that
+has been created (since the kernel module "xt_mp2t" were loaded).
+
+[FIXME: Needs fixing]
+(Currently) If the same name is specified more than once, then the
+kernel will give a WARNING, but the proc file will still be valid,
+and will simply "cover" the previous one.  (Then this rule is deleted
+again, then the old proc file will again be accessable. But be warned
+don't delete them in the wrong direction, then "BUG: soft lockup"
+will occur!!!)
+
+
+  WARNING: at fs/proc/generic.c:590 proc_register+0x161/0x1a4()
+  proc_dir_entry 'xt_mp2t/rule_TEST' already registered
+
+
+== Logging levels: msg_level ==
+
+The xt_mp2t kernel module has different levels of logging
+statements, which can be adjusted runtime for debugging
+purposes.  The levels are based upon the kernels netdevice log
+infrastructure system, mostly used by Ethernet device drivers.
+
+The levels are adjusted via a bit-vector called "msg_level".
+
+The "msg_level" is runtime adjustable via:
+
+  /sys/module/xt_mp2t/parameters/msg_level
+
+And its possible to set it when loading the module:
+
+  insmod xt_mp2t msg_level=0x877
+
+The possible bit values can be see in kernel source version of:
+
+  kernel-src/include/linux/netdevice.h
+
+
+=== msg_level: RX_STATUS ===
+
+Enabling the RX_STATUS bit (0x0800) in msg_level, results in the
+module will printk when it detects CC-skips and
+discontinuity (where a discontinuity cover several CC skips).
+
+* CC-skips, is printed at KERN_INFO level.
+
+* Discontinuities, is printed at KERN_NOTICE level.
+
+Notice, that these syslog messages are rate limited (via
+net_ratelimit) and therefor CANNOT be trused to be used for
+parsing to obtain the drops.  These messages are for debugging
+purposes to corrolate specific issues within streams where
+detailed level is required (e.g. per PID drop info).
+
+On the TODO list is a Netlink implementation, which will provide
+the required information stability and give highres
+timestamping.
+
+
+=== Possible logging levels ===
+
+From 'include/linux/netdevice.h'
+
+  enum {
+        NETIF_MSG_DRV           = 0x0001,
+        NETIF_MSG_PROBE         = 0x0002,
+        NETIF_MSG_LINK          = 0x0004,
+        NETIF_MSG_TIMER         = 0x0008,
+        NETIF_MSG_IFDOWN        = 0x0010,
+        NETIF_MSG_IFUP          = 0x0020,
+        NETIF_MSG_RX_ERR        = 0x0040,
+        NETIF_MSG_TX_ERR        = 0x0080,
+        NETIF_MSG_TX_QUEUED     = 0x0100,
+        NETIF_MSG_INTR          = 0x0200,
+        NETIF_MSG_TX_DONE       = 0x0400,
+        NETIF_MSG_RX_STATUS     = 0x0800,
+        NETIF_MSG_PKTDATA       = 0x1000,
+        NETIF_MSG_HW            = 0x2000,
+        NETIF_MSG_WOL           = 0x4000,
+  };
+
