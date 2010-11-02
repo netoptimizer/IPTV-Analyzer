@@ -28,9 +28,14 @@ LIB_CFLAGS   ?=-O2 -ggdb3 -Wall -fPIC
 #   tables.
 #
 
-# We prefer to use 64bit kernels
-ARCH ?= x86_64
-export ARCH
+# Its possible to compile the module against a 64-bit kernel,
+# on a 32-bit system, by define ARCH=x86_64
+#
+# You can simply call:
+#   make ARCH=x86_64
+#
+# ARCH ?= x86_64
+# export ARCH
 
 # Trick to modify kernels CFLAGS
 #KBUILD_CFLAGS+=-g -O0

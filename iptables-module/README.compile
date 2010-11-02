@@ -137,19 +137,29 @@ If you have a fresh kernel source you might need to call:
 TODO/Issue?: Is it possible to link against a fresh source? As the
 module needs to know the C "extern" adresses.
 
-Another trick, 64-bit vs 32-bit kernel.  The current Makefile assumes
-you want to compile against a 64-bit kernel. This is due to the
-ARCH=x86_64 define. To compile against a 32-bit version just call:
-
-  make ARCH=x86
+=== Installing the kernel module ===
 
 When the kernel module has been compiled successfully, its possibly to
-install the kernel module via:
+install the kernel module, as root, via:
 
   make modules_install
 
 This will install the kernel module into /lib/modules/2.6.xx/extra/
-(via a call to the kernel build system).
+(via a call to the kernel build system, this might call depmod for
+you).
+
+After the install you should call (as root):
+
+  depmod -a
+
+If its another kernel than the running kernel you need to add the
+kernel-version as an argument to depmod
+
+A small test to see if the kernel module got installed and depmod
+correctly call:
+
+ modinfo -k $KERNEL_VER xt_mp2t
+
 
 === Reloading kernel module ===
 
@@ -157,4 +167,3 @@ Remember to manually rmmod and insmod the kernel module it self.
 
   rmmod xt_mp2t
   insmod ./xt_mp2t.ko
-
