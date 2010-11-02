@@ -1,6 +1,14 @@
 
 Recent changes
 
+2010-11-02  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.3.0-devel.
+
+	The version change is only a developers release.  I just want to
+	make sure that the SVN and GIT version uses a different version,
+	to avoid confusion.
+
 2010-10-29  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Converting from SVN to GIT
