@@ -245,12 +245,8 @@ struct pid_data_t {
 
 /* Data to match a stream / connection */
 struct mp2t_stream_match { /* Like xt_hashlimit: dsthash_dst */
-	union {
-		struct {
-			__be32 dst; /* MC addr first */
-			__be32 src;
-		} ip;
-	};
+	__be32 dst_addr; /* MC addr first */
+	__be32 src_addr;
 	__be16 dst_port;
 	__be16 src_port;
 };
@@ -969,8 +965,8 @@ dissect_mp2t(unsigned char *payload_ptr, u16 payload_len,
 
 	/* Fill in the match struct */
 	memset(&match, 0, sizeof(match)); /* Worried about struct padding */
-	match.ip.src = iph->saddr;
-	match.ip.dst = iph->daddr;
+	match.src_addr = iph->saddr;
+	match.dst_addr = iph->daddr;
 	match.src_port = uh->source;
 	match.dst_port = uh->dest;
 
@@ -1246,8 +1242,8 @@ static int mp2t_seq_show_real(struct mp2t_stream *stream, struct seq_file *s,
 	res = seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
 			    "pids:%d skips:%llu discontinuity:%llu\n",
 			 bucket,
-			 &stream->match.ip.dst,
-			 &stream->match.ip.src,
+			 &stream->match.dst_addr,
+			 &stream->match.src_addr,
 			 ntohs(stream->match.dst_port),
 			 ntohs(stream->match.src_port),
 			 stream->pid_list_len,
