@@ -32,9 +32,9 @@ struct xt_rule_mp2t_conn_htable;
 struct mp2t_cfg {
 
 	/* Hash table setup */
-	u_int32_t size;		/* how many hash buckets */
-	u_int32_t max;		/* max number of entries */
-	u_int32_t max_list;	/* warn if list searches exceed this number */
+	__u32 size;		/* how many hash buckets */
+	__u32 max;		/* max number of entries */
+	__u32 max_list;	/* warn if list searches exceed this number */
 };
 
 
