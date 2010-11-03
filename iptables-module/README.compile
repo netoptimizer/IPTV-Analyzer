@@ -137,6 +137,47 @@ If you have a fresh kernel source you might need to call:
 TODO/Issue?: Is it possible to link against a fresh source? As the
 module needs to know the C "extern" adresses.
 
+=== Loading the kernel module manually ===
+
+Its possibly to load the kernel module via insmod, without installing
+the module into /lib/modules/2.6.xx/ (see below howto perform the
+install).
+
+* But be warned that the systems does not automatically load
+  dependencies.
+
+First of all you need to make sure that the iptables module have been
+loaded (e.g x_tables, ip_tables, iptable_mangle, iptable_filter etc.).
+The easiest way to get these modules loaded is simple to invoke the
+'iptables -L' command line tool.
+
+The kernel module compile, actually produced two kernel modules:
+
+* xt_mp2t.ko
+* compat_xtables.ko
+
+If you kernel version <= 2.6.34, then you also need to load the kernel
+module "compat_xtables.ko"
+
+  insmod ./compat_xtables.ko
+
+Next, you need to load the real kernel module:
+
+  insmod ./xt_mp2t,ko
+
+If the loading failed with (e.g. "Unknown symbol in module") use
+'dmesg' to see the real error message.
+
+
+=== Reloading kernel module ===
+
+When making modifications to the kernel module remember to manually
+rmmod and insmod the kernel module again.
+
+  rmmod xt_mp2t
+  insmod ./xt_mp2t.ko
+
+
 === Installing the kernel module ===
 
 When the kernel module has been compiled successfully, its possibly to
@@ -161,9 +202,3 @@ correctly call:
  modinfo -k $KERNEL_VER xt_mp2t
 
 
-=== Reloading kernel module ===
-
-Remember to manually rmmod and insmod the kernel module it self.
-
-  rmmod xt_mp2t
-  insmod ./xt_mp2t.ko
