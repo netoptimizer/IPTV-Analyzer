@@ -22,9 +22,6 @@
 
 #include <linux/rculist.h>
 
-#include "xt_mp2t.h"
-#include "compat_xtables.h"
-
 #include <linux/netdevice.h> /* msg levels */
 
 /* Proc file related */
@@ -33,6 +30,9 @@
 
 /* Timestamp related */
 #include <linux/time.h>
+
+#include "xt_mp2t.h"
+#include "compat_xtables.h"
 
 MODULE_AUTHOR("Jesper Dangaard Brouer <jdb@comx.dk>");
 MODULE_DESCRIPTION("Detecting packet drops in MPEG2 Transport Streams (TS)");
