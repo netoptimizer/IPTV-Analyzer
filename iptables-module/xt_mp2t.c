@@ -1168,18 +1168,16 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 	return res;
 }
 
-static struct xt_match mp2t_mt_reg[] __read_mostly = {
-	{
-		.name           = "mp2t",
-		.revision       = 0,
-		.family         = NFPROTO_IPV4,
-		.match          = xt_mp2t_match,
-		.checkentry     = xt_mp2t_mt_check,
-		.destroy        = xt_mp2t_mt_destroy,
-		.proto		= IPPROTO_UDP,
-		.matchsize      = sizeof(struct xt_mp2t_mtinfo),
-		.me             = THIS_MODULE,
-	},
+static struct xt_match mp2t_mt_reg __read_mostly = {
+	.name       = "mp2t",
+	.revision   = 0,
+	.family     = NFPROTO_IPV4,
+	.match      = xt_mp2t_match,
+	.checkentry = xt_mp2t_mt_check,
+	.destroy    = xt_mp2t_mt_destroy,
+	.proto      = IPPROTO_UDP,
+	.matchsize  = sizeof(struct xt_mp2t_mtinfo),
+	.me         = THIS_MODULE,
 };
 
 
@@ -1372,7 +1370,7 @@ static int __init mp2t_mt_init(void)
 	msg_dbg(DRV, "Message level (msg_level): 0x%X", msg_level);
 
 	/* Register the mp2t matches */
-	err = xt_register_matches(mp2t_mt_reg, ARRAY_SIZE(mp2t_mt_reg));
+	err = xt_register_match(&mp2t_mt_reg);
 	if (err) {
 		msg_err(DRV, "unable to register matches");
 		return err;
@@ -1384,7 +1382,7 @@ static int __init mp2t_mt_init(void)
 	if (!mp2t_procdir) {
 		msg_err(DRV, "unable to create proc dir entry");
 		/* In case of error unregister the mp2t matches */
-		xt_unregister_matches(mp2t_mt_reg, ARRAY_SIZE(mp2t_mt_reg));
+		xt_unregister_match(&mp2t_mt_reg);
 		err = -ENOMEM;
 	}
 #endif
@@ -1398,7 +1396,7 @@ static void __exit mp2t_mt_exit(void)
 
 	remove_proc_entry(XT_MODULE_NAME, init_net.proc_net);
 
-	xt_unregister_matches(mp2t_mt_reg, ARRAY_SIZE(mp2t_mt_reg));
+	xt_unregister_match(&mp2t_mt_reg);
 
 	/* Its important to wait for all call_rcu_bh() callbacks to
 	 * finish before this module is deallocated as the code
