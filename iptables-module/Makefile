@@ -11,6 +11,11 @@ LIB_TARGETS := libxt_mp2t.so
 obj-m += xt_mp2t.o
 #obj-m += seq_example.o
 
+# Jan Engelhardt's compat_xtables module stolen from xtables-addon project
+#  git://xtables-addons.git.sf.net/gitroot/xtables-addons/xtables-addons/
+obj-m += compat_xtables.o
+
+
 # Environment variables that can be overwritten/redefined
 # --------
 KERNEL_DIR   ?= /lib/modules/$(shell uname -r)/build
