@@ -1209,7 +1209,7 @@ static void *mp2t_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
 	struct proc_dir_entry *pde = s->private;
 	struct xt_rule_mp2t_conn_htable *htable = pde->data;
-	unsigned int *bucket = (unsigned int *)v;
+	unsigned int *bucket = v;
 
 	if (v == SEQ_START_TOKEN) {
 		bucket = kmalloc(sizeof(unsigned int), GFP_ATOMIC);
@@ -1231,7 +1231,7 @@ static void *mp2t_seq_next(struct seq_file *s, void *v, loff_t *pos)
 
 static void mp2t_seq_stop(struct seq_file *s, void *v)
 {
-	unsigned int *bucket = (unsigned int *)v;
+	unsigned int *bucket = v;
 	kfree(bucket);
 }
 
@@ -1266,7 +1266,7 @@ static int mp2t_seq_show(struct seq_file *s, void *v)
 {
 	struct proc_dir_entry *pde = s->private;
 	struct xt_rule_mp2t_conn_htable *htable = pde->data;
-	unsigned int *bucket = (unsigned int *)v;
+	unsigned int *bucket = v;
 	struct mp2t_stream *stream;
 	struct hlist_node *pos;
 	struct timespec delta;
