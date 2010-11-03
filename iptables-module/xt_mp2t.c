@@ -361,8 +361,8 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 	hash_struct_sz = sizeof(*minfo->hinfo); /* metadata struct size */
 	size = hash_struct_sz +	sizeof(struct list_head) * hash_buckets;
 
-	msg_info(IFUP, "Alloc htable(%u) %d bytes elems:%d metadata:%d bytes",
-		 id, (int)size, hash_buckets, hash_struct_sz);
+	msg_info(IFUP, "Alloc htable(%u) %zu bytes elems:%u metadata:%u bytes",
+		 id, size, hash_buckets, hash_struct_sz);
 
 	hinfo = kzalloc(size, GFP_ATOMIC);
 	if (hinfo == NULL) {
@@ -728,7 +728,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
 	/* Remove proc entry */
 	remove_proc_entry(ht->pde->name, mp2t_procdir);
 
-	msg_info(IFDOWN, "Destroy stream elements (%d count) in htable(%u)",
+	msg_info(IFDOWN, "Destroy stream elements (%u count) in htable(%u)",
 		 ht->count, ht->id);
 	msg_dbg(IFDOWN, "Find stream, not found %d times",
 		ht->stream_not_found);
@@ -755,7 +755,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
 	spin_unlock(&ht->lock);
 
 	msg_info(IFDOWN,
-		 "Free htable(%u) (%d buckets) longest list search %d",
+		 "Free htable(%u) (%u buckets) longest list search %d",
 		 ht->id, ht->cfg.size, ht->max_list_search);
 
 	if (ht->count != 0)
@@ -922,7 +922,7 @@ dissect_tsp(unsigned char *payload_ptr, u16 payload_len,
 	afc     = (header & MP2T_AFC_MASK) >> MP2T_AFC_SHIFT;
 	cc_curr = (header & MP2T_CC_MASK)  >> MP2T_CC_SHIFT;
 
-	msg_dbg(PKTDATA, "TS header:0x%X pid:%d cc:%d afc:%d",
+	msg_dbg(PKTDATA, "TS header:0x%X pid:%d cc:%d afc:%u",
 		header, pid, cc_curr, afc);
 
 	/* Adaption Field Control header */
