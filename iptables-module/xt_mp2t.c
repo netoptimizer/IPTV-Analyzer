@@ -902,7 +902,7 @@ detect_cc_drops(struct pid_data_t *pid_data, int8_t cc_curr,
 
 
 static int
-dissect_tsp(unsigned char *payload_ptr, u16 payload_len,
+dissect_tsp(const unsigned char *payload_ptr, u16 payload_len,
 	    const struct sk_buff *skb, struct mp2t_stream *stream)
 {
 	__be32 header;
@@ -912,7 +912,11 @@ dissect_tsp(unsigned char *payload_ptr, u16 payload_len,
 	int skips = 0;
 	struct pid_data_t *pid_data;
 
-	/* Process header*/
+	/*
+	 * Process header. TSP headers come every MP2T_PACKET_SIZE bytes,
+	 * which is a multiple of 32 bits, so not using get_unaligned
+	 * is ok here.
+	 */
 	header  = ntohl(*(u32 *)payload_ptr);
 	pid     = (header & MP2T_PID_MASK) >> MP2T_PID_SHIFT;
 	afc     = (header & MP2T_AFC_MASK) >> MP2T_AFC_SHIFT;
@@ -945,7 +949,7 @@ dissect_tsp(unsigned char *payload_ptr, u16 payload_len,
 
 
 static int
-dissect_mp2t(unsigned char *payload_ptr, u16 payload_len,
+dissect_mp2t(const unsigned char *payload_ptr, u16 payload_len,
 	     const struct sk_buff *skb, const struct udphdr *uh,
 	     const struct xt_mp2t_mtinfo *info)
 {
@@ -1037,7 +1041,7 @@ dissect_mp2t(unsigned char *payload_ptr, u16 payload_len,
 
 
 static bool
-is_mp2t_packet(unsigned char *payload_ptr, u16 payload_len)
+is_mp2t_packet(const unsigned char *payload_ptr, u16 payload_len)
 {
 	u16 offset = 0;
 
@@ -1076,7 +1080,7 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 	u16 ulen;
 	u16 hdr_size;
 	u16 payload_len;
-	unsigned char *payload_ptr;
+	const unsigned char *payload_ptr;
 
 	bool res = false;
 	int skips = 0;
