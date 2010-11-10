@@ -11,6 +11,58 @@ The basic command to produce a makefile is:
  perl Makefile.PL
 
 
+== INSTALLATION ==
+
+To install this module type the following:
+
+  perl Makefile.PL
+  make
+  make install
+
+To install this software/module in a controllable fashion, I recommend
+using 'stow'.  Using stow requires the ability to install the binaries
+to an alternative path.   Use the following commands:
+
+  perl Makefile.PL PREFIX=/usr/local/
+  make
+  make install PREFIX=/usr/local/stow/iptv-collector-0.3.x
+
+The stow part:
+
+  cd /usr/local/stow/
+  stow iptv-collector-0.3.x
+
+
+== DAEMON ==
+
+The collector daemon is call 'iptv-collector'.
+
+Its simply started by calling 'iptv-collector', which will
+automatically spawn a daemon process.
+
+The daemon can be restarted by simple starting another
+'iptv-collector' process, which will detect and kill the other daemon
+process.  The reason this is implemented, is because we cannot allow
+two collector processes to operating at the same time, as they would
+record drop count twice into the database.
+
+TODO: Describe the pid file perms problem
+
+
+=== CONFIG FILES ===
+
+The iptv-collector daemon depends on two config files:
+
+  /etc/log4perl.conf
+
+and
+
+  /etc/tvprobe.conf
+  (this should be changed to iptv-collector.conf)
+
+Example config files are available under "etc" directory.
+
+
 == DEPENDENCIES ==
 
 The dependencies will hopefully be detected for you when generating
@@ -32,11 +84,6 @@ The following Debian packages are needed by the collector daemon:
    (libipc-shareable-perl liblog-dispatch-perl  libparams-validate-perl)
 * mysql-client
 * mysql-server
-
-
-== CONFIG FILES ==
-
-Example config files are available under "etc" directory.
 
 
 == COPYRIGHT AND LICENCE ==
