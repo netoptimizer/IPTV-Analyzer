@@ -1,6 +1,17 @@
 
 Recent changes
 
+2010-11-17  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.3.1.
+
+	This version uses/integrates the compat_xtables kernel module from
+	the Xtables-addons project.  This should (hopefully) make the
+	iptables module compatible with more kernel versions.  In theory
+	the kernel module should be compatible with kernel versions from
+	2.6.27 to 2.6.36 (although this is untested).
+
+
 2010-11-02  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.3.0-devel.

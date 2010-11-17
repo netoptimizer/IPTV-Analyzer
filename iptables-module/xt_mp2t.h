@@ -13,8 +13,8 @@
 #define _LINUX_NETFILTER_XT_MP2T_MATCH_H 1
 
 #define XT_MODULE_NAME		"xt_mp2t"
-#define XT_MODULE_VERSION	"0.3.0-devel"
-#define XT_MODULE_RELDATE	"Nov 2, 2010"
+#define XT_MODULE_VERSION	"0.3.1"
+#define XT_MODULE_RELDATE	"Nov 17, 2010"
 #define PFX			XT_MODULE_NAME ": "
 
 static char version[] =
