@@ -23,7 +23,7 @@ Recode a stream from a file:
    '#transcode{vcodec=mp4v,vb=1024,scale=1,acodec=mpga,ab=192,channels=2}:duplicate{dst=std{access=udp,mux=ts,dst=239.254.1.1:5500}}'
 
 
-Send a incomming multicast stream out again using another multicast
+Send a incoming multicast stream out again using another multicast
 address:
 
 
@@ -44,8 +44,8 @@ introduce a "burst" of loss
 
   tc qdisc change dev eth6 root netem loss 1.1% 25%
 
-Think it means give it a 25 percent change that the next packet drop
-occur close to this one. (see explaination:
+Think it means give it a 25 percent chance that the next packet drop
+occur close to this one. (see explanation:
 http://www.linuxfoundation.org/en/Net:Netem section: "Packet loss").
 With their formulation, this will cause 1.1% of packets to be lost,
 and each successive probability depends by a quarter on the last one.
