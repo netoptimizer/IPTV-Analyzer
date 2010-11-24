@@ -62,7 +62,7 @@ static int mp2t_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 			 const void *entry, struct xt_entry_match **match)
 {
 	struct xt_mp2t_mtinfo *info = (void *)(*match)->data;
-	u_int32_t num;
+	uint32_t num;
 
 	switch (c) {
 	case 'n': /* --name */

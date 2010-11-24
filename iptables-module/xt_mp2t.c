@@ -262,8 +262,8 @@ struct mp2t_stream { /* Like xt_hashlimit: dsthash_ent */
 
 	/* Per stream total skips and discontinuity */
 	/* TODO: Explain difference between skips and discontinuity */
-	u64 skips;
-	u64 discontinuity;
+	uint64_t skips;
+	uint64_t discontinuity;
 
 	/* lock for writing/changing/updating */
 	spinlock_t lock;
@@ -296,7 +296,7 @@ struct xt_rule_mp2t_conn_htable {
 	struct list_head list;		/* global list of all htables */
 	atomic_t use;			/* reference counting  */
 	unsigned int id;		/* id corrosponding to rule_id */
-	/* u_int8_t family; */ /* needed for IPv6 support */
+	/* uint8_t family; */ /* needed for IPv6 support */
 
 	/* "cfg" is also defined here as the real hash array size might
 	 * differ from the user defined size, and changing the
@@ -306,10 +306,10 @@ struct xt_rule_mp2t_conn_htable {
 
 	/* Used internally */
 	spinlock_t lock;		/* write lock for hlist_head */
-	u_int32_t rnd;			/* random seed for hash */
+	uint32_t rnd;			/* random seed for hash */
 	int rnd_initialized;
 	unsigned int count;		/* number entries in table */
-	u_int16_t warn_condition;	/* limiting warn printouts */
+	uint16_t warn_condition;	/* limiting warn printouts */
 
 	/* Rule creation time can be used by userspace to 1) determine
 	 * the running periode and 2) to detect if the rule has been
@@ -431,12 +431,12 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 	return true;
 }
 
-static u_int32_t
+static uint32_t
 hash_match(const struct xt_rule_mp2t_conn_htable *ht,
 	   const struct mp2t_stream_match *match)
 {
-	u_int32_t hash = jhash2((const u32 *)match,
-				sizeof(*match)/sizeof(u32),
+	uint32_t hash = jhash2((const uint32_t *)match,
+				sizeof(*match) / sizeof(uint32_t),
 				ht->rnd);
 	/*
 	 * Instead of returning hash % ht->cfg.size (implying a divide)
@@ -444,7 +444,7 @@ hash_match(const struct xt_rule_mp2t_conn_htable *ht,
 	 * give results between [0 and cfg.size-1] and same hash distribution,
 	 * but using a multiply, less expensive than a divide
 	 */
-	return ((u64)hash * ht->cfg.size) >> 32;
+	return ((uint64_t)hash * ht->cfg.size) >> 32;
 }
 
 static inline
@@ -460,7 +460,7 @@ mp2t_stream_find(struct xt_rule_mp2t_conn_htable *ht,
 {
 	struct mp2t_stream *entry;
 	struct hlist_node  *pos;
-	u_int32_t hash;
+	uint32_t hash;
 	int cnt = 0;
 
 #if PERFTUNE
@@ -565,7 +565,7 @@ mp2t_stream_alloc_init(struct xt_rule_mp2t_conn_htable *ht,
 	struct mp2t_stream *entry; /* hashtable entry */
 	unsigned int entry_sz;
 	size_t size;
-	u_int32_t hash;
+	uint32_t hash;
 
 	/* initialize hash with random val at the time we allocate
 	 * the first hashtable entry */
@@ -782,7 +782,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
  */
 
 static struct xt_rule_mp2t_conn_htable*
-conn_htable_get(u32 rule_id)
+conn_htable_get(uint32_t rule_id)
 {
 	struct xt_rule_mp2t_conn_htable *hinfo;
 
@@ -902,12 +902,12 @@ detect_cc_drops(struct pid_data_t *pid_data, int8_t cc_curr,
 
 
 static int
-dissect_tsp(const unsigned char *payload_ptr, u16 payload_len,
+dissect_tsp(const unsigned char *payload_ptr, uint16_t payload_len,
 	    const struct sk_buff *skb, struct mp2t_stream *stream)
 {
 	__be32 header;
-	u16 pid;
-	u8 afc;
+	uint16_t pid;
+	uint8_t afc;
 	int8_t cc_curr;
 	int skips = 0;
 	struct pid_data_t *pid_data;
@@ -917,7 +917,7 @@ dissect_tsp(const unsigned char *payload_ptr, u16 payload_len,
 	 * which is a multiple of 32 bits, so not using get_unaligned
 	 * is ok here.
 	 */
-	header  = ntohl(*(u32 *)payload_ptr);
+	header  = ntohl(*(uint32_t *)payload_ptr);
 	pid     = (header & MP2T_PID_MASK) >> MP2T_PID_SHIFT;
 	afc     = (header & MP2T_AFC_MASK) >> MP2T_AFC_SHIFT;
 	cc_curr = (header & MP2T_CC_MASK)  >> MP2T_CC_SHIFT;
@@ -949,11 +949,11 @@ dissect_tsp(const unsigned char *payload_ptr, u16 payload_len,
 
 
 static int
-dissect_mp2t(const unsigned char *payload_ptr, u16 payload_len,
+dissect_mp2t(const unsigned char *payload_ptr, uint16_t payload_len,
 	     const struct sk_buff *skb, const struct udphdr *uh,
 	     const struct xt_mp2t_mtinfo *info)
 {
-	u16 offset = 0;
+	uint16_t offset = 0;
 	int skips  = 0;
 	int skips_total = 0;
 	int discontinuity = 0;
@@ -1041,9 +1041,9 @@ dissect_mp2t(const unsigned char *payload_ptr, u16 payload_len,
 
 
 static bool
-is_mp2t_packet(const unsigned char *payload_ptr, u16 payload_len)
+is_mp2t_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 {
-	u16 offset = 0;
+	uint16_t offset = 0;
 
 	/* IDEA/TODO: Detect wrong/changing TS mappings */
 
@@ -1077,9 +1077,9 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 	const struct udphdr *uh;
 	struct udphdr _udph;
 	__be32 saddr, daddr;
-	u16 ulen;
-	u16 hdr_size;
-	u16 payload_len;
+	uint16_t ulen;
+	uint16_t hdr_size;
+	uint16_t payload_len;
 	const unsigned char *payload_ptr;
 
 	bool res = false;
