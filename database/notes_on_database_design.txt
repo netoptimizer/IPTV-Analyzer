@@ -601,6 +601,19 @@ GROUP BY datoen, probe_id
 +--------
 
 
+Indexes
+~~~~~~~
+
+ Our DB admin helped me out and created these indexes:
+
+  create index idx_time_probe on log_event(record_time, probe_id);
+
+ He notes that the function multicast_list_query() is rather
+ expensive, and perhaps should be optimized by changing PHP select
+ code. But he created this index which helps:
+
+  create index idx_mcast on log_event(multicast_dst);
+
 
 
 NOTES:
