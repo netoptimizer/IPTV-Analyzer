@@ -680,7 +680,7 @@ xt_mp2t_mt_check(const struct xt_mtchk_param *par)
 		return 0; /* success */
 	}
 
-	if (mp2t_htable_create(info) == false) {
+	if (!mp2t_htable_create(info)) {
 		msg_err(DRV, "Error creating hash table");
 		return -ENOMEM;
 	}
