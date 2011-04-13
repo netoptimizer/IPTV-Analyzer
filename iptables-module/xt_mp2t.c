@@ -227,7 +227,7 @@ MODULE_PARM_DESC(msg_level, "Message level bit mask");
 /*** Global defines ***/
 static DEFINE_SPINLOCK(mp2t_lock); /* Protects conn_htables list */
 static LIST_HEAD(conn_htables);    /* List of xt_rule_mp2t_conn_htable's */
-static u_int32_t GLOBAL_ID;	   /* Used for assigning rule_id's */
+static unsigned int GLOBAL_ID;	   /* Used for assigning rule_id's */
 /* TODO/FIXME: xt_hashlimit has this extra mutex, do I need it?
 static DEFINE_MUTEX(mp2t_mutex);*/ /* Additional checkentry protection */
 
@@ -299,7 +299,7 @@ struct xt_rule_mp2t_conn_htable {
 	 */
 	struct list_head list;		/* global list of all htables */
 	atomic_t use;			/* reference counting  */
-	u_int32_t id;			/* id corrosponding to rule_id */
+	unsigned int id;		/* id corrosponding to rule_id */
 	/* u_int8_t family; */ /* needed for IPv6 support */
 
 	/* "cfg" is also defined here as the real hash array size might
@@ -345,7 +345,7 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 	unsigned int hash_struct_sz;
 	char rule_name[IFNAMSIZ+5];
 	unsigned int i;
-	u_int32_t id;
+	unsigned int id;
 	size_t size;
 
 	/* Q: is lock with mp2t_lock necessary */
@@ -361,12 +361,12 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 	hash_struct_sz = sizeof(*minfo->hinfo); /* metadata struct size */
 	size = hash_struct_sz +	sizeof(struct list_head) * hash_buckets;
 
-	msg_info(IFUP, "Alloc htable(%d) %d bytes elems:%d metadata:%d bytes",
+	msg_info(IFUP, "Alloc htable(%u) %d bytes elems:%d metadata:%d bytes",
 		 id, (int)size, hash_buckets, hash_struct_sz);
 
 	hinfo = kzalloc(size, GFP_ATOMIC);
 	if (hinfo == NULL) {
-		msg_err(DRV, "unable to create hashtable(%d), out of memory!",
+		msg_err(DRV, "unable to create hashtable(%u), out of memory!",
 			id);
 		return false;
 	}
@@ -412,7 +412,7 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 
 	/* Generate a rule_name for proc if none given */
 	if (!minfo->rule_name || !strlen(minfo->rule_name))
-		snprintf(rule_name, IFNAMSIZ+5, "rule_%d", hinfo->id);
+		snprintf(rule_name, IFNAMSIZ+5, "rule_%u", hinfo->id);
 	else
 		/* FIXME: Check for duplicate names! */
 		snprintf(rule_name, IFNAMSIZ+5, "rule_%s", minfo->rule_name);
@@ -591,7 +591,7 @@ mp2t_stream_alloc_init(struct xt_rule_mp2t_conn_htable *ht,
 		if (unlikely(ht->warn_condition < 10)) {
 			ht->warn_condition++;
 			msg_warn(RX_ERR,
-			 "Rule[%d]: "
+			 "Rule[%u]: "
 			 "Stopped tracking streams, max %u exceeded (%u) "
 			 "(Max can be adjusted via --max-streams param)",
 			 ht->id, ht->cfg.max, ht->count);
@@ -679,7 +679,7 @@ xt_mp2t_mt_check(const struct xt_mtchk_param *par)
 	 * conn_htable_destroy() thus not deallocating our memory */
 	if (info->hinfo != NULL) {
 		atomic_inc(&info->hinfo->use);
-		msg_info(DEBUG, "ReUsing info->hinfo ptr:[%p] htable id:%d",
+		msg_info(DEBUG, "ReUsing info->hinfo ptr:[%p] htable id:%u",
 			 info->hinfo, info->hinfo->id);
 		return 0; /* success */
 	}
@@ -728,7 +728,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
 	/* Remove proc entry */
 	remove_proc_entry(ht->pde->name, mp2t_procdir);
 
-	msg_info(IFDOWN, "Destroy stream elements (%d count) in htable(%d)",
+	msg_info(IFDOWN, "Destroy stream elements (%d count) in htable(%u)",
 		 ht->count, ht->id);
 	msg_dbg(IFDOWN, "Find stream, not found %d times",
 		ht->stream_not_found);
@@ -755,7 +755,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
 	spin_unlock(&ht->lock);
 
 	msg_info(IFDOWN,
-		 "Free htable(%d) (%d buckets) longest list search %d",
+		 "Free htable(%u) (%d buckets) longest list search %d",
 		 ht->id, ht->cfg.size, ht->max_list_search);
 
 	if (ht->count != 0)
@@ -987,7 +987,7 @@ dissect_mp2t(unsigned char *payload_ptr, u16 payload_len,
 		}
 		/* msg_info(RX_STATUS, */
 		printk(KERN_INFO
-		       "Rule:%d New stream (%pI4 -> %pI4)\n",
+		       "Rule:%u New stream (%pI4 -> %pI4)\n",
 		       hinfo->id, &iph->saddr, &iph->daddr);
 	}
 
@@ -1294,7 +1294,7 @@ static int mp2t_seq_show(struct seq_file *s, void *v)
 
 		/* dynamic info */
 		seq_puts(s, "# info:dynamic");
-		seq_printf(s, " rule_id:%d", htable->id);
+		seq_printf(s, " rule_id:%u", htable->id);
 		seq_printf(s, " streams:%d", htable->count);
 		seq_printf(s, " streams_check:%d", htable->stream_not_found);
 		seq_printf(s, " max_list_search:%d",  htable->max_list_search);
