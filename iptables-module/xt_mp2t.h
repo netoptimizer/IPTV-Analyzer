@@ -12,6 +12,10 @@
 #ifndef _LINUX_NETFILTER_XT_MP2T_MATCH_H
 #define _LINUX_NETFILTER_XT_MP2T_MATCH_H 1
 
+/* XT_MODULE_NAME could be replaced by KBUILD_MODNAME, if this version
+   info were only used the kernel module, but we also use it in
+   userspace.
+*/
 #define XT_MODULE_NAME		"xt_mp2t"
 #define XT_MODULE_VERSION	"0.3.1"
 #define XT_MODULE_RELDATE	"Nov 17, 2010"
