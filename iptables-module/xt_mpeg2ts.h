@@ -1,5 +1,5 @@
 /*
- * Header file for MPEG2 TS match extension "mp2t" for Xtables.
+ * Header file for MPEG2 TS match extension "mpeg2ts" for Xtables.
  *
  * Copyright (c) Jesper Dangaard Brouer <jdb@comx.dk>, 2009+
  *
@@ -9,14 +9,14 @@
  * Free Software Foundation.
  *
  */
-#ifndef _LINUX_NETFILTER_XT_MP2T_MATCH_H
-#define _LINUX_NETFILTER_XT_MP2T_MATCH_H 1
+#ifndef _LINUX_NETFILTER_XT_MPEG2TS_MATCH_H
+#define _LINUX_NETFILTER_XT_MPEG2TS_MATCH_H 1
 
 /* XT_MODULE_NAME could be replaced by KBUILD_MODNAME, if this version
    info were only used the kernel module, but we also use it in
    userspace.
 */
-#define XT_MODULE_NAME		"xt_mp2t"
+#define XT_MODULE_NAME		"xt_mpeg2ts"
 #define XT_MODULE_VERSION	"0.3.2"
 #define XT_MODULE_RELDATE	"Apr 14, 2011"
 #define PFX			XT_MODULE_NAME ": "
@@ -67,4 +67,4 @@ struct xt_mp2t_mtinfo {
 	struct xt_rule_mp2t_conn_htable *hinfo __attribute__((aligned(8)));
 };
 
-#endif /* _LINUX_NETFILTER_XT_MP2T_MATCH_H */
+#endif /* _LINUX_NETFILTER_XT_MPEG2TS_MATCH_H */

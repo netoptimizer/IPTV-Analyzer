@@ -1,5 +1,5 @@
 /*
- * Userspace interface for MPEG2 TS match extension "mp2t" for Xtables.
+ * Userspace interface for MPEG2 TS match extension "mpeg2ts" for Xtables.
  *
  * Copyright (c) Jesper Dangaard Brouer <jdb@comx.dk>, 2009+
  *
@@ -19,10 +19,10 @@
 #include <stddef.h>
 
 #include <xtables.h>
-#include "xt_mp2t.h"
+#include "xt_mpeg2ts.h"
 
 /*
- * Userspace iptables/xtables interface for mp2t module.
+ * Userspace iptables/xtables interface for mpeg2ts module.
  */
 
 /* FIXME: don't think this compat check does not cover all versions */
@@ -42,9 +42,9 @@ static const struct option mp2t_mt_opts[] = {
 static void mp2t_mt_help(void)
 {
 	printf(
-"mp2t (MPEG2 Transport Stream) match options:\n"
+"mpeg2ts (MPEG2 Transport Stream) match options:\n"
 "VERSION %s\n"
-"   [--name <name>]        Name for proc file /proc/net/xt_mp2t/rule_NAME\n"
+"   [--name <name>]        Name for proc file /proc/net/xt_mpeg2ts/rule_NAME\n"
 "   [--drop-detect]        Match lost TS frames (occured before this packet)\n"
 "   [--max-streams <num>]  Track 'max' number of streams (per rule)\n",
 		version
@@ -66,7 +66,7 @@ static int mp2t_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 
 	switch (c) {
 	case 'n': /* --name */
-		xtables_param_act(XTF_ONLY_ONCE, "mp2t", "--name",
+		xtables_param_act(XTF_ONLY_ONCE, "mpeg2ts", "--name",
 				  *flags & XT_MP2T_PARAM_NAME);
 		if (invert)
 			xtables_error(PARAMETER_PROBLEM, "Inverting name?");
@@ -139,8 +139,8 @@ static void mp2t_mt_print(const void *entry,
 {
 	const struct xt_mp2t_mtinfo *info = (const void *)(match->data);
 
-	/* Always indicate this is a mp2t match rule */
-	printf("mp2t match");
+	/* Always indicate this is a mpeg2ts match rule */
+	printf("mpeg2ts match");
 
 	if (info->flags & XT_MP2T_PARAM_NAME)
 		printf(" name:\"%s\"", info->rule_name);
@@ -171,7 +171,7 @@ static void mp2t_mt_save(const void *entry,
 
 static struct xtables_match mp2t_mt_reg = {
 	.version        = XTABLES_VERSION,
-	.name           = "mp2t",
+	.name           = "mpeg2ts",
 	.revision       = 0,
 	.family         = PF_UNSPEC,
 	.size           = XT_ALIGN(sizeof(struct xt_mp2t_mtinfo)),

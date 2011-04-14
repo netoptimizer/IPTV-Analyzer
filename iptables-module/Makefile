@@ -7,8 +7,8 @@
 
 # Targets
 # -------
-LIB_TARGETS := libxt_mp2t.so
-obj-m += xt_mp2t.o
+LIB_TARGETS := libxt_mpeg2ts.so
+obj-m += xt_mpeg2ts.o
 #obj-m += seq_example.o
 
 # Jan Engelhardt's compat_xtables module stolen from xtables-addon project
@@ -79,7 +79,7 @@ clean:
 	rm -f *.o *~ *.so *.ko
 	rm -f *.mod.c Module.symvers modules.order
 	rm -f .*.cmd
-	rm -f .xt_mp2t.o.d
+	rm -f .xt_mpeg2ts.o.d
 
 
 lib:	$(LIB_TARGETS)
@@ -93,7 +93,7 @@ lib%.o: lib%.c %.h
 
 
 # Old approach
-lib_manual:	libxt_mp2t.c xt_mp2t.h
-	gcc $(IPT_FLAGS) libxt_mp2t.c -D_INIT=libxt_mp2t_init \
-		-fPIC -I$(IPTABLES_INC) -c -o libxt_mp2t.o
-	gcc -shared -o libxt_mp2t.so libxt_mp2t.o
+lib_manual:	libxt_mpeg2ts.c xt_mpeg2ts.h
+	gcc $(IPT_FLAGS) libxt_mpeg2ts.c -D_INIT=libxt_mpeg2ts_init \
+		-fPIC -I$(IPTABLES_INC) -c -o libxt_mpeg2ts.o
+	gcc -shared -o libxt_mpeg2ts.so libxt_mpeg2ts.o

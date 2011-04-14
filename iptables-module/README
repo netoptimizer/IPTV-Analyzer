@@ -1,8 +1,9 @@
 
 = iptables kernel module =
 
-This xt_mp2t iptables kernel module analyses the contents of MPEG2
+This xt_mpeg2ts iptables kernel module analyses the contents of MPEG2
 Transport Stream (TS) packets, and can detect TS/CC packet drops.
+(Previous name of kernel module were xt_mp2t)
 
 == Dependencies ==
 
@@ -23,7 +24,7 @@ See: the README.compile file for further instructions.
 
 An iptables rules that matches all MPEG2 TS traffic.
 
-  iptables -t mangle -I PREROUTING -p udp -m mp2t
+  iptables -t mangle -I PREROUTING -p udp -m mpeg2ts
 
 Notice how its necessary to add '-p udp' as the match module only
 accepts UDP traffic.
@@ -31,8 +32,8 @@ accepts UDP traffic.
 
 == Proc file containing stats ==
 
-When creating a 'mp2t' iptables rule, a corresponding proc file is
-created in /proc/net/xt_mp2t/rule_NAME.
+When creating a 'mpeg2ts' iptables rule, a corresponding proc file is
+created in /proc/net/xt_mpeg2ts/rule_NAME.
 
 * This file contains the stats.
 
@@ -40,8 +41,8 @@ When creating the iptables rule, its possible to specify a '--name'
 for the proc file, which will replace the "NAME" (in rule_NAME).
 
 If no '--name' is specified then the rule "NAME" will be an
-increasing number, that corrosponds the number of "mp2t" rules that
-has been created (since the kernel module "xt_mp2t" were loaded).
+increasing number, that corrosponds the number of "mpeg2ts" rules that
+has been created (since the kernel module "xt_mpeg2ts" were loaded).
 
 [FIXME: Needs fixing]
 (Currently) If the same name is specified more than once, then the
@@ -53,12 +54,12 @@ will occur!!!)
 
 
   WARNING: at fs/proc/generic.c:590 proc_register+0x161/0x1a4()
-  proc_dir_entry 'xt_mp2t/rule_TEST' already registered
+  proc_dir_entry 'xt_mpeg2ts/rule_TEST' already registered
 
 
 == Logging levels: msg_level ==
 
-The xt_mp2t kernel module has different levels of logging
+The xt_mpeg2ts kernel module has different levels of logging
 statements, which can be adjusted runtime for debugging
 purposes.  The levels are based upon the kernels netdevice log
 infrastructure system, mostly used by Ethernet device drivers.
@@ -67,11 +68,11 @@ The levels are adjusted via a bit-vector called "msg_level".
 
 The "msg_level" is runtime adjustable via:
 
-  /sys/module/xt_mp2t/parameters/msg_level
+  /sys/module/xt_mpeg2ts/parameters/msg_level
 
 And its possible to set it when loading the module:
 
-  insmod xt_mp2t msg_level=0x877
+  insmod xt_mpeg2ts msg_level=0x877
 
 The possible bit values can be see in kernel source version of:
 

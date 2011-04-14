@@ -1,5 +1,5 @@
 /*
- * MPEG2 TS match extension "mp2t" for Xtables.
+ * MPEG2 TS match extension "mpeg2ts" for Xtables.
  *
  * This module analyses the contents of MPEG2 Transport Stream (TS)
  * packets, and can detect TS/CC packet drops.
@@ -31,7 +31,7 @@
 /* Timestamp related */
 #include <linux/time.h>
 
-#include "xt_mp2t.h"
+#include "xt_mpeg2ts.h"
 #include "compat_xtables.h"
 
 MODULE_AUTHOR("Jesper Dangaard Brouer <jdb@comx.dk>");
@@ -49,7 +49,7 @@ static const struct file_operations dl_file_ops;
  * levels see include/linux/netdevice.h.
  *
  * Note that "msg_level" is runtime adjustable via:
- *  /sys/module/xt_mp2t/parameters/msg_level
+ *  /sys/module/xt_mpeg2ts/parameters/msg_level
  *
  */
 #define NETIF_MSG_DEBUG  0x10000
@@ -666,7 +666,7 @@ xt_mp2t_mt_check(const struct xt_mtchk_param *par)
 	}
 
 	/* TODO/FIXME: Add a check to NOT allow proc files with same
-	 * name in /proc/net/xt_mp2t/rule_%s */
+	 * name in /proc/net/xt_mpeg2ts/rule_%s */
 
 
 	/* TODO: Write about how, this preserves htable memory by
@@ -1154,7 +1154,7 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 */
 
 	if (is_mp2t_packet(payload_ptr, payload_len)) {
-		msg_dbg(PKTDATA, "Jubii - its a MP2T packet");
+		msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
 		skips = dissect_mp2t(payload_ptr, payload_len, skb, uh, info);
 	} else {
 		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
@@ -1169,7 +1169,7 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 }
 
 static struct xt_match mp2t_mt_reg __read_mostly = {
-	.name       = "mp2t",
+	.name       = "mpeg2ts",
 	.revision   = 0,
 	.family     = NFPROTO_IPV4,
 	.match      = xt_mp2t_match,
