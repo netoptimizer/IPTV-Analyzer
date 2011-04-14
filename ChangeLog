@@ -1,6 +1,17 @@
 
 Recent changes
 
+2011-04-14  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.3.2.
+
+	Finally integrated Jan Engelhardts patches to the iptables module,
+	back from the Netfilter Workshop, Oct. 2010.  These patches lived
+	in the Xtables-addon branch named "mp2t".
+
+	Making a release before:
+	 Renaming the kernel module, from "mp2t" to "mpeg2ts".
+
 2010-11-17  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.3.1.
