@@ -88,22 +88,22 @@ source.
 
 Create directory:
 
-  mkdir /usr/local/stow/mp2t_development_fake/
+  mkdir /usr/local/stow/mpeg2ts_development_fake/
 
 And create the directories libexec/xtables/ within.
 
-  mkdir -p /usr/local/stow/mp2t_development_fake/libexec/xtables/
-  cd       /usr/local/stow/mp2t_development_fake/libexec/xtables/
+  mkdir -p /usr/local/stow/mpeg2ts_development_fake/libexec/xtables/
+  cd       /usr/local/stow/mpeg2ts_development_fake/libexec/xtables/
 
 Create a symlink from this directory to your development edition of
-the file 'libxt_mp2t.so'
+the file 'libxt_mpeg2ts.so'
 
-  ln -s ~/git/iptv-analyzer/iptables-module/libxt_mp2t.so .
+  ln -s ~/git/iptv-analyzer/iptables-module/libxt_mpeg2ts.so .
 
-Activate the stow software package 'mp2t_development_fake'.
+Activate the stow software package 'mpeg2ts_development_fake'.
 
   cd /usr/local/stow
-  stow mp2t_development_fake
+  stow mpeg2ts_development_fake
 
 
 == Compiling the kernel module ==
@@ -153,7 +153,7 @@ The easiest way to get these modules loaded is simple to invoke the
 
 The kernel module compile, actually produced two kernel modules:
 
-* xt_mp2t.ko
+* xt_mpeg2ts.ko
 * compat_xtables.ko
 
 If you kernel version <= 2.6.34, then you also need to load the kernel
@@ -163,7 +163,7 @@ module "compat_xtables.ko"
 
 Next, you need to load the real kernel module:
 
-  insmod ./xt_mp2t,ko
+  insmod ./xt_mpeg2ts.ko
 
 If the loading failed with (e.g. "Unknown symbol in module") use
 'dmesg' to see the real error message.
@@ -174,8 +174,8 @@ If the loading failed with (e.g. "Unknown symbol in module") use
 When making modifications to the kernel module remember to manually
 rmmod and insmod the kernel module again.
 
-  rmmod xt_mp2t
-  insmod ./xt_mp2t.ko
+  rmmod xt_mpeg2ts
+  insmod ./xt_mpeg2ts.ko
 
 
 === Installing the kernel module ===
@@ -199,6 +199,6 @@ kernel-version as an argument to depmod
 A small test to see if the kernel module got installed and depmod
 correctly call:
 
- modinfo -k $KERNEL_VER xt_mp2t
+ modinfo -k $KERNEL_VER xt_mpeg2ts
 
 
