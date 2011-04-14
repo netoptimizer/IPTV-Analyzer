@@ -25,15 +25,15 @@ static char version[] =
 	XT_MODULE_NAME ".c:v" XT_MODULE_VERSION " (" XT_MODULE_RELDATE ")";
 
 enum {
-	XT_MP2T_DETECT_DROP = 1 << 0,
-	XT_MP2T_MAX_STREAMS = 1 << 1,
-	XT_MP2T_PARAM_NAME  = 1 << 2,
+	XT_MPEG2TS_DETECT_DROP = 1 << 0,
+	XT_MPEG2TS_MAX_STREAMS = 1 << 1,
+	XT_MPEG2TS_PARAM_NAME  = 1 << 2,
 };
 
-/* Details of this hash structure is hidden in kernel space xt_mp2t.c */
-struct xt_rule_mp2t_conn_htable;
+/* Details of this hash structure is hidden in kernel space xt_mpeg2ts.c */
+struct xt_rule_mpeg2ts_conn_htable;
 
-struct mp2t_cfg {
+struct mpeg2ts_cfg {
 
 	/* Hash table setup */
 	__u32 size;		/* how many hash buckets */
@@ -42,7 +42,7 @@ struct mp2t_cfg {
 };
 
 
-struct xt_mp2t_mtinfo {
+struct xt_mpeg2ts_mtinfo {
 	__u16 flags;
 
 	/* FIXME:
@@ -58,13 +58,13 @@ struct xt_mp2t_mtinfo {
 	 */
 	char rule_name[IFNAMSIZ];
 
-	struct mp2t_cfg cfg;
+	struct mpeg2ts_cfg cfg;
 
 	/** Below used internally by the kernel **/
 	__u32 rule_id;
 
 	/* Hash table pointer */
-	struct xt_rule_mp2t_conn_htable *hinfo __attribute__((aligned(8)));
+	struct xt_rule_mpeg2ts_conn_htable *hinfo __attribute__((aligned(8)));
 };
 
 #endif /* _LINUX_NETFILTER_XT_MPEG2TS_MATCH_H */

@@ -42,7 +42,7 @@ MODULE_ALIAS("ipt_mp2t");
 MODULE_ALIAS("ipt_mpeg2ts");
 
 /* Proc related */
-static struct proc_dir_entry *mp2t_procdir;
+static struct proc_dir_entry *mpeg2ts_procdir;
 static const struct file_operations dl_file_ops;
 
 /* Message level instrumentation based upon the device driver message
@@ -59,13 +59,13 @@ static const struct file_operations dl_file_ops;
 #define PERFTUNE 0
 
 #if 1
-#define MP2T_MSG_DEFAULT						\
+#define MPEG2TS_MSG_DEFAULT						\
 	(NETIF_MSG_DRV   | NETIF_MSG_PROBE  | NETIF_MSG_LINK |		\
 	 NETIF_MSG_IFUP  | NETIF_MSG_IFDOWN |				\
 	 NETIF_MSG_DEBUG | NETIF_MSG_RX_ERR | NETIF_MSG_RX_STATUS	\
 	)
 #else
-#define MP2T_MSG_DEFAULT						\
+#define MPEG2TS_MSG_DEFAULT						\
 	(NETIF_MSG_DRV    | NETIF_MSG_PROBE  | NETIF_MSG_LINK |		\
 	 NETIF_MSG_IFUP   | NETIF_MSG_IFDOWN |				\
 	 NETIF_MSG_RX_ERR |						\
@@ -205,15 +205,15 @@ MODULE_PARM_DESC(msg_level, "Message level bit mask");
  * Datastructures:
  * ---------------
  *
- * xt_rule_mp2t_conn_htable (per iptables rule)
+ * xt_rule_mpeg2ts_conn_htable (per iptables rule)
  *    metadata
  *    locking: RCU
  *    hash[metadata.cfg.size]
  *          |
- *          +-> lists of type mp2t_stream elements
+ *          +-> lists of type mpeg2ts_stream elements
  *
  *
- * mp2t_stream (per multicast/mpeg2-ts stream)
+ * mpeg2ts_stream (per multicast/mpeg2-ts stream)
  *     stats (about skips and discontinuities)
  *     locking: Spinlock
  *     pid_cc_table (normal list)
@@ -225,11 +225,11 @@ MODULE_PARM_DESC(msg_level, "Message level bit mask");
  **/
 
 /*** Global defines ***/
-static DEFINE_SPINLOCK(mp2t_lock); /* Protects conn_htables list */
-static LIST_HEAD(conn_htables);    /* List of xt_rule_mp2t_conn_htable's */
+static DEFINE_SPINLOCK(mpeg2ts_lock); /* Protects conn_htables list */
+static LIST_HEAD(conn_htables);    /* List of xt_rule_mpeg2ts_conn_htable's */
 static unsigned int GLOBAL_ID;	   /* Used for assigning rule_id's */
 /* TODO/FIXME: xt_hashlimit has this extra mutex, do I need it?
-static DEFINE_MUTEX(mp2t_mutex);*/ /* Additional checkentry protection */
+static DEFINE_MUTEX(mpeg2ts_mutex);*/ /* Additional checkentry protection */
 
 
 /* This is sort of the last TS frames info per pid */
@@ -244,18 +244,18 @@ struct pid_data_t {
 /** Hash table stuff **/
 
 /* Data to match a stream / connection */
-struct mp2t_stream_match { /* Like xt_hashlimit: dsthash_dst */
+struct mpeg2ts_stream_match { /* Like xt_hashlimit: dsthash_dst */
 	__be32 dst_addr; /* MC addr first */
 	__be32 src_addr;
 	__be16 dst_port;
 	__be16 src_port;
 };
 
-/* Hash entry with info about the mp2t stream / connection */
-struct mp2t_stream { /* Like xt_hashlimit: dsthash_ent */
+/* Hash entry with info about the mpeg2ts stream / connection */
+struct mpeg2ts_stream { /* Like xt_hashlimit: dsthash_ent */
 	/* Place static / read-only parts in the beginning */
 	struct hlist_node node;
-	struct mp2t_stream_match match;
+	struct mpeg2ts_stream_match match;
 
 	/* Place modified structure members in the end */
 	/* FIXME: Add spacing in struct for cache alignment */
@@ -286,7 +286,7 @@ struct mp2t_stream { /* Like xt_hashlimit: dsthash_ent */
  * There is one hash-table per iptables rule.
  * (Based on xt_hashlimit).
  */
-struct xt_rule_mp2t_conn_htable {
+struct xt_rule_mpeg2ts_conn_htable {
 
 	/* Global list containing these elements are needed: (1) to
 	 * avoid realloc of our data structures when other rules gets
@@ -302,7 +302,7 @@ struct xt_rule_mp2t_conn_htable {
 	 * differ from the user defined size, and changing the
 	 * userspace defined rule data is not allowed as userspace
 	 * then cannot match the rule again for deletion */
-	struct mp2t_cfg cfg;		/* config */
+	struct mpeg2ts_cfg cfg;		/* config */
 
 	/* Used internally */
 	spinlock_t lock;		/* write lock for hlist_head */
@@ -329,14 +329,14 @@ struct xt_rule_mp2t_conn_htable {
 	struct proc_dir_entry *pde;
 
 	struct hlist_head stream_hash[0];/* conn/stream hashtable
-					  * struct mp2t_stream elements */
+					  * struct mpeg2ts_stream elements */
 };
 
 /* Inspired by xt_hashlimit.c : htable_create() */
 static bool
-mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
+mpeg2ts_htable_create(struct xt_mpeg2ts_mtinfo *minfo)
 {
-	struct xt_rule_mp2t_conn_htable *hinfo;
+	struct xt_rule_mpeg2ts_conn_htable *hinfo;
 	unsigned int hash_buckets;
 	unsigned int hash_struct_sz;
 	char rule_name[IFNAMSIZ+5];
@@ -344,10 +344,10 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 	unsigned int id;
 	size_t size;
 
-	/* Q: is lock with mp2t_lock necessary */
-	spin_lock(&mp2t_lock);
+	/* Q: is lock with mpeg2ts_lock necessary */
+	spin_lock(&mpeg2ts_lock);
 	id = GLOBAL_ID++;
-	spin_unlock(&mp2t_lock);
+	spin_unlock(&mpeg2ts_lock);
 
 	if (minfo->cfg.size)
 		hash_buckets = minfo->cfg.size;
@@ -393,9 +393,9 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 
 	INIT_LIST_HEAD(&hinfo->list);
 	/*
-	spin_lock(&mp2t_lock);
+	spin_lock(&mpeg2ts_lock);
 	list_add_tail(&conn_htables, &hinfo->list);
-	spin_unlock(&mp2t_lock);
+	spin_unlock(&mpeg2ts_lock);
 	*/
 
 	hinfo->count = 0;
@@ -414,7 +414,7 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 		snprintf(rule_name, IFNAMSIZ+5, "rule_%s", minfo->rule_name);
 
 	/* Create proc entry */
-	hinfo->pde = proc_create_data(rule_name, 0, mp2t_procdir,
+	hinfo->pde = proc_create_data(rule_name, 0, mpeg2ts_procdir,
 				      &dl_file_ops, hinfo);
 
 #ifdef CONFIG_PROC_FS
@@ -432,8 +432,8 @@ mp2t_htable_create(struct xt_mp2t_mtinfo *minfo)
 }
 
 static uint32_t
-hash_match(const struct xt_rule_mp2t_conn_htable *ht,
-	   const struct mp2t_stream_match *match)
+hash_match(const struct xt_rule_mpeg2ts_conn_htable *ht,
+	   const struct mpeg2ts_stream_match *match)
 {
 	uint32_t hash = jhash2((const uint32_t *)match,
 				sizeof(*match) / sizeof(uint32_t),
@@ -448,17 +448,17 @@ hash_match(const struct xt_rule_mp2t_conn_htable *ht,
 }
 
 static inline
-bool match_cmp(const struct mp2t_stream *ent,
-			     const struct mp2t_stream_match *b)
+bool match_cmp(const struct mpeg2ts_stream *ent,
+			     const struct mpeg2ts_stream_match *b)
 {
 	return !memcmp(&ent->match, b, sizeof(ent->match));
 }
 
-static struct mp2t_stream *
-mp2t_stream_find(struct xt_rule_mp2t_conn_htable *ht,
-		 const struct mp2t_stream_match *match)
+static struct mpeg2ts_stream *
+mpeg2ts_stream_find(struct xt_rule_mpeg2ts_conn_htable *ht,
+		    const struct mpeg2ts_stream_match *match)
 {
-	struct mp2t_stream *entry;
+	struct mpeg2ts_stream *entry;
 	struct hlist_node  *pos;
 	uint32_t hash;
 	int cnt = 0;
@@ -475,7 +475,7 @@ mp2t_stream_find(struct xt_rule_mp2t_conn_htable *ht,
 	if (!hlist_empty(&ht->stream_hash[hash])) {
 		/* The hlist_for_each_entry_rcu macro uses the
 		 * appropiate rcu_dereference() to access the
-		 * mp2t_stream pointer */
+		 * mpeg2ts_stream pointer */
 		hlist_for_each_entry_rcu(entry, pos,
 				     &ht->stream_hash[hash], node) {
 			cnt++;
@@ -511,7 +511,7 @@ found:
 }
 
 static struct pid_data_t *
-mp2t_pid_find(struct mp2t_stream *stream, const int16_t pid)
+mpeg2ts_pid_find(struct mpeg2ts_stream *stream, const int16_t pid)
 {
 	struct pid_data_t *entry;
 
@@ -523,7 +523,7 @@ mp2t_pid_find(struct mp2t_stream *stream, const int16_t pid)
 }
 
 static struct pid_data_t *
-mp2t_pid_create(struct mp2t_stream *stream, const int16_t pid)
+mpeg2ts_pid_create(struct mpeg2ts_stream *stream, const int16_t pid)
 {
 	struct pid_data_t *entry;
 
@@ -543,7 +543,7 @@ mp2t_pid_create(struct mp2t_stream *stream, const int16_t pid)
 }
 
 static int
-mp2t_pid_destroy_list(struct mp2t_stream *stream)
+mpeg2ts_pid_destroy_list(struct mpeg2ts_stream *stream)
 {
 	struct pid_data_t *entry, *n;
 
@@ -558,11 +558,11 @@ mp2t_pid_destroy_list(struct mp2t_stream *stream)
 	return stream->pid_list_len;
 }
 
-static struct mp2t_stream *
-mp2t_stream_alloc_init(struct xt_rule_mp2t_conn_htable *ht,
-		       const struct mp2t_stream_match *match)
+static struct mpeg2ts_stream *
+mpeg2ts_stream_alloc_init(struct xt_rule_mpeg2ts_conn_htable *ht,
+			  const struct mpeg2ts_stream_match *match)
 {
-	struct mp2t_stream *entry; /* hashtable entry */
+	struct mpeg2ts_stream *entry; /* hashtable entry */
 	unsigned int entry_sz;
 	size_t size;
 	uint32_t hash;
@@ -628,7 +628,7 @@ mp2t_stream_alloc_init(struct xt_rule_mp2t_conn_htable *ht,
 	 * stream_hash[] lists is protected by the spinlock ht->lock.
 	 * Should we only use try lock and exit if we cannot get it???
 	 * I'm worried about what happens if we are waiting for the
-	 * lock held by xt_mp2t_mt_destroy() which will dealloc ht
+	 * lock held by xt_mpeg2ts_mt_destroy() which will dealloc ht
 	 */
 	spin_lock_bh(&ht->lock);
 	hlist_add_head_rcu(&entry->node, &ht->stream_hash[hash]);
@@ -639,17 +639,17 @@ mp2t_stream_alloc_init(struct xt_rule_mp2t_conn_htable *ht,
 }
 
 /*
- * The xt_mp2t_mt_check() / checkentry, return type logic differs
+ * The xt_mpeg2ts_mt_check() / checkentry, return type logic differs
  * between kernel versions.  Fortunately the compat_xtables
  * module/system handles the different cases.
  */
 static int
-xt_mp2t_mt_check(const struct xt_mtchk_param *par)
+xt_mpeg2ts_mt_check(const struct xt_mtchk_param *par)
 {
-	struct xt_mp2t_mtinfo *info = par->matchinfo;
+	struct xt_mpeg2ts_mtinfo *info = par->matchinfo;
 
 	/*
-	if (info->flags & ~XT_MP2T_DETECT_DROP)
+	if (info->flags & ~XT_MPEG2TS_DETECT_DROP)
 		return false;
 	*/
 
@@ -671,7 +671,7 @@ xt_mp2t_mt_check(const struct xt_mtchk_param *par)
 
 	/* TODO: Write about how, this preserves htable memory by
 	 * reuse of hinfo pointer and incrementing 'use' refcounter
-	 * assures that xt_mp2t_mt_destroy() will not call
+	 * assures that xt_mpeg2ts_mt_destroy() will not call
 	 * conn_htable_destroy() thus not deallocating our memory */
 	if (info->hinfo != NULL) {
 		atomic_inc(&info->hinfo->use);
@@ -680,7 +680,7 @@ xt_mp2t_mt_check(const struct xt_mtchk_param *par)
 		return 0; /* success */
 	}
 
-	if (!mp2t_htable_create(info)) {
+	if (!mpeg2ts_htable_create(info)) {
 		msg_err(DRV, "Error creating hash table");
 		return -ENOMEM;
 	}
@@ -689,11 +689,11 @@ xt_mp2t_mt_check(const struct xt_mtchk_param *par)
 }
 
 static void
-mp2t_stream_free(struct rcu_head *head)
+mpeg2ts_stream_free(struct rcu_head *head)
 {
-	struct mp2t_stream *stream;
+	struct mpeg2ts_stream *stream;
 
-	stream = container_of(head, struct mp2t_stream, rcu_head);
+	stream = container_of(head, struct mpeg2ts_stream, rcu_head);
 
 	/* Debugging check */
 	if (unlikely(!stream))
@@ -702,7 +702,7 @@ mp2t_stream_free(struct rcu_head *head)
 
 	/* Deallocate the PID list */
 	spin_lock_bh(&stream->lock);
-	mp2t_pid_destroy_list(stream);
+	mpeg2ts_pid_destroy_list(stream);
 	spin_unlock_bh(&stream->lock);
 
 	/* Before free, check the 'use' reference counter */
@@ -717,12 +717,12 @@ mp2t_stream_free(struct rcu_head *head)
 }
 
 static void
-conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
+conn_htable_destroy(struct xt_rule_mpeg2ts_conn_htable *ht)
 {
 	unsigned int i;
 
 	/* Remove proc entry */
-	remove_proc_entry(ht->pde->name, mp2t_procdir);
+	remove_proc_entry(ht->pde->name, mpeg2ts_procdir);
 
 	msg_info(IFDOWN, "Destroy stream elements (%u count) in htable(%u)",
 		 ht->count, ht->id);
@@ -732,7 +732,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
 	/* lock hash table and iterate over it to release all elements */
 	spin_lock(&ht->lock);
 	for (i = 0; i < ht->cfg.size; i++) {
-		struct mp2t_stream *stream;
+		struct mpeg2ts_stream *stream;
 		struct hlist_node *pos, *n;
 		hlist_for_each_entry_safe(stream, pos, n,
 					  &ht->stream_hash[i], node) {
@@ -745,7 +745,7 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
 			   holding a spinlock, or else we will get a
 			   "scheduling while atomic" bug.
 			*/
-			call_rcu_bh(&stream->rcu_head, mp2t_stream_free);
+			call_rcu_bh(&stream->rcu_head, mpeg2ts_stream_free);
 		}
 	}
 	spin_unlock(&ht->lock);
@@ -769,9 +769,9 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
  * dynamic allocated data (per rule) needs to survive this update, BUT
  * only if our rule has not been removed.  This is achieved by having
  * a reference counter.  The reason it works, is that during swapping
- * of rulesets, the checkentry function (xt_mp2t_mt_check) is called
+ * of rulesets, the checkentry function (xt_mpeg2ts_mt_check) is called
  * on the new ruleset _before_ calling the destroy function
- * (xt_mp2t_mt_destroy) on the old ruleset.  During checkentry, we
+ * (xt_mpeg2ts_mt_destroy) on the old ruleset.  During checkentry, we
  * increment the reference counter on data if we can find the data
  * associated with this rule.
  *
@@ -781,48 +781,48 @@ conn_htable_destroy(struct xt_rule_mp2t_conn_htable *ht)
  *   conn_htable_add() - Add data to the global searchable list
  */
 
-static struct xt_rule_mp2t_conn_htable*
+static struct xt_rule_mpeg2ts_conn_htable*
 conn_htable_get(uint32_t rule_id)
 {
-	struct xt_rule_mp2t_conn_htable *hinfo;
+	struct xt_rule_mpeg2ts_conn_htable *hinfo;
 
-	spin_lock_bh(&mp2t_lock);
+	spin_lock_bh(&mpeg2ts_lock);
 	list_for_each_entry(hinfo, &conn_htables, list) {
 		if (hinfo->id == rule_id) {
 			atomic_inc(&hinfo->use);
-			spin_unlock_bh(&mp2t_lock);
+			spin_unlock_bh(&mpeg2ts_lock);
 			return hinfo;
 		}
 	}
-	spin_unlock_bh(&mp2t_lock);
+	spin_unlock_bh(&mpeg2ts_lock);
 	return NULL;
 }
 
 static void
-conn_htable_put(struct xt_rule_mp2t_conn_htable *hinfo)
+conn_htable_put(struct xt_rule_mpeg2ts_conn_htable *hinfo)
 {
 	/* Finished using element, delete if last user */
 	if (atomic_dec_and_test(&hinfo->use)) {
-		spin_lock_bh(&mp2t_lock);
+		spin_lock_bh(&mpeg2ts_lock);
 		list_del(&hinfo->list);
-		spin_unlock_bh(&mp2t_lock);
+		spin_unlock_bh(&mpeg2ts_lock);
 		conn_htable_destroy(hinfo);
 	}
 }
 
 static void
-conn_htable_add(struct xt_rule_mp2t_conn_htable *hinfo)
+conn_htable_add(struct xt_rule_mpeg2ts_conn_htable *hinfo)
 {
-	spin_lock_bh(&mp2t_lock);
+	spin_lock_bh(&mpeg2ts_lock);
 	list_add_tail(&conn_htables, &hinfo->list);
-	spin_unlock_bh(&mp2t_lock);
+	spin_unlock_bh(&mpeg2ts_lock);
 }
 
 static void
-xt_mp2t_mt_destroy(const struct xt_mtdtor_param *par)
+xt_mpeg2ts_mt_destroy(const struct xt_mtdtor_param *par)
 {
-	const struct xt_mp2t_mtinfo *info = par->matchinfo;
-	struct xt_rule_mp2t_conn_htable *hinfo;
+	const struct xt_mpeg2ts_mtinfo *info = par->matchinfo;
+	struct xt_rule_mpeg2ts_conn_htable *hinfo;
 	hinfo = info->hinfo;
 
 	/* Calls only destroy if refcnt is zero */
@@ -903,7 +903,7 @@ detect_cc_drops(struct pid_data_t *pid_data, int8_t cc_curr,
 
 static int
 dissect_tsp(const unsigned char *payload_ptr, uint16_t payload_len,
-	    const struct sk_buff *skb, struct mp2t_stream *stream)
+	    const struct sk_buff *skb, struct mpeg2ts_stream *stream)
 {
 	__be32 header;
 	uint16_t pid;
@@ -934,9 +934,9 @@ dissect_tsp(const unsigned char *payload_ptr, uint16_t payload_len,
 		 * counter is hidden here...*/
 	}
 
-	pid_data = mp2t_pid_find(stream, pid);
+	pid_data = mpeg2ts_pid_find(stream, pid);
 	if (!pid_data) {
-		pid_data = mp2t_pid_create(stream, pid);
+		pid_data = mpeg2ts_pid_create(stream, pid);
 		if (!pid_data)
 			return 0;
 	}
@@ -949,9 +949,9 @@ dissect_tsp(const unsigned char *payload_ptr, uint16_t payload_len,
 
 
 static int
-dissect_mp2t(const unsigned char *payload_ptr, uint16_t payload_len,
-	     const struct sk_buff *skb, const struct udphdr *uh,
-	     const struct xt_mp2t_mtinfo *info)
+dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
+		const struct sk_buff *skb, const struct udphdr *uh,
+		const struct xt_mpeg2ts_mtinfo *info)
 {
 	uint16_t offset = 0;
 	int skips  = 0;
@@ -959,10 +959,10 @@ dissect_mp2t(const unsigned char *payload_ptr, uint16_t payload_len,
 	int discontinuity = 0;
 	const struct iphdr *iph = ip_hdr(skb);
 
-	struct mp2t_stream     *stream; /* "Connection" */
-	struct mp2t_stream_match match;
+	struct mpeg2ts_stream     *stream; /* "Connection" */
+	struct mpeg2ts_stream_match match;
 
-	struct xt_rule_mp2t_conn_htable *hinfo;
+	struct xt_rule_mpeg2ts_conn_htable *hinfo;
 	hinfo = info->hinfo;
 
 	/** Lookup stream data structures **/
@@ -977,9 +977,9 @@ dissect_mp2t(const unsigned char *payload_ptr, uint16_t payload_len,
 	/* spin_lock_bh(&hinfo->lock); // Replaced by RCU */
 	rcu_read_lock_bh();
 
-	stream = mp2t_stream_find(hinfo, &match);
+	stream = mpeg2ts_stream_find(hinfo, &match);
 	if (!stream) {
-		stream = mp2t_stream_alloc_init(hinfo, &match);
+		stream = mpeg2ts_stream_alloc_init(hinfo, &match);
 		if (!stream) {
 			/* spin_unlock_bh(&hinfo->lock); // Replaced by RCU */
 			rcu_read_unlock_bh();
@@ -1041,7 +1041,7 @@ dissect_mp2t(const unsigned char *payload_ptr, uint16_t payload_len,
 
 
 static bool
-is_mp2t_packet(const unsigned char *payload_ptr, uint16_t payload_len)
+is_mpeg2ts_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 {
 	uint16_t offset = 0;
 
@@ -1057,22 +1057,22 @@ is_mp2t_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 	while ((payload_len - offset) >= MP2T_PACKET_SIZE) {
 
 		if (payload_ptr[0] != MP2T_SYNC_BYTE) {
-			msg_dbg(PKTDATA, "Invalid MP2T packet skip!");
+			msg_dbg(PKTDATA, "Invalid MPEG2TS packet skip!");
 			return false;
 		}
 		offset +=  MP2T_PACKET_SIZE;
 		payload_ptr += MP2T_PACKET_SIZE;
 	}
-	/* msg_dbg(PKTDATA, "True MP2T packet"); */
+	/* msg_dbg(PKTDATA, "True MPEG2TS packet"); */
 
 	return true;
 }
 
 
 static bool
-xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
+xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 {
-	const struct xt_mp2t_mtinfo *info = par->matchinfo;
+	const struct xt_mpeg2ts_mtinfo *info = par->matchinfo;
 	const struct iphdr *iph = ip_hdr(skb);
 	const struct udphdr *uh;
 	struct udphdr _udph;
@@ -1085,7 +1085,7 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 	bool res = false;
 	int skips = 0;
 
-	if (!(info->flags & XT_MP2T_DETECT_DROP)) {
+	if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
 		msg_err(RX_ERR, "You told me to do nothing...?!");
 		return false;
 	}
@@ -1153,40 +1153,41 @@ xt_mp2t_match(const struct sk_buff *skb, struct xt_action_param *par)
 		msg_dbg(RX_STATUS, "skb(0x%p) NOT cloned", skb);
 */
 
-	if (is_mp2t_packet(payload_ptr, payload_len)) {
+	if (is_mpeg2ts_packet(payload_ptr, payload_len)) {
 		msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
-		skips = dissect_mp2t(payload_ptr, payload_len, skb, uh, info);
+		skips =
+		  dissect_mpeg2ts(payload_ptr, payload_len, skb, uh, info);
 	} else {
 		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
 			"(pkt from:%pI4 to:%pI4)", &saddr, &daddr);
 		return false;
 	}
 
-	if (info->flags & XT_MP2T_DETECT_DROP)
+	if (info->flags & XT_MPEG2TS_DETECT_DROP)
 		res = !!(skips); /* Convert to a bool */
 
 	return res;
 }
 
-static struct xt_match mp2t_mt_reg __read_mostly = {
+static struct xt_match mpeg2ts_mt_reg __read_mostly = {
 	.name       = "mpeg2ts",
 	.revision   = 0,
 	.family     = NFPROTO_IPV4,
-	.match      = xt_mp2t_match,
-	.checkentry = xt_mp2t_mt_check,
-	.destroy    = xt_mp2t_mt_destroy,
+	.match      = xt_mpeg2ts_match,
+	.checkentry = xt_mpeg2ts_mt_check,
+	.destroy    = xt_mpeg2ts_mt_destroy,
 	.proto      = IPPROTO_UDP,
-	.matchsize  = sizeof(struct xt_mp2t_mtinfo),
+	.matchsize  = sizeof(struct xt_mpeg2ts_mtinfo),
 	.me         = THIS_MODULE,
 };
 
 
 /*** Proc seq_file functionality ***/
 
-static void *mp2t_seq_start(struct seq_file *s, loff_t *pos)
+static void *mpeg2ts_seq_start(struct seq_file *s, loff_t *pos)
 {
 	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mp2t_conn_htable *htable = pde->data;
+	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
 	unsigned int *bucket;
 
 	if (*pos >= htable->cfg.size)
@@ -1203,10 +1204,10 @@ static void *mp2t_seq_start(struct seq_file *s, loff_t *pos)
 	return bucket;
 }
 
-static void *mp2t_seq_next(struct seq_file *s, void *v, loff_t *pos)
+static void *mpeg2ts_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
 	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mp2t_conn_htable *htable = pde->data;
+	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
 	unsigned int *bucket = v;
 
 	if (v == SEQ_START_TOKEN) {
@@ -1227,14 +1228,14 @@ static void *mp2t_seq_next(struct seq_file *s, void *v, loff_t *pos)
 	return bucket;
 }
 
-static void mp2t_seq_stop(struct seq_file *s, void *v)
+static void mpeg2ts_seq_stop(struct seq_file *s, void *v)
 {
 	unsigned int *bucket = v;
 	kfree(bucket);
 }
 
-static int mp2t_seq_show_real(struct mp2t_stream *stream, struct seq_file *s,
-			      unsigned int bucket)
+static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
+				 struct seq_file *s, unsigned int bucket)
 {
 	int res;
 
@@ -1260,12 +1261,12 @@ static int mp2t_seq_show_real(struct mp2t_stream *stream, struct seq_file *s,
 	return res;
 }
 
-static int mp2t_seq_show(struct seq_file *s, void *v)
+static int mpeg2ts_seq_show(struct seq_file *s, void *v)
 {
 	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mp2t_conn_htable *htable = pde->data;
+	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
 	unsigned int *bucket = v;
-	struct mp2t_stream *stream;
+	struct mpeg2ts_stream *stream;
 	struct hlist_node *pos;
 	struct timespec delta;
 	struct timespec now;
@@ -1315,7 +1316,7 @@ static int mp2t_seq_show(struct seq_file *s, void *v)
 			hlist_for_each_entry_rcu(stream, pos,
 						 &htable->stream_hash[*bucket],
 						 node) {
-				if (mp2t_seq_show_real(stream, s, *bucket)) {
+				if (mpeg2ts_seq_show_real(stream, s, *bucket)) {
 					rcu_read_unlock();
 					return -1;
 				}
@@ -1327,13 +1328,13 @@ static int mp2t_seq_show(struct seq_file *s, void *v)
 }
 
 static const struct seq_operations dl_seq_ops = {
-	.start = mp2t_seq_start,
-	.next  = mp2t_seq_next,
-	.stop  = mp2t_seq_stop,
-	.show  = mp2t_seq_show
+	.start = mpeg2ts_seq_start,
+	.next  = mpeg2ts_seq_next,
+	.stop  = mpeg2ts_seq_stop,
+	.show  = mpeg2ts_seq_show
 };
 
-static int mp2t_proc_open(struct inode *inode, struct file *file)
+static int mpeg2ts_proc_open(struct inode *inode, struct file *file)
 {
 	int ret = seq_open(file, &dl_seq_ops);
 
@@ -1346,7 +1347,7 @@ static int mp2t_proc_open(struct inode *inode, struct file *file)
 
 static const struct file_operations dl_file_ops = {
 	.owner   = THIS_MODULE,
-	.open    = mp2t_proc_open,
+	.open    = mpeg2ts_proc_open,
 	.read    = seq_read,
 	.llseek  = seq_lseek,
 	.release = seq_release
@@ -1354,23 +1355,23 @@ static const struct file_operations dl_file_ops = {
 
 /*** Module init & exit ***/
 
-static int __init mp2t_mt_init(void)
+static int __init mpeg2ts_mt_init(void)
 {
 	int err;
 	GLOBAL_ID = 1; /* Module counter for rule_id assignments */
 
 	/* The list conn_htables contain references to dynamic
-	 * allocated memory (via xt_rule_mp2t_conn_htable ptr) that
+	 * allocated memory (via xt_rule_mpeg2ts_conn_htable ptr) that
 	 * needes to survive between rule updates.
 	 */
 	INIT_LIST_HEAD(&conn_htables);
 
-	msg_level = netif_msg_init(debug, MP2T_MSG_DEFAULT);
+	msg_level = netif_msg_init(debug, MPEG2TS_MSG_DEFAULT);
 	msg_info(DRV, "Loading: %s", version);
 	msg_dbg(DRV, "Message level (msg_level): 0x%X", msg_level);
 
-	/* Register the mp2t matches */
-	err = xt_register_match(&mp2t_mt_reg);
+	/* Register the mpeg2ts matches */
+	err = xt_register_match(&mpeg2ts_mt_reg);
 	if (err) {
 		msg_err(DRV, "unable to register matches");
 		return err;
@@ -1378,11 +1379,11 @@ static int __init mp2t_mt_init(void)
 
 #ifdef CONFIG_PROC_FS
 	/* Create proc directory shared by all rules */
-	mp2t_procdir = proc_mkdir(XT_MODULE_NAME, init_net.proc_net);
-	if (!mp2t_procdir) {
+	mpeg2ts_procdir = proc_mkdir(XT_MODULE_NAME, init_net.proc_net);
+	if (!mpeg2ts_procdir) {
 		msg_err(DRV, "unable to create proc dir entry");
-		/* In case of error unregister the mp2t matches */
-		xt_unregister_match(&mp2t_mt_reg);
+		/* In case of error unregister the mpeg2ts match */
+		xt_unregister_match(&mpeg2ts_mt_reg);
 		err = -ENOMEM;
 	}
 #endif
@@ -1390,17 +1391,17 @@ static int __init mp2t_mt_init(void)
 	return err;
 }
 
-static void __exit mp2t_mt_exit(void)
+static void __exit mpeg2ts_mt_exit(void)
 {
 	msg_info(DRV, "Unloading: %s", version);
 
 	remove_proc_entry(XT_MODULE_NAME, init_net.proc_net);
 
-	xt_unregister_match(&mp2t_mt_reg);
+	xt_unregister_match(&mpeg2ts_mt_reg);
 
 	/* Its important to wait for all call_rcu_bh() callbacks to
 	 * finish before this module is deallocated as the code
-	 * mp2t_stream_free() is used by these callbacks.
+	 * mpeg2ts_stream_free() is used by these callbacks.
 	 *
 	 * Notice doing a synchronize_rcu() is NOT enough. Need to
 	 * invoke rcu_barrier_bh() to enforce wait for completion of
@@ -1409,5 +1410,5 @@ static void __exit mp2t_mt_exit(void)
 	rcu_barrier_bh();
 }
 
-module_init(mp2t_mt_init);
-module_exit(mp2t_mt_exit);
+module_init(mpeg2ts_mt_init);
+module_exit(mpeg2ts_mt_exit);
