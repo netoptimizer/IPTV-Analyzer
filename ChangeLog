@@ -1,6 +1,12 @@
 
 Recent changes
 
+	Renamed the iptables kernel module, from "mp2t" to "mpeg2ts".
+
+	 The new name "mpeg2ts" much better acronym/shortname for MPEG2
+	 Transport Stream.  The old name "mp2t" came from the Wireshark
+	 acronym for this protocol.
+
 2011-04-14  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.3.2.
