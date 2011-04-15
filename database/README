@@ -1,0 +1,36 @@
+
+= Quick database HOWTO =
+
+== Create the database ==
+
+On database server call:
+
+ mysql -u root -p
+
+At the mysql prompt, write:
+
+ drop database if exists tvprobe;
+ create database tvprobe;
+
+
+== Grant access to database ==
+
+At the mysql prompt, write:
+
+ grant all on tvprobe.* to 'tvprobe'@'localhost' identified by 'CHANGEPASSWORD';
+ flush privileges;
+
+If you want to, grant remote access:
+
+ grant SELECT, INSERT, UPDATE, EXECUTE on tvprobe.*
+       to 'tvprobe'@'HOSTNAME.yourdomain.dk'
+       identified by 'CHANGEPASSWORD';
+ flush privileges;
+
+
+== Create tables ==
+
+At the UNIX prompt write:
+
+ mysql -u root -p tvprobe < database_tvprobe.sql
+
