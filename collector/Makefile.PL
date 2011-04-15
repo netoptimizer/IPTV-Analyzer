@@ -22,9 +22,14 @@ my %attr = (
 #    VERSION   => '0.x.x',
     VERSION_FROM      => 'lib/tvprobe/mp2t.pm', # finds $VERSION
     PREREQ_PM => {
-        'Log::Log4perl'   => 0,
+	'Log::Log4perl'   => 0,
+	'Config::File'    => 0,
 	'Proc::Daemon'    => 0,
 	'Proc::PID::File' => 0,
+	'Data::Compare'   => 0,
+	'File::Basename'  => 0,
+	'DBI'             => 0,
+	'DBD::mysql'      => 0,
     },
     PL_FILES  => {},    # Prevent old MakeMaker from running Build.PL
     EXE_FILES => \@exe_files,
