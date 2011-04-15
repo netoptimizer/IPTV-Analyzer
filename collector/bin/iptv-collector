@@ -28,7 +28,6 @@ our $logger = get_logger("tvprobe::mp2t");
 
 # Config options
 our $cfg = get_config();
-our $procname = 'mp2t_collector_daemon';
 our $interval = $cfg->{'collector_interval'} || 10;
 our $heartbeat_interval_ticks = $cfg->{'collector_heartbeat_ticks'} || 60;
 
@@ -83,7 +82,7 @@ sub daemon()
 
 sub daemon2()
 {
-    # Problem: perm to /var/run/mp2t_collector_daemon.pl.pid
+    # Problem: perm to /var/run/$0.pid
     my $rundir  = "/var/run/";
     my $pidfile = $rundir . basename($0) . ".pid";
     if ( not -w $pidfile) {
@@ -130,7 +129,7 @@ sub daemon2()
 
 sub daemon3()
 {
-    # Problem: perm to /var/run/mp2t_collector_daemon.pl.pid
+    # Problem: perm to /var/run/$0.pid
     my $rundir  = "/var/run/";
     my $pidfile = $rundir . basename($0) . ".pid";
     if ( -e $pidfile && (not -w $pidfile)) {
