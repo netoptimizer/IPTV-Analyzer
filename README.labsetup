@@ -34,9 +34,11 @@ address:
 
 == Dropping packets on purpose ==
 
-Create a 0.1 percent packet loss on eth6
+Create a 0.1 percent packet loss on eth6.  Notice, we also need to
+introduce a delay, so the packet drop/loss have packets to "select"
+from.
 
-  tc qdisc add    dev eth6 root netem loss 0.1%
+  tc qdisc add    dev eth6 root netem delay 20 ms loss 0.1%
 
 
 Next, change the packet loss percent on eth6 to 1.1 percent, and
