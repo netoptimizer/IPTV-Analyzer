@@ -35,7 +35,7 @@ probe_name = tvprobe-dev2
 # other keys without changing the id.
 #
 # Required option, which proc file to read
-input[rule_eth42][procfile]  = /proc/net/xt_mp2t/rule_test
+input[rule_eth42][procfile]  = /proc/net/xt_mpeg2ts/rule_test
 #
 # Required options that identifies this input
 input[rule_eth42][shortloc]  = alb
@@ -51,7 +51,7 @@ input[rule_eth42][switchtype] = HP9300
 input[rule_eth42][input_ip]   = 192.168.16.42
 input[rule_eth42][input_dev]  = eth42
 
-# Remember: Change to use complete path as the daemon chdir's to /
+# Remember: Change to use complete path as the daemon chdir's to "/"
 input[test1][procfile] = ../input/proc_rule_test001.input
 input[test1][shortloc] = cph
 input[test1][switch]   = switch002a

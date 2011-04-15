@@ -1,5 +1,5 @@
 #
-# Perl tvprobe utility module based on the iptables module mp2t
+# Perl tvprobe utility module based on the iptables module mpeg2ts
 #  see "perldoc tvprobe/mp2t.pm"
 #
 
@@ -139,7 +139,7 @@ sub get_config {
 #    'probe_name' => 'tvprobe42',
 #    'input' => {
 #	'rule_eth42' => {
-#	    'procfile'   => '/proc/net/xt_mp2t/rule_test',
+#	    'procfile'   => '/proc/net/xt_mpeg2ts/rule_test',
 #	    'shortloc'   => 'alb',
 #	    'switch'     => 'albcs35',
 #	    'name'       => 'Main signal',
@@ -276,7 +276,7 @@ sub read_input_key($$) {
 }
 
 ###
-# Parsing lines from the mp2t proc file.  The syntax for the proc
+# Parsing lines from the mpeg2ts proc file.  The syntax for the proc
 # output is "key:value" constructs, seperated by a space.
 #
 sub parse_line($) {
@@ -530,7 +530,7 @@ sub process_input_queue($@)
     #  created:timestamp differ from the last stored timestamp.
     my $created_last = get_time_info_created($globalref);
     if ($created_last > 0 && $created_last != $created_new) {
-	my $log = "Looks like iptables mp2t rule was reloaded behind our back";
+	my $log = "Looks like iptables mpeg2ts rule was reloaded behind our back";
 	$logger->warn("input[$probe_input] $log");
 	reset_daemon_session($globalref);
 	my $daemon_session_id = get_daemon_session($globalref, $probe_input);
@@ -1467,17 +1467,17 @@ __END__
 
 =head1 NAME
 
-tvprobe::mp2t - tvprobe utility based on the iptables module mp2t
+tvprobe::mp2t - tvprobe utility based on the iptables module mpeg2ts
 
 =head1 SYNOPSIS
 
 This modules provides common functions and utilities for our tvprobe
-analyser which is based upon the iptables module mp2t.
+analyzer which is based upon the iptables module mpeg2ts.
 
 =head1 DESCRIPTION
 
 The main purpose of the module is to provide parsing facilities for
-the proc file output from the mp2t kernel netfilter/iptables module.
+the proc file output from the mpeg2ts kernel netfilter/iptables module.
 
 The syntax for the proc output is "key:value" constructs, seperated by
 a space.  This is done to easy machine/script parsing and still human
@@ -1523,7 +1523,7 @@ Example of the config file:
  # other keys without changing the id.
  #
  # Required option, which proc file to read
- input[rule_eth42][procfile]  = /proc/net/xt_mp2t/rule_test
+ input[rule_eth42][procfile]  = /proc/net/xt_mpeg2ts/rule_test
  #
  # Required options that identifies this input
  input[rule_eth42][shortloc]  = alb

@@ -31,7 +31,7 @@ my %attr = (
 #    'dist'    => {COMPRESS => 'gzip', SUFFIX => 'gz'},
 #   realclean => {FILES => join ' ', @clean_files},
     AUTHOR    => 'Jesper Dangaard Brouer',
-    ABSTRACT  => 'IPTV-analyzer mp2t Collector daemon',
+    ABSTRACT  => 'IPTV-analyzer mpeg2ts Collector daemon',
 #    INSTALLDIRS => 'site',
 );
 

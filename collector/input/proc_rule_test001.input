@@ -1,4 +1,4 @@
-# info:version module:xt_mp2t version:0.2.0-devel
+# info:version module:xt_mpeg2ts version:0.4.1-devel
 # info:time created:1263215354.724570789 now:1263217148.157113795 delta:1793.432543006
 # info:dynamic rule_id:1 streams:4 streams_check:4 max_list_search:0 rnd:4252654206
 # info:config htable_size:100 max-streams:0 list_search_warn_level:20
