@@ -84,7 +84,7 @@ The following Debian packages are needed by the collector daemon:
    (libipc-shareable-perl liblog-dispatch-perl  libparams-validate-perl)
 * mysql-client
 * mysql-server
-
+* liblog-dispatch-perl (for email extention to Log4perl)
 
 == COPYRIGHT AND LICENCE ==
 
