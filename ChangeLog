@@ -1,6 +1,11 @@
 
 Recent changes
 
+	The collector, changed the Perl module layout to IPTV::Analyzer
+	(used to be called tvprobe).
+
+	TODO: Also change the config file name.
+
 2011-04-18  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.6.0.
