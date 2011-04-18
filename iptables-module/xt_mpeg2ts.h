@@ -17,8 +17,8 @@
    userspace.
 */
 #define XT_MODULE_NAME		"xt_mpeg2ts"
-#define XT_MODULE_VERSION	"0.3.2"
-#define XT_MODULE_RELDATE	"Apr 14, 2011"
+#define XT_MODULE_VERSION	"0.6.0"
+#define XT_MODULE_RELDATE	"Apr 18, 2011"
 #define PFX			XT_MODULE_NAME ": "
 
 static char version[] =
