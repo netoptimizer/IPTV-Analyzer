@@ -4,7 +4,7 @@
 #
 
 log4perl.logger              = DEBUG, Screen1
-log4perl.logger.tvprobe.mpeg2ts = INFO, File1
+log4perl.logger.IPTV.Analyzer = INFO, File1
 
 
 # Output: Screen1

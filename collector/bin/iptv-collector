@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w -I../lib/
 
-# Perl Example of howto parse /proc/net/xt_mpeg2ts/ data
+# Perl IPTV-Analyzer collector daemon, which process
+# and parse data from /proc/net/xt_mpeg2ts/xxx, provided by
+# the iptables module mpeg2ts.
 
 use strict;
 use warnings;
@@ -15,15 +17,15 @@ use Proc::PID::File; # libproc-pid-file-perl
 
 use File::Basename;
 
-# Hack to get include path to tvprobe::mpeg2ts
+# Hack to get include path to IPTV::Analyzer::mpeg2ts
 # use lib dirname($0);
-use tvprobe::mpeg2ts;
+use IPTV::Analyzer::mpeg2ts;
 
 use Trapper;
 
 # Logger hack for changing the logging level runtime
 use Log::Log4perl qw(get_logger :levels);
-our $logger = get_logger("tvprobe::mpeg2ts");
+our $logger = get_logger("IPTV::Analyzer::mpeg2ts");
 #$logger->level($DEBUG);
 
 # Config options
@@ -122,7 +124,7 @@ sub daemon2()
 	    exit(1);
 	}
     } else {
-	$logger->info("Starting tvprobe collector daemon2");
+	$logger->info("Starting IPTV::Analyzer collector daemon2");
     }
 }
 
@@ -210,8 +212,8 @@ sub daemon3()
 	    exit(1);
 	}
     } else {
-	my $ver = $tvprobe::mpeg2ts::VERSION;
-	$logger->info("Started tvprobe collector daemon (child) (version:$ver)");
+	my $ver = $IPTV::Analyzer::mpeg2ts::VERSION;
+	$logger->info("Started IPTV::Analyzer collector daemon (child) (version:$ver)");
     }
 }
 
@@ -245,15 +247,15 @@ $SIG{__DIE__} = sub {
 
 
 #tie *STDERR, "Trapper";
-#tie *STDERR, "tvprobe::mpeg2ts";
+#tie *STDERR, "IPTV::Analyzer::mpeg2ts";
 
 ## Testing outputs
 #print        "TEST1:stdout\n";
 #print STDERR "TEST1:stderr\n";
 #warn         "TEST1:warn()\n";
 
-my $ver = $tvprobe::mpeg2ts::VERSION;
-$logger->info("Starting tvprobe collector daemon (parent) (version:$ver)");
+my $ver = $IPTV::Analyzer::mpeg2ts::VERSION;
+$logger->info("Starting IPTV::Analyzer collector daemon (parent) (version:$ver)");
 
 
 # Fork of this process
@@ -266,7 +268,7 @@ daemon3();
 #print STDERR "TEST2:stderr\n";
 #warn         "TEST2:warn()\n";
 
-# tvprobe::mpeg2ts
+# IPTV::Analyzer::mpeg2ts
 db_connect();
 
 # The loop
@@ -283,7 +285,7 @@ while ($run) {
     }
 }
 
-$logger->info("Stopping tvprobe collector daemon (version:$ver)");
+$logger->info("Stopping IPTV::Analyzer collector daemon (version:$ver)");
 
 db_commit();
 db_disconnect();

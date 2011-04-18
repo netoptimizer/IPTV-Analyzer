@@ -1,9 +1,9 @@
 #
-# Perl tvprobe utility module based on the iptables module mpeg2ts
-#  see "perldoc tvprobe/mpeg2ts.pm"
+# Perl IPTV/Analyzer utility module based on the iptables module mpeg2ts
+#  see "perldoc IPTV/Analyzer/mpeg2ts.pm"
 #
 
-package tvprobe::mpeg2ts;
+package IPTV::Analyzer::mpeg2ts;
 
 use strict;
 use warnings;
@@ -1464,16 +1464,16 @@ sub db_insert($$$$$)
 1;
 __END__
 # Below is documentation for the module.
-#  One way of reading it: "perldoc tvprobe/mpeg2ts.pm"
+#  One way of reading it: "perldoc IPTV/Analyzer/mpeg2ts.pm"
 
 =head1 NAME
 
-tvprobe::mpeg2ts - tvprobe utility based on the iptables module mpeg2ts
+IPTV::Analyzer::mpeg2ts - collector utility for the iptables module mpeg2ts
 
 =head1 SYNOPSIS
 
-This modules provides common functions and utilities for our tvprobe
-analyzer which is based upon the iptables module mpeg2ts.
+This modules provides common functions and utilities for the IPTV analyzer
+which is based upon the iptables module mpeg2ts.
 
 =head1 DESCRIPTION
 
