@@ -56,9 +56,10 @@ if ( -e "${basedir}/${log4perl_conf}" ) {
     Log::Log4perl->init("/etc/${log4perl_conf}");
 } else {
     # Use fallback config
-    my $log = "Could not find the log4perl config file:[$log4perl_conf]";
+    my $log = "Could NOT find the log4perl config file:[$log4perl_conf]";
+    $log.= " - you will not see daemon log info!!!";
     Log::Log4perl->init(\$logger_fallback_config);
-    $logger->warn($log);
+    $logger->error($log);
 }
 
 # Call load config after the logging module is activated
