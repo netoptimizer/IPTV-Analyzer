@@ -1,9 +1,10 @@
 #
-# Log4perl configuration file used by the DCU system
+# Log4perl configuration example file to the IPTV-analyzer
+#  iptv-collector daemon
 #
 
 log4perl.logger              = DEBUG, Screen1
-log4perl.logger.tvprobe.mp2t = INFO, File1
+log4perl.logger.tvprobe.mpeg2ts = INFO, File1
 
 
 # Output: Screen1
@@ -42,7 +43,7 @@ log4perl.category = FATAL, Mailer
 log4perl.appender.Mailer         = Log::Dispatch::Email::MailSend
 log4perl.appender.Mailer.Threshold = ERROR
 log4perl.appender.Mailer.to      = hawk@comx.dk
-log4perl.appender.Mailer.subject = FAILURE in mp2t collector daemon
+log4perl.appender.Mailer.subject = FAILURE in mpeg2ts iptv-collector daemon
 log4perl.appender.Mailer.layout  = SimpleLayout
 #log4perl.appender.Mailer.buffered = 0
 

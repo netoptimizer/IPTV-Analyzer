@@ -1,9 +1,9 @@
 #
 # Perl tvprobe utility module based on the iptables module mpeg2ts
-#  see "perldoc tvprobe/mp2t.pm"
+#  see "perldoc tvprobe/mpeg2ts.pm"
 #
 
-package tvprobe::mp2t;
+package tvprobe::mpeg2ts;
 
 use strict;
 use warnings;
@@ -1463,11 +1463,11 @@ sub db_insert($$$$$)
 1;
 __END__
 # Below is documentation for the module.
-#  One way of reading it: "perldoc tvprobe/mp2t.pm"
+#  One way of reading it: "perldoc tvprobe/mpeg2ts.pm"
 
 =head1 NAME
 
-tvprobe::mp2t - tvprobe utility based on the iptables module mpeg2ts
+tvprobe::mpeg2ts - tvprobe utility based on the iptables module mpeg2ts
 
 =head1 SYNOPSIS
 

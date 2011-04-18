@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w -I../lib/
 
-# Perl Example of howto parse /proc/net/xt_mp2t/ data
+# Perl Example of howto parse /proc/net/xt_mpeg2ts/ data
 
 use strict;
 use warnings;
@@ -15,15 +15,15 @@ use Proc::PID::File; # libproc-pid-file-perl
 
 use File::Basename;
 
-# Hack to get include path to tvprobe::mp2t
+# Hack to get include path to tvprobe::mpeg2ts
 # use lib dirname($0);
-use tvprobe::mp2t;
+use tvprobe::mpeg2ts;
 
 use Trapper;
 
 # Logger hack for changing the logging level runtime
 use Log::Log4perl qw(get_logger :levels);
-our $logger = get_logger("tvprobe::mp2t");
+our $logger = get_logger("tvprobe::mpeg2ts");
 #$logger->level($DEBUG);
 
 # Config options
@@ -210,7 +210,7 @@ sub daemon3()
 	    exit(1);
 	}
     } else {
-	my $ver = $tvprobe::mp2t::VERSION;
+	my $ver = $tvprobe::mpeg2ts::VERSION;
 	$logger->info("Started tvprobe collector daemon (child) (version:$ver)");
     }
 }
@@ -245,14 +245,14 @@ $SIG{__DIE__} = sub {
 
 
 #tie *STDERR, "Trapper";
-#tie *STDERR, "tvprobe::mp2t";
+#tie *STDERR, "tvprobe::mpeg2ts";
 
 ## Testing outputs
 #print        "TEST1:stdout\n";
 #print STDERR "TEST1:stderr\n";
 #warn         "TEST1:warn()\n";
 
-my $ver = $tvprobe::mp2t::VERSION;
+my $ver = $tvprobe::mpeg2ts::VERSION;
 $logger->info("Starting tvprobe collector daemon (parent) (version:$ver)");
 
 
@@ -266,7 +266,7 @@ daemon3();
 #print STDERR "TEST2:stderr\n";
 #warn         "TEST2:warn()\n";
 
-# tvprobe::mp2t
+# tvprobe::mpeg2ts
 db_connect();
 
 # The loop

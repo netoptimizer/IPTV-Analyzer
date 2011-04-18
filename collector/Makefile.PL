@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 # copied, but is also means that these files are getting copied to the
 # dir blib/script/ (which I dont understand the purpose of).
 our @exe_files;
-#push @exe_files, 'bin/tvprobe_mp2t_collector';
+#push @exe_files, 'bin/iptv-collector';
 
 # Automatically find files in "bin" directory
 my $bindir="bin";
@@ -20,7 +20,7 @@ closedir DIR;
 my %attr = (
     NAME      => 'iptv-collector',
 #    VERSION   => '0.x.x',
-    VERSION_FROM      => 'lib/tvprobe/mp2t.pm', # finds $VERSION
+    VERSION_FROM      => 'lib/tvprobe/mpeg2ts.pm', # finds $VERSION
     PREREQ_PM => {
 	'Log::Log4perl'   => 0,
 	'Config::File'    => 0,
