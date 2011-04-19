@@ -1,7 +1,7 @@
 /*
  * Header file for MPEG2 TS match extension "mpeg2ts" for Xtables.
  *
- * Copyright (c) Jesper Dangaard Brouer <jdb@comx.dk>, 2009+
+ * Copyright (c) Jesper Dangaard Brouer <hawk@comx.dk>, 2009-2011+
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License; either

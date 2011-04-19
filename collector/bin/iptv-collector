@@ -1,8 +1,14 @@
 #!/usr/bin/perl -w -I../lib/
-
+#
 # Perl IPTV-Analyzer collector daemon, which process
 # and parse data from /proc/net/xt_mpeg2ts/xxx, provided by
 # the iptables module mpeg2ts.
+#
+# Author: Jesper Dangaard Brouer <hawk@comx.dk>.
+#
+# This software is licensed under the terms of the GNU General Public
+# License 2.0. or newer. See <http://www.gnu.org/licenses/gpl-2.0.html>.
+#
 
 use strict;
 use warnings;
