@@ -51,6 +51,9 @@ my $basedir = dirname($0);
 if ( -e "${basedir}/${log4perl_conf}" ) {
     # Try local script dir
     Log::Log4perl->init("${basedir}/${log4perl_conf}");
+} elsif ( -e "/etc/iptv-analyzer/${log4perl_conf}" ) {
+    # Try /etc/iptv-analyzer
+    Log::Log4perl->init("/etc/iptv-analyzer/${log4perl_conf}");
 } elsif ( -e "/etc/${log4perl_conf}" ) {
     # Try /etc/
     Log::Log4perl->init("/etc/${log4perl_conf}");
