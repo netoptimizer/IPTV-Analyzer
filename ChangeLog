@@ -1,10 +1,13 @@
 
 Recent changes
 
-	The collector, changed the Perl module layout to IPTV::Analyzer
-	(used to be called tvprobe).
+	Restructure the collector code.
 
-	TODO: Also change the config file name.
+	Notice: Collector config file renamed and changed location to:
+	  /etc/iptv-analyzer.conf  (previously /etc/tvprobe.conf).
+
+	The collector, also changed the Perl module layout to
+	IPTV::Analyzer (used to be called tvprobe).
 
 2011-04-18  Jesper Dangaard Brouer <hawk@comx.dk>
 
