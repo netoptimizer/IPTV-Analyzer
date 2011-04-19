@@ -4,18 +4,18 @@ use ExtUtils::MakeMaker;
 # copied, but is also means that these files are getting copied to the
 # dir blib/script/ (which I dont understand the purpose of).
 our @exe_files;
-#push @exe_files, 'bin/iptv-collector';
+push @exe_files, 'bin/iptv-collector';
 
-# Automatically find files in "bin" directory
-my $bindir="bin";
-opendir (DIR, $bindir) or warn "Couldn't open directory, $!";
-while ($file = readdir(DIR))
-{
-    next if ($file =~ m/^\./);
-    print "Found bin file: $file\n";
-    push @exe_files, "$bindir/$file";
-}
-closedir DIR;
+## Automatically find files in "bin" directory
+#my $bindir="bin";
+#opendir (DIR, $bindir) or warn "Couldn't open directory, $!";
+#while ($file = readdir(DIR))
+#{
+#    next if ($file =~ m/^\./);
+#    print "Found bin file: $file\n";
+#    push @exe_files, "$bindir/$file";
+#}
+#closedir DIR;
 
 # Add some extra to the generated Makefile
 {
