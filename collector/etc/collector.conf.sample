@@ -1,3 +1,6 @@
+#
+# Config file location: /etc/iptv-analyzer/collector.conf
+#
 
 # DB setup
 dbhost = localhost
