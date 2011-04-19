@@ -53,14 +53,13 @@ TODO: Describe the pid file perms problem
 
 The iptv-collector daemon depends on two config files:
 
-  /etc/log4perl.conf
+  /etc/iptv-analyzer/collector.conf
 
 and
 
-  /etc/tvprobe.conf
-  (this should be changed to iptv-collector.conf)
+  /etc/log4perl.conf
 
-Example config files are available under "etc" directory.
+Example/sample config files are available under "etc" directory.
 
 
 == DEPENDENCIES ==

@@ -113,9 +113,9 @@ BEGIN {
 #
 
 sub load_config {
-    my $cfgfile = shift || "tvprobe.conf";
+    my $cfgfile = shift || "collector.conf";
     my $cfgdir;
-    my $cfgdir_default = "/etc/";
+    my $cfgdir_default = "/etc/iptv-analyzer/";
     if ( -e "${cfgdir_default}${cfgfile}" ) {
 	$cfgdir = $cfgdir_default;
     } else {
@@ -1489,11 +1489,12 @@ readable.
 The module uses the module L<Config::File> for reading all config
 files and the module L<Log::Log4perl> for the logging facility.
 
-The module uses a default config file called: C<tvprobe.conf>.
+The module uses a default config file called: C<collector.conf>, which
+is located in C</etc/iptv-analyzer/>.
 
 =head1 CONFIG
 
-Example of the config file:
+Example of the config file: /etc/iptv-analyzer/collector.conf
 
  # DB setup
  dbhost = localhost
