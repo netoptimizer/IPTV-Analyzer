@@ -20,7 +20,7 @@ closedir DIR;
 my %attr = (
     NAME      => 'iptv-collector',
 #    VERSION   => '0.x.x',
-    VERSION_FROM      => 'lib/tvprobe/mpeg2ts.pm', # finds $VERSION
+    VERSION_FROM      => 'lib/IPTV/Analyzer/mpeg2ts.pm', # finds $VERSION
     PREREQ_PM => {
 	'Log::Log4perl'   => 0,
 	'Config::File'    => 0,
