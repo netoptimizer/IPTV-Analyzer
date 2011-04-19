@@ -46,7 +46,8 @@ use File::Basename;
 # use lib dirname($0);
 use IPTV::Analyzer::mpeg2ts;
 
-use Trapper;
+# Trick to catch stderr messages from e.g. DB calls into Log4perl
+use IPTV::Analyzer::Log4perlTrapper;
 
 # Logger hack for changing the logging level runtime
 use Log::Log4perl qw(get_logger :levels);

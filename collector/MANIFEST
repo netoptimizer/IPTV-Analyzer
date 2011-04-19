@@ -4,7 +4,7 @@ etc/log4perl.conf.sample
 input/proc_rule_test001.input
 input/README
 lib/IPTV/Analyzer/mpeg2ts.pm
-lib/Trapper.pm
+lib/IPTV/Analyzer/Log4perlTrapper.pm
 Makefile.PL
 MANIFEST			This list of files
 README.wiki
