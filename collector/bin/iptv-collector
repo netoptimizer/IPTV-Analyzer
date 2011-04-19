@@ -1,14 +1,33 @@
 #!/usr/bin/perl -w -I../lib/
 #
-# Perl IPTV-Analyzer collector daemon, which process
-# and parse data from /proc/net/xt_mpeg2ts/xxx, provided by
-# the iptables module mpeg2ts.
+# Perl IPTV-Analyzer collector daemon
 #
-# Author: Jesper Dangaard Brouer <hawk@comx.dk>.
-#
-# This software is licensed under the terms of the GNU General Public
-# License 2.0. or newer. See <http://www.gnu.org/licenses/gpl-2.0.html>.
-#
+=pod
+
+=head1 NAME
+
+iptv-collector -- IPTV-Analyzer Collector daemon
+
+=head1 DESCRIPTION
+
+The IPTV-Analyzer Collector daemon, parse and process data from
+the iptables module mpeg2ts, via reading files under:
+
+  /proc/net/xt_mpeg2ts/rule_XXX
+
+The daemon constantly compares the proc file input, to detect changes
+for a given multicast channel, e.g drop detection.  Changes are
+recorded and stored into a MySQL database.
+
+=head1 CONFIG
+
+The config file: /etc/iptv-analyzer/collector.conf
+
+Sample/documentation of the config format see:
+
+  man IPTV::Analyzer::mpeg2ts
+
+=cut
 
 use strict;
 use warnings;
@@ -296,3 +315,15 @@ $logger->info("Stopping IPTV::Analyzer collector daemon (version:$ver)");
 db_commit();
 db_disconnect();
 exit;
+
+__END__
+=pod
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2009-2011+ by Jesper Dangaard Brouer, ComX Networks A/S.
+
+This file is licensed under the terms of the GNU General Public
+License 2.0. or newer. See <http://www.gnu.org/licenses/gpl-2.0.html>.
+
+=cut
