@@ -1,6 +1,6 @@
 bin/iptv-collector
+etc/collector.conf.sample
 etc/log4perl.conf.example
-etc/tvprobe.conf.example
 input/proc_rule_test001.input
 input/README
 lib/IPTV/Analyzer/mpeg2ts.pm
