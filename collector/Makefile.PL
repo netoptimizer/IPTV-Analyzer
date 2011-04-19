@@ -17,6 +17,23 @@ while ($file = readdir(DIR))
 }
 closedir DIR;
 
+# Add some extra to the generated Makefile
+{
+    package MY;
+    sub postamble {
+	'
+INST_ETC = /etc/iptv-analyzer
+
+install::
+	$(NOECHO) $(ECHO) Installing sample config in: $(INST_ETC)
+	$(NOECHO) test -d $(INST_ETC) || $(MKPATH) $(INST_ETC)
+	$(CP) etc/log4perl.conf.sample  $(INST_ETC)/
+	$(CP) etc/collector.conf.sample $(INST_ETC)/
+'
+    }
+}
+
+
 my %attr = (
     NAME      => 'iptv-collector',
 #    VERSION   => '0.x.x',
