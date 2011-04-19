@@ -47,7 +47,7 @@ my %attr = (
 	'File::Basename'  => 0,
 	'DBI'             => 0,
 	'DBD::mysql'      => 0,
-	'Log::Dispatch::Email.pm' => 0,
+	'Log::Dispatch::Email' => 0,
     },
     PL_FILES  => {},    # Prevent old MakeMaker from running Build.PL
     EXE_FILES => \@exe_files,
