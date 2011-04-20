@@ -1,10 +1,16 @@
 
 Recent changes
 
-	Restructure the collector code.
+2011-04-20  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.7.0.
+
+	Restructured the collector code.
 
 	Notice: Collector config file renamed and changed location to:
+
 	  /etc/iptv-analyzer/collector.conf
+
 	(previously /etc/tvprobe.conf).
 
 	The collector, also changed the Perl module layout to
