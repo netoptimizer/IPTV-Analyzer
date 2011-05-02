@@ -19,8 +19,8 @@ obj-m += compat_xtables.o
 # Environment variables that can be overwritten/redefined
 # --------
 KERNEL_DIR   ?= /lib/modules/$(shell uname -r)/build
-#IPTABLES_INC ?= /usr/include
-IPTABLES_INC ?= /usr/local/include
+IPTABLES_INC ?= /usr/include
+#IPTABLES_INC ?= /usr/local/include
 LIB_CFLAGS   ?=-O2 -ggdb3 -Wall -fPIC
 
 # Trick I found in kernel/Documentation/kbuild/modules.txt:
@@ -49,9 +49,9 @@ KBUILD_CFLAGS+=-g -O2 -fno-inline
 
 PWD = $(shell pwd)
 
-# FIXME: Don't assume that iptables are located in /usr/local/sbin
+# TODO: Auto detect location of iptables, don't assume /sbin
 
-iptables_version = $(shell (/usr/local/sbin/iptables -V | awk {'print $$2'} | cut -c 2-))
+iptables_version = $(shell (/sbin/iptables -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 
 # TODO: Add a version check, that tell/warn people if the iptables
