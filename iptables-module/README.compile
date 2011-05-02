@@ -9,43 +9,9 @@ software.  To follow these compile instructions, you should have stow
 installed on your machine.
 
 
-== Compiling and installing iptables v1.4.3.2 ==
+== Iptables dependency ==
 
 This iptables module requires minimum iptables 1.4.3.
-
-The following describes the procedure for getting iptables v1.4.3.2
-installed on your system, via downloading, unpacking, compiling and
-installing from the source.
-
-Download iptables source code tarball:
-
-  cd ~/download/
-  wget http://www.netfilter.org/projects/iptables/files/iptables-1.4.3.2.tar.bz2
-
-Unpack the source
-
-  cd ~/tools/
-  tar jxvf ~/download/iptables-1.4.3.2.tar.bz2
-  cd iptables-1.4.3.2/
-
-Note, when compiling iptables set 'prefix=/usr/local/' and then when
-installing the prefix should be redefined to the stow path.
-
-  ./configure --prefix=/usr/local/
-  make
-
-Due to stow, install iptables in /usr/local/stow/iptables-1.4.3.2, by
-redefining "prefix".
-
-  make prefix=/usr/local/stow/iptables-1.4.3.2 install
-
-Activate the software via stow:
-
-  cd /usr/local/stow/
-  stow iptables-1.4.3.2
-
-Check the version
- /usr/local/sbin/iptables -V
 
 
 == Developement tree ==
