@@ -21,7 +21,7 @@ analyzer tools are extremely expensive.  The IPTV-Analyzer is mostly
 target for enterprise usage, with several probes/measurement-points at
 strategic points in your network.
 
-== Elements ==
+== Elements / Architecture ==
 
 === iptables-module: mpeg2ts ===
 
@@ -33,12 +33,10 @@ hash tables are used for handling large number of streams.  Statistics
 are exported via the proc filesystem (scalability is achieved via use
 of the seq_file proc API).
 
-=== Collector ==
+=== Collector ===
 
 The statistics are collected by a iptv-collector daemon, and stored in
 a MySQL database.
-
-== Architecture ==
 
 == Price ==
 
