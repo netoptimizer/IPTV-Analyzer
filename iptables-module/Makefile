@@ -91,7 +91,7 @@ sparse:
 # Install target for userspace lib
 lib_install: lib
 	@echo "\n  -=-=-=-=- INSTALL Userspace lib -=-=-=-=-"
-	@if test -d $(xtlibdir)x; then \
+	@if test -d $(xtlibdir); then \
 	    $(CP) $(LIB_TARGETS) $(xtlibdir); \
 	else \
 	    echo "***ERROR*** - cannot find libexec install dir"; \
