@@ -19,10 +19,7 @@ obj-m += compat_xtables.o
 # Environment variables that can be overwritten/redefined
 # --------
 KERNEL_DIR   ?= /lib/modules/$(shell uname -r)/build
-IPTABLES_INC ?= /usr/include
-#IPTABLES_INC ?= /usr/local/include
 LIB_CFLAGS   ?=-O2 -ggdb3 -Wall -fPIC
-xtlibdir ?= /lib/xtables
 
 # Trick I found in kernel/Documentation/kbuild/modules.txt:
 #
@@ -53,9 +50,25 @@ CP = cp -v
 
 # Auto detect location of iptables, don't assume /sbin
 iptables_bin = $(shell which iptables)
-
 iptables_version = $(shell ($(iptables_bin) -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
+
+# Problem statement:
+#
+#  The userspace lib dir is differs on different Linux distributions,
+#  further more the distributions choose not to follow the source code
+#  (and just alter the exec_prefix to libexec).  Instead they force
+#  the usage of /lib/xtables/ or /lib64/xtables/, via
+#
+#    ./configure --with-xtlibdir=/lib/xtables
+#
+# Auto detect userspace lib dir and prefix
+iptables_bindir = $(shell dirname $(iptables_bin))
+#PREFIX         ?= $(shell dirname $(iptables_bindir))
+IPTABLES_INC   ?= /usr/include
+#IPTABLES_INC ?= /usr/local/include
+#xtlibdir ?= $(shell if [ /lib/xtables ]; then)
+xtlibdir ?= /lib/xtables
 
 # TODO: Add a version check, that tell/warn people if the iptables
 #       version is below 1.4.3 (as we depend >= 1.4.3)
@@ -77,12 +90,12 @@ sparse:
 
 # Install target for userspace lib
 lib_install: lib
-	@echo -e "\n  -=-=-=-=- INSTALL Userspace lib -=-=-=-=-"
-	@if test -d $(xtlibdir); then \
-	    @$(CP) $(LIB_TARGETS) $(xtlibdir); \
-	@else
-	    @echo "***ERROR*** - cannot find lib install dir"; \
-	@fi
+	@echo "\n  -=-=-=-=- INSTALL Userspace lib -=-=-=-=-"
+	@if test -d $(xtlibdir)x; then \
+	    $(CP) $(LIB_TARGETS) $(xtlibdir); \
+	else \
+	    echo "***ERROR*** - cannot find libexec install dir"; \
+	fi
 
 install: lib_install modules_install
 
