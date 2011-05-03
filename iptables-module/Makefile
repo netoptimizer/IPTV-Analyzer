@@ -48,6 +48,9 @@ KBUILD_CFLAGS+=-g -O2 -fno-inline
 PWD = $(shell pwd)
 CP = cp -v
 
+# Need sbin in the path to find iptables binary
+PATH:=/usr/local/sbin:/usr/sbin:/sbin:$(PATH)
+
 # Auto detect location of iptables, don't assume /sbin
 iptables_bin = $(shell which iptables)
 iptables_version = $(shell ($(iptables_bin) -V | awk {'print $$2'} | cut -c 2-))
@@ -64,17 +67,20 @@ IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 #
 # Auto detect userspace lib dir and prefix
 iptables_bindir = $(shell dirname $(iptables_bin))
-#PREFIX         ?= $(shell dirname $(iptables_bindir))
+iptables_prefix = $(shell dirname $(iptables_bindir))
 IPTABLES_INC   ?= /usr/include
 #IPTABLES_INC ?= /usr/local/include
-#xtlibdir ?= $(shell if [ /lib/xtables ]; then)
-xtlibdir ?= /lib/xtables
+#xtlibdir ?= /lib/xtables
+xtlibdir ?= $(shell if [ "$(iptables_bindir)" = "/sbin" ]; then echo "/lib/xtables"; else echo "$(iptables_prefix)/libexec/xtables"; fi)
 
 # TODO: Add a version check, that tell/warn people if the iptables
 #       version is below 1.4.3 (as we depend >= 1.4.3)
 
-
 all: lib modules
+
+#testxtlibdir:
+#	echo xtlibdir: $(xtlibdir)
+#	echo $(PATH)
 
 modules:
 	@echo -e "\n  -=-=-=-=- Kernel modules -=-=-=-=-"
