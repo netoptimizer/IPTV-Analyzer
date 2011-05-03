@@ -51,9 +51,10 @@ KBUILD_CFLAGS+=-g -O2 -fno-inline
 PWD = $(shell pwd)
 CP = cp -v
 
-# TODO: Auto detect location of iptables, don't assume /sbin
+# Auto detect location of iptables, don't assume /sbin
+iptables_bin = $(shell which iptables)
 
-iptables_version = $(shell (/sbin/iptables -V | awk {'print $$2'} | cut -c 2-))
+iptables_version = $(shell ($(iptables_bin) -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 
 # TODO: Add a version check, that tell/warn people if the iptables
@@ -77,7 +78,11 @@ sparse:
 # Install target for userspace lib
 lib_install: lib
 	@echo -e "\n  -=-=-=-=- INSTALL Userspace lib -=-=-=-=-"
-	@$(CP) $(LIB_TARGETS) $(xtlibdir)
+	@if test -d $(xtlibdir); then \
+	    @$(CP) $(LIB_TARGETS) $(xtlibdir); \
+	@else
+	    @echo "***ERROR*** - cannot find lib install dir"; \
+	@fi
 
 install: lib_install modules_install
 
