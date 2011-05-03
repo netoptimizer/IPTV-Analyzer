@@ -22,6 +22,7 @@ KERNEL_DIR   ?= /lib/modules/$(shell uname -r)/build
 IPTABLES_INC ?= /usr/include
 #IPTABLES_INC ?= /usr/local/include
 LIB_CFLAGS   ?=-O2 -ggdb3 -Wall -fPIC
+xtlibdir ?= /lib/xtables
 
 # Trick I found in kernel/Documentation/kbuild/modules.txt:
 #
@@ -48,6 +49,7 @@ LIB_CFLAGS   ?=-O2 -ggdb3 -Wall -fPIC
 KBUILD_CFLAGS+=-g -O2 -fno-inline
 
 PWD = $(shell pwd)
+CP = cp -v
 
 # TODO: Auto detect location of iptables, don't assume /sbin
 
@@ -64,13 +66,20 @@ modules:
 	@echo -e "\n  -=-=-=-=- Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
-modules_install:
+modules_install: modules
 	@echo -e "\n  -=-=-=-=- INSTALL Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install
 
 sparse:
 	@echo -e "\n  -=-=-=-=- SPARSE CHECK: Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) C=1 modules
+
+# Install target for userspace lib
+lib_install: lib
+	@echo -e "\n  -=-=-=-=- INSTALL Userspace lib -=-=-=-=-"
+	@$(CP) $(LIB_TARGETS) $(xtlibdir)
+
+install: lib_install modules_install
 
 
 clean:
