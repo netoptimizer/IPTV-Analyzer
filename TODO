@@ -9,6 +9,7 @@ Stuff I/we need to change before a release
 
  * tarball release script
 
+ * iptables-module: Move auto detecting xtlibdir to configure script
 
 == iptables-module ==
 
