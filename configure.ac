@@ -1,8 +1,9 @@
 #
 # Notice: The VERSION is defined/controlled by AC_INIT
 #
-#AC_INIT([iptv-analyzer], [0.7.1])
 AC_INIT([iptv-analyzer], [0.7.1], [hawk@comx.dk], [], [www.iptv-analyzer.org])
+#AC_INIT(package,        version, [bug-report], [tarname], [url])
+#
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 #AC_PROG_INSTALL
