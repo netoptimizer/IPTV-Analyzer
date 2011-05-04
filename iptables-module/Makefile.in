@@ -92,15 +92,15 @@ all: lib modules
 #	echo $(PATH)
 
 modules:
-	@echo -e "\n  -=-=-=-=- Kernel modules -=-=-=-=-"
+	@echo "\n  -=-=-=-=- Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
 modules_install: modules
-	@echo -e "\n  -=-=-=-=- INSTALL Kernel modules -=-=-=-=-"
+	@echo "\n  -=-=-=-=- INSTALL Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install
 
 sparse:
-	@echo -e "\n  -=-=-=-=- SPARSE CHECK: Kernel modules -=-=-=-=-"
+	@echo "\n  -=-=-=-=- SPARSE CHECK: Kernel modules -=-=-=-=-"
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) C=1 modules
 
 # Install target for userspace lib
@@ -130,7 +130,7 @@ lib%.so: lib%.o
 	gcc -shared -o $@ $^;
 
 lib%.o: lib%.c %.h
-	@echo -e "\n  -=-=-=-=- Userspace lib -=-=-=-=-"
+	@echo "\n  -=-=-=-=- Userspace lib -=-=-=-=-"
 	gcc $(IPT_FLAGS) ${LIB_CFLAGS} -I$(IPTABLES_INC) -D_INIT=lib$*_init -c -o $@ $<;
 
 
