@@ -16,6 +16,10 @@ exec_prefix = @exec_prefix@
 libexecdir  = @libexecdir@
 #
 #configure_xtlibdir = @xtlibdir@
+#
+# Kernel builddir detected (via /lib/modules/$(shell uname -r)/build"])
+#  or set by configure [--with-kbuild=PATH]
+kbuilddir   = @kbuilddir@
 
 # Targets
 # -------
@@ -27,11 +31,17 @@ obj-m += xt_mpeg2ts.o
 #  git://xtables-addons.git.sf.net/gitroot/xtables-addons/xtables-addons/
 obj-m += compat_xtables.o
 
+# Need a directory with the kernel source/makefiles
+# - Use kbuilddir if its defined, else detect it our self
+ifdef kbuilddir
+KERNEL_DIR ?= $(kbuilddir)
+else
+KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
+endif
 
-# Environment variables that can be overwritten/redefined
-# --------
-KERNEL_DIR   ?= /lib/modules/$(shell uname -r)/build
-LIB_CFLAGS   ?=-O2 -ggdb3 -Wall -fPIC
+# Environment variables with ?= can be overwritten/redefined
+#  when calling make
+LIB_CFLAGS ?=-O2 -ggdb3 -Wall -fPIC
 
 # Trick I found in kernel/Documentation/kbuild/modules.txt:
 #
