@@ -66,12 +66,12 @@ else
 	fi;
 fi;
 echo "Found kernel version $kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
-if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 36; then
+if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 38; then
 	echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
-elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 17 \) -o \
-    \( "$kmajor" -eq 2 -a "$kminor" -eq 6 -a "$kmicro" -eq 18 -a \
-    "$kstable" -lt 5 \); then
-	echo "ERROR: That kernel version is not supported. Please see INSTALL for minimum configuration.";
+elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 28 \); then
+	echo "ERROR: That kernel version is not supported";
+	echo "       Minimum kernel versions > 2.6.27";
+	echo "       (as we need the RCU locking API).";
 	exit 1;
 fi;
 
