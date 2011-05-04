@@ -1,13 +1,17 @@
-
-AC_INIT([iptv-analyzer], [0.7.1])
+#
+# Notice: The VERSION is defined/controlled by AC_INIT
+#
+#AC_INIT([iptv-analyzer], [0.7.1])
+AC_INIT([iptv-analyzer], [0.7.1], [hawk@comx.dk], [], [www.iptv-analyzer.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_INSTALL
-AM_INIT_AUTOMAKE([1.10.2 -Wall foreign subdir-objects])
+#AC_PROG_INSTALL
+#AM_INIT_AUTOMAKE([1.10.2 -Wall foreign subdir-objects])
+AM_INIT_AUTOMAKE([foreign])
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+#AC_DISABLE_STATIC
+#AC_PROG_LIBTOOL
 
 AC_ARG_WITH([kbuild],
 	AS_HELP_STRING([--with-kbuild=PATH],
