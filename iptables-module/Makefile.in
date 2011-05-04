@@ -82,8 +82,8 @@ IPTABLES_INC   ?= /usr/include
 #xtlibdir ?= /lib/xtables
 xtlibdir ?= $(shell if [ "$(iptables_bindir)" = "/sbin" ]; then echo "/lib/xtables"; else echo "$(iptables_prefix)/libexec/xtables"; fi)
 
-# TODO: Add a version check, that tell/warn people if the iptables
-#       version is below 1.4.3 (as we depend >= 1.4.3)
+# Configure does a version check, that tell/warn people if the iptables
+# version is below 1.4.3 (as we depend >= 1.4.3)
 
 all: lib modules
 
