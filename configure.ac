@@ -42,7 +42,7 @@ regular_CFLAGS="-D_LARGEFILE_SOURCE=1 -D_LARGE_FILES -D_FILE_OFFSET_BITS=64 \
 	-I\${XA_TOPSRCDIR}/include";
 
 #
-# check kernel version
+# Check kernel version
 #
 if grep -q "CentOS release 5\." /etc/redhat-release 2>/dev/null ||
     grep -q "Red Hat Enterprise Linux Server release 5" /etc/redhat-release 2>/dev/null; then
@@ -69,7 +69,7 @@ echo "Found kernel version $kmajor.$kminor.$kmicro.$kstable in $kbuilddir";
 if test "$kmajor" -gt 2 -o "$kminor" -gt 6 -o "$kmicro" -gt 38; then
 	echo "WARNING: You are trying a newer kernel. Results may vary. :-)";
 elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 28 \); then
-	echo "ERROR: That kernel version is not supported";
+	echo "ERROR: Your kernel version is not supported";
 	echo "       Minimum kernel versions > 2.6.27";
 	echo "       (as we need the RCU locking API).";
 	exit 1;
@@ -79,4 +79,13 @@ AC_SUBST([regular_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
 AC_CONFIG_FILES([Makefile])
+
 AC_OUTPUT
+
+echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-"
+echo "   Visit the project homepage at:"
+echo "       http://$PACKAGE_URL"
+echo ""
+echo "   Send bugreports, patches and insults to:"
+echo "       $PACKAGE_BUGREPORT"
+echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-"
