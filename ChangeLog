@@ -1,6 +1,15 @@
 
 Recent changes
 
+2011-05-04  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.7.1.
+
+	Minor fixes to the Makefiles and docs.
+
+	 Want a release before starting on converting the project to use
+	 autotools/automake/configure.
+
 2011-04-20  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.7.0.
