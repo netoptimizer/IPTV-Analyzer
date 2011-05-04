@@ -27,11 +27,28 @@ tmpdir := $(shell mktemp -dtu)
 packer  = gzip
 packext = .tar.gz
 
+GIT_VERSION = $(shell if [ -d .git ]; then git describe; fi)
+
+testver:
+	@echo Detected GIT_VERSION:\"${GIT_VERSION}\"
+
 .PHONY: tarball
+
+#
+# The tarball target is to be used together with the Git repository
+#  and uses the git "version" provided by 'git describe'
+#
 tarball:
 # do not use mkdir_p here.
-	mkdir ${tmpdir}
-	pushd ${top_srcdir} && git archive --prefix=${PACKAGE_NAME}-${PACKAGE_VERSION}/ HEAD | tar -C ${tmpdir} -x && popd;
-	pushd ${tmpdir}/${PACKAGE_NAME}-${PACKAGE_VERSION} && ./autogen.sh && popd;
-	tar --use=${packer} -C ${tmpdir} -cf ${PACKAGE_NAME}-${PACKAGE_VERSION}${packext} --owner=root --group=root ${PACKAGE_NAME}-${PACKAGE_VERSION}/;
-	rm -Rf ${tmpdir};
+	@if [ -z "${GIT_VERSION}" ]; then \
+		echo " *** ERROR: Sorry target tarball require the git tree"; \
+		exit 42;\
+	else \
+		echo " -- Creating tarball GIT version: ${GIT_VERSION}"; \
+	fi
+	@mkdir ${tmpdir}
+	pushd ${top_srcdir} && git archive --prefix=${PACKAGE_NAME}-${GIT_VERSION}/ HEAD | tar -C ${tmpdir} -x && popd;
+	pushd ${tmpdir}/${PACKAGE_NAME}-${GIT_VERSION} && ./autogen.sh && popd;
+	tar --use=${packer} -C ${tmpdir} -cf ${PACKAGE_NAME}-${GIT_VERSION}${packext} --owner=root --group=root ${PACKAGE_NAME}-${GIT_VERSION}/;
+	@rm -Rf ${tmpdir};
+	@echo " -- Tarball ${PACKAGE_NAME}-${GIT_VERSION}${packext} ready"
