@@ -1,9 +1,18 @@
+# @configure_input@
 #
-# Standalone makefile for iptables MPEG2 TS kernel module and userspace
-# shared library.
+# Makefile for iptables MPEG2 TS kernel module
+#          and iptables userspace shared library.
 #
 # Author: Jesper Dangaard Brouer <jdb@comx.dk>
 #
+
+# Configure substitution variables
+# ================================
+package     = @PACKAGE_NAME@
+version     = @PACKAGE_VERSION@
+# (Note the version comes from configure.ac AC_INIT)
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
 
 # Targets
 # -------
@@ -130,3 +139,13 @@ lib_manual:	libxt_mpeg2ts.c xt_mpeg2ts.h
 	gcc $(IPT_FLAGS) libxt_mpeg2ts.c -D_INIT=libxt_mpeg2ts_init \
 		-fPIC -I$(IPTABLES_INC) -c -o libxt_mpeg2ts.o
 	gcc -shared -o libxt_mpeg2ts.so libxt_mpeg2ts.o
+
+
+# Configure/autotools trick to detect if Makefile.in is changed and
+#  a rebuild in needed.
+#
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status iptables-module/$@
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck

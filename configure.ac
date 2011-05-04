@@ -79,7 +79,10 @@ fi;
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	iptables-module/Makefile
+])
 
 AC_OUTPUT
 
