@@ -5,18 +5,17 @@ Stuff I/we need to change before a release
 
 == iptables-module ==
 
-Implement 'make install' target for iptables userspace shared lib
-(kernel module install is implemented).
+Implement byte and packet counters, for no-signal detection.
+
 
 Add README file, for desc stuff about that the kernel module does not
 require recompiling of you kernel.  But it does require the kernel
 source as its uses the kernel makefile system.  It also need the
-correct symbol table to hook into iptables.
+correct symbol table (Module.symvers) to hook into iptables.
 
 Also describe the interaction with iptables userspace part, where we
 simply generate a dyn-loadable module iptables will use.
 
-Implement byte and packet counters, for no-signal detection.
 
 == Database ==
 
@@ -31,7 +30,4 @@ Implement no-signal detection.
 == Homepage ==
 
 The project needs a homepage.  I prefer a wikipage to start with.
-
-== License ==
-
-Add GNU license files.
+ See: www.iptv-analyzer.org/wiki
