@@ -3,6 +3,13 @@
 
 Stuff I/we need to change before a release
 
+ * collector: Integrate Makefile.PL with configure
+
+ * collector: Integrate version from configure
+
+ * tarball release script
+
+
 == iptables-module ==
 
 Implement byte and packet counters, for no-signal detection.
