@@ -32,6 +32,53 @@ AC_ARG_WITH([xtlibdir],
 	[xtlibdir="$withval"],
 	[xtlibdir='${libexecdir}/xtables'])
 
+# I would have liked to detect and check the $xtlibdir directory at
+# this point, but its not possible as the variable $prefix and
+# $exec_prefix variables are not set yet.  They get set after
+# AC_OUTPUT, but after that point, its no longer possible to redefine
+# $xtlibdir.
+#
+# Disable the check by testing if "/" exist
+xtlibdir_check="/";
+#
+# In case, configure is called --with-xtlibdir, then it should be
+# possible to check the directory.
+#
+if test "${with_xtlibdir+set}" = set; then
+   # No expantion needed, if specified via --with-xtlibdir
+   xtlibdir_check=$xtlibdir;
+##else
+##   # Need to expand the quoted '${libexecdir}/xtables'
+##   myprefix=${prefix};
+##   if [[ "${exec_prefix}" != "NONE" ]]; then
+##      myprefix=`eval echo ${exec_prefix}`;
+##   fi
+##   xtlibdir_check=${myprefix}/libexec/xtables;
+fi
+#
+# Test directories exist
+if [[ ! -d "$xtlibdir_check" ]]; then
+   AC_MSG_WARN([Xtables extensions dir ${xtlibdir_check} does not exist])
+   AC_MSG_NOTICE([Entering auto-detect mode for Xtables extensions dir xtlibdir])
+   if [[ -d /usr/local/libexec/xtables ]]; then
+      AC_MSG_NOTICE([ - Found xtlibdir: /usr/local/libexec/xtables])
+      xtlibdir=/usr/local/libexec/xtables
+
+   elif [[ -d /lib/xtables ]]; then
+      AC_MSG_NOTICE([ - Found xtlibdir: /lib/xtables])
+      xtlibdir=/lib/xtables
+
+   elif [[ -d /lib64/xtables ]]; then
+      AC_MSG_NOTICE([ - Found xtlibdir: /lib64/xtables])
+      xtlibdir=/lib64/xtables
+
+   else
+      AC_MSG_ERROR([ - Cannot find a xtlibdir], [2])
+   fi
+fi
+
+
+
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
 	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, see INSTALL file for details])])
