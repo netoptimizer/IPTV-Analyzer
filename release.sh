@@ -23,7 +23,7 @@ RELDIR=release
 if [ ! -d $RELDIR ]; then
     mkdir -p $RELDIR
 fi
-VERSION_TAG="v{$VERSION}"
+VERSION_TAG="v${VERSION}"
 #VERSION_TAG=HEAD #HACK for testing
 
 # Compression packer tool
