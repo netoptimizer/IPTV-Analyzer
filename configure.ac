@@ -26,59 +26,6 @@ if [[ "$kbuilddir" == no ]]; then
 	kbuilddir="";
 fi
 
-AC_ARG_WITH([xtlibdir],
-	AS_HELP_STRING([--with-xtlibdir=PATH],
-	[Path where to install Xtables extensions [[LIBEXECDIR/xtables]]]),
-	[xtlibdir="$withval"],
-	[xtlibdir='${libexecdir}/xtables'])
-
-# I would have liked to detect and check the $xtlibdir directory at
-# this point, but its not possible as the variable $prefix and
-# $exec_prefix variables are not set yet.  They get set after
-# AC_OUTPUT, but after that point, its no longer possible to redefine
-# $xtlibdir.
-#
-# IDEA: Perhaps is possible to use $ac_default_prefix if $prefix == NONE.
-#
-# Disable the check by testing if "/" exist
-xtlibdir_check="/";
-#
-# In case, configure is called --with-xtlibdir, then it should be
-# possible to check the directory.
-#
-if test "${with_xtlibdir+set}" = set; then
-   # No expantion needed, if specified via --with-xtlibdir
-   xtlibdir_check=$xtlibdir;
-##else
-##   # Need to expand the quoted '${libexecdir}/xtables'
-##   myprefix=${prefix};
-##   if [[ "${exec_prefix}" != "NONE" ]]; then
-##      myprefix=`eval echo ${exec_prefix}`;
-##   fi
-##   xtlibdir_check=${myprefix}/libexec/xtables;
-fi
-#
-# Test directories exist
-if [[ ! -d "$xtlibdir_check" ]]; then
-   AC_MSG_WARN([Xtables extensions dir ${xtlibdir_check} does not exist])
-   AC_MSG_NOTICE([Entering auto-detect mode for Xtables extensions dir xtlibdir])
-   if [[ -d /usr/local/libexec/xtables ]]; then
-      AC_MSG_NOTICE([ - Found xtlibdir: /usr/local/libexec/xtables])
-      xtlibdir=/usr/local/libexec/xtables
-
-   elif [[ -d /lib/xtables ]]; then
-      AC_MSG_NOTICE([ - Found xtlibdir: /lib/xtables])
-      xtlibdir=/lib/xtables
-
-   elif [[ -d /lib64/xtables ]]; then
-      AC_MSG_NOTICE([ - Found xtlibdir: /lib64/xtables])
-      xtlibdir=/lib64/xtables
-
-   else
-      AC_MSG_ERROR([ - Cannot find a xtlibdir], [2])
-   fi
-fi
-
 # Check iptables binary exist and set variable IPTABLES to the program
 # with full path.  Add "sbin" dirs to the search PATH as the user
 # running configure might not have this in their path.
@@ -92,6 +39,95 @@ fi
 IPTABLES_BINDIR=`AS_DIRNAME([$IPTABLES])`
 IPTABLES_DIR=`AS_DIRNAME([$IPTABLES_BINDIR])`
 
+# xtlibdir the Xtables extensions path
+AC_ARG_WITH([xtlibdir],
+	AS_HELP_STRING([--with-xtlibdir=PATH],
+	[Path where to install Xtables extensions.
+	 Configure will try to auto DETECT, based on iptables binary path]),
+	[xtlibdir="$withval"],
+	[xtlibdir="detect"])
+#	[xtlibdir='${libexecdir}/xtables'])
+
+# Default setting of xtlibdir is "detect".
+# 
+# Try to detect xtlibdir based upon the location of the detected
+# iptables binary IPTABLES_DIR.
+#
+# I would have liked to detect and check the $xtlibdir directory at
+# this point, but its not possible as the variable $prefix and
+# $exec_prefix variables are not set yet.  They get set after
+# AC_OUTPUT, but after that point, its no longer possible to redefine
+# $xtlibdir.
+#
+# IDEA: Perhaps is possible to use $ac_default_prefix if $prefix == NONE.
+#
+xtlibdir_check="";
+#
+# In case, configure is called --with-xtlibdir, then it should be
+# possible to check the directory.
+#
+if test "${with_xtlibdir+set}" = set; then
+   # No detection and expantion needed, if specified via --with-xtlibdir
+   xtlibdir_check=$xtlibdir;
+elif test "${xtlibdir}" = "detect"; then
+
+   AC_MSG_NOTICE([Entering auto-detect mode for Xtables extensions dir xtlibdir])
+   test_dir=""
+   if [[ "${IPTABLES_DIR}" = "/" ]]; then
+      # Need to test for /lib{,64}/xtables/
+      test_dir=/lib/xtables
+      if [[ -d "$test_dir" ]]; then
+          AC_MSG_NOTICE([ - Found xtlibdir: $test_dir])
+	  xtlibdir=$test_dir
+      else
+	 test_dir=/lib64/xtables
+         if [[ -d "$test_dir" ]]; then
+             AC_MSG_NOTICE([ - Found xtlibdir: $test_dir])
+	     xtlibdir=$test_dir
+	 else
+             xtlibdir=""
+	     test_dir=""
+	 fi
+      fi
+   else
+      # Should we handle the case where IPTABLES_DIR = $prefix and
+      # then pass it along as '$prefix'
+      test_dir=${IPTABLES_DIR}/libexec/xtables
+      xtlibdir=$test_dir
+   fi
+   # Double check the $test_dir
+   xtlibdir_check=$test_dir
+
+##   # Need to expand the quoted '${libexecdir}/xtables'
+##   myprefix=${prefix};
+##   if [[ "${exec_prefix}" != "NONE" ]]; then
+##      myprefix=`eval echo ${exec_prefix}`;
+##   fi
+##   xtlibdir_check=${myprefix}/libexec/xtables;
+else
+   xtlibdir_check=$xtlibdir
+fi
+#
+# Test directories exist
+if [[ ! -d "$xtlibdir_check" ]]; then
+   AC_MSG_ERROR([Xtables extensions dir ${xtlibdir_check} does not exist], [2])
+
+#   if [[ -d /usr/local/libexec/xtables ]]; then
+#      AC_MSG_NOTICE([ - Found xtlibdir: /usr/local/libexec/xtables])
+#      xtlibdir=/usr/local/libexec/xtables
+
+#   elif [[ -d /lib/xtables ]]; then
+#      AC_MSG_NOTICE([ - Found xtlibdir: /lib/xtables])
+#      xtlibdir=/lib/xtables
+
+#   elif [[ -d /lib64/xtables ]]; then
+#      AC_MSG_NOTICE([ - Found xtlibdir: /lib64/xtables])
+#      xtlibdir=/lib64/xtables
+
+#   else
+#      AC_MSG_ERROR([ - Cannot find a xtlibdir], [2])
+#   fi
+fi
 
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
