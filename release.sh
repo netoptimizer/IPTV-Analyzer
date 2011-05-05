@@ -6,6 +6,8 @@ NAME=iptables
 VERSION=1.4.7
 PREV_VERSION=1.4.6
 
+GPGKEY="Netfilter Core Team"
+
 # Create a unique tempdir, to avoid leftovers from older release builds
 TMPDIR=`mktemp -dt $NAME.XXXXXXXXXX`
 trap 'rm -rf $TMPDIR' EXIT
@@ -26,10 +28,10 @@ pushd "$PKGDIR" && {
 }
 
 tar -cjf "$TARBALL" "$NAME-$VERSION";
-gpg -u "Netfilter Core Team" -sb "$TARBALL";
+gpg -u "$GPGKEY" -sb q"$TARBALL";
 md5sum "$TARBALL" >"$TARBALL.md5sum";
 sha1sum "$TARBALL" >"$TARBALL.sha1sum";
 
-gpg -u "Netfilter Core Team" -sb "$PATCH";
+gpg -u "$GPGKEY" -sb "$PATCH";
 md5sum "$PATCH" >"$PATCH.md5sum";
 sha1sum "$PATCH" >"$PATCH.sha1sum";
