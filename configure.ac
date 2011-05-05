@@ -79,6 +79,16 @@ if [[ ! -d "$xtlibdir_check" ]]; then
    fi
 fi
 
+# Check iptables binary exist and set variable IPTABLES to the program
+# with full path.  Add "sbin" dirs to the search PATH as the user
+# running configure might not have this in their path.
+#
+SBIN_PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin:
+AC_PATH_PROG([IPTABLES], [iptables], [no], $SBIN_PATH)
+if [[ "$IPTABLES" = "no" ]]; then
+   AC_MSG_ERROR([Cannot find iptables binary - You need to install iptables])
+fi
+# TODO: extract iptables install path
 
 
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
@@ -128,6 +138,7 @@ fi;
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
+AC_SUBST([IPTABLES])
 AC_CONFIG_FILES([
 	Makefile
 	iptables-module/Makefile

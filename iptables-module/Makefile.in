@@ -20,6 +20,10 @@ libexecdir  = @libexecdir@
 # Kernel builddir detected (via /lib/modules/$(shell uname -r)/build"])
 #  or set by configure [--with-kbuild=PATH]
 kbuilddir   = @kbuilddir@
+#
+# iptables variables detected by configure
+iptables_bin = @IPTABLES@
+
 
 # Targets
 # -------
