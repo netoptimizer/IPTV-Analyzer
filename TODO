@@ -7,8 +7,6 @@ Stuff I/we need to change before a release
 
  * collector: Integrate version from configure
 
- * iptables-module: use config.h to extract version
-
 
 == iptables-module ==
 
