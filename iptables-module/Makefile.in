@@ -15,7 +15,7 @@ prefix      = @prefix@
 exec_prefix = @exec_prefix@
 libexecdir  = @libexecdir@
 #
-#configure_xtlibdir = @xtlibdir@
+configure_xtlibdir = @xtlibdir@
 #
 # Kernel builddir detected (via /lib/modules/$(shell uname -r)/build"])
 #  or set by configure [--with-kbuild=PATH]
@@ -23,7 +23,7 @@ kbuilddir   = @kbuilddir@
 #
 # iptables variables detected by configure
 iptables_bin = @IPTABLES@
-
+iptables_dir = @IPTABLES_DIR@
 
 # Targets
 # -------
@@ -77,8 +77,7 @@ CP = cp -v
 # Need sbin in the path to find iptables binary
 PATH:=/usr/local/sbin:/usr/sbin:/sbin:$(PATH)
 
-# Auto detect location of iptables, don't assume /sbin
-iptables_bin = $(shell which iptables)
+# Detect iptables version
 iptables_version = $(shell ($(iptables_bin) -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 
@@ -94,12 +93,16 @@ IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 #    ./configure --with-xtlibdir=/lib/xtables
 #
 # Auto detect userspace lib dir and prefix
-iptables_bindir = $(shell dirname $(iptables_bin))
-iptables_prefix = $(shell dirname $(iptables_bindir))
 IPTABLES_INC   ?= /usr/include
 #IPTABLES_INC ?= /usr/local/include
 #xtlibdir ?= /lib/xtables
-xtlibdir ?= $(shell if [ "$(iptables_bindir)" = "/sbin" ]; then echo "/lib/xtables"; else echo "$(iptables_prefix)/libexec/xtables"; fi)
+xtlibdir ?= $(shell \
+	if [ "$(iptables_dir)" = "/" ]; then \
+		echo "/lib/xtables"; \
+	else \
+		echo "$(iptables_dir)/libexec/xtables"; fi)
+
+
 
 # Configure does a version check, that tell/warn people if the iptables
 # version is below 1.4.3 (as we depend >= 1.4.3)

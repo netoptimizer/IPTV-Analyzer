@@ -88,7 +88,9 @@ AC_PATH_PROG([IPTABLES], [iptables], [no], $SBIN_PATH)
 if [[ "$IPTABLES" = "no" ]]; then
    AC_MSG_ERROR([Cannot find iptables binary - You need to install iptables])
 fi
-# TODO: extract iptables install path
+# Extract iptables base dirname / path
+IPTABLES_BINDIR=`AS_DIRNAME([$IPTABLES])`
+IPTABLES_DIR=`AS_DIRNAME([$IPTABLES_BINDIR])`
 
 
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
@@ -139,6 +141,7 @@ AC_SUBST([regular_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
 AC_SUBST([IPTABLES])
+AC_SUBST([IPTABLES_DIR])
 AC_CONFIG_FILES([
 	Makefile
 	iptables-module/Makefile
