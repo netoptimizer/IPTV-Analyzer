@@ -12,17 +12,20 @@
 #ifndef _LINUX_NETFILTER_XT_MPEG2TS_MATCH_H
 #define _LINUX_NETFILTER_XT_MPEG2TS_MATCH_H 1
 
+/* Get version number PACKAGE_VERSION from configure system */
+#include "../config.h"
+
 /* XT_MODULE_NAME could be replaced by KBUILD_MODNAME, if this version
    info were only used the kernel module, but we also use it in
    userspace.
 */
 #define XT_MODULE_NAME		"xt_mpeg2ts"
-#define XT_MODULE_VERSION	"0.7.1"
-#define XT_MODULE_RELDATE	"May 4, 2011"
+#define XT_MODULE_VERSION	PACKAGE_VERSION
 #define PFX			XT_MODULE_NAME ": "
 
 static char version[] =
-	XT_MODULE_NAME ".c:v" XT_MODULE_VERSION " (" XT_MODULE_RELDATE ")";
+	XT_MODULE_NAME ".c:v" XT_MODULE_VERSION	\
+	" (part of " PACKAGE_NAME ")";
 
 enum {
 	XT_MPEG2TS_DETECT_DROP = 1 << 0,
