@@ -1,17 +1,21 @@
 #! /bin/sh
 #
 set -e
+NAME=iptables
 
 VERSION=1.4.7
 PREV_VERSION=1.4.6
-TMPDIR=/tmp/ipt-release
-IPTDIR="$TMPDIR/iptables-$VERSION"
+
+# Create a unique tempdir, to avoid leftovers from older release builds
+TMPDIR=`mktemp -dt $NAME.XXXXXXXXXX`
+trap 'rm -rf $TMPDIR' EXIT
+IPTDIR="$TMPDIR/${NAME}-${VERSION}"
 
 PATCH="patch-iptables-$PREV_VERSION-$VERSION.bz2";
 TARBALL="iptables-$VERSION.tar.bz2";
 CHANGELOG="changes-iptables-$PREV_VERSION-$VERSION.txt";
 
-mkdir -p "$TMPDIR"
+#mkdir -p "$TMPDIR"
 git shortlog "v$PREV_VERSION..v$VERSION" > "$TMPDIR/$CHANGELOG"
 git diff "v$PREV_VERSION..v$VERSION" | bzip2 > "$TMPDIR/$PATCH"
 git archive --prefix="iptables-$VERSION/" "v$VERSION" | tar -xC "$TMPDIR/"
