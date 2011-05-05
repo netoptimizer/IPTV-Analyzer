@@ -9,7 +9,7 @@ PREV_VERSION=1.4.6
 # Create a unique tempdir, to avoid leftovers from older release builds
 TMPDIR=`mktemp -dt $NAME.XXXXXXXXXX`
 trap 'rm -rf $TMPDIR' EXIT
-IPTDIR="$TMPDIR/${NAME}-${VERSION}"
+PKGDIR="$TMPDIR/${NAME}-${VERSION}"
 
 PATCH="patch-$NAME-$PREV_VERSION-$VERSION.bz2";
 TARBALL="$NAME-$VERSION.tar.bz2";
@@ -20,9 +20,9 @@ git shortlog "v$PREV_VERSION..v$VERSION" > "$TMPDIR/$CHANGELOG"
 git diff "v$PREV_VERSION..v$VERSION" | bzip2 > "$TMPDIR/$PATCH"
 git archive --prefix="$NAME-$VERSION/" "v$VERSION" | tar -xC "$TMPDIR/"
 
-cd "$IPTDIR" && {
+pushd "$PKGDIR" && {
 	sh autogen.sh
-	cd ..
+	popd
 }
 
 tar -cjf "$TARBALL" "$NAME-$VERSION";
