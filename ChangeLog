@@ -1,6 +1,12 @@
 
 Recent changes
 
+	Major rewrite of the makefile system.
+
+	Converted to project to use the well-known configure(autotools)
+	infrastructure, still in combination with the kernels Kbuild
+	system.
+
 2011-05-04  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.7.1.
