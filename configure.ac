@@ -38,6 +38,8 @@ AC_ARG_WITH([xtlibdir],
 # AC_OUTPUT, but after that point, its no longer possible to redefine
 # $xtlibdir.
 #
+# IDEA: Perhaps is possible to use $ac_default_prefix if $prefix == NONE.
+#
 # Disable the check by testing if "/" exist
 xtlibdir_check="/";
 #
