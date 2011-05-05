@@ -7,9 +7,8 @@ Stuff I/we need to change before a release
 
  * collector: Integrate version from configure
 
- * tarball release script
+ * iptables-module: use config.h to extract version
 
- * iptables-module: Move auto detecting xtlibdir to configure script
 
 == iptables-module ==
 
