@@ -25,6 +25,9 @@ kbuilddir   = @kbuilddir@
 # iptables variables detected by configure
 iptables_bin = @IPTABLES@
 iptables_dir = @IPTABLES_DIR@
+# (Include path to locate xtables.h)
+iptables_inc = @IPTABLES_INC@
+
 
 # Targets
 # -------
@@ -79,8 +82,7 @@ CP = cp -v
 iptables_version = $(shell ($(iptables_bin) -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 
-IPTABLES_INC   ?= /usr/include
-#IPTABLES_INC ?= /usr/local/include
+# TODO: What about the -DXTABLES_LIBDIR=\"$(xtlibdir)\"
 
 # Configure does a version check, that tell/warn people if the iptables
 # version is below 1.4.3 (as we depend >= 1.4.3)
@@ -132,13 +134,13 @@ lib%.so: lib%.o
 
 lib%.o: lib%.c %.h
 	@echo "\n  -=-=-=-=- Userspace lib -=-=-=-=-"
-	gcc $(IPT_FLAGS) ${LIB_CFLAGS} -I$(IPTABLES_INC) -D_INIT=lib$*_init -c -o $@ $<;
+	gcc $(IPT_FLAGS) ${LIB_CFLAGS} -I$(iptables_inc) -D_INIT=lib$*_init -c -o $@ $<;
 
 
 # Old approach
 lib_manual:	libxt_mpeg2ts.c xt_mpeg2ts.h
 	gcc $(IPT_FLAGS) libxt_mpeg2ts.c -D_INIT=libxt_mpeg2ts_init \
-		-fPIC -I$(IPTABLES_INC) -c -o libxt_mpeg2ts.o
+		-fPIC -I$(iptables_inc) -c -o libxt_mpeg2ts.o
 	gcc -shared -o libxt_mpeg2ts.so libxt_mpeg2ts.o
 
 

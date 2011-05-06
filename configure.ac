@@ -39,6 +39,12 @@ fi
 IPTABLES_BINDIR=`AS_DIRNAME([$IPTABLES])`
 IPTABLES_DIR=`AS_DIRNAME([$IPTABLES_BINDIR])`
 
+# Find the include path for xtables.h
+IPTABLES_INC="${IPTABLES_DIR}/include"
+if [[ "$IPTABLES_DIR" = "/" ]]; then
+   IPTABLES_INC="/usr/include"
+fi
+
 # xtlibdir the Xtables extensions path
 AC_ARG_WITH([xtlibdir],
 	AS_HELP_STRING([--with-xtlibdir=PATH],
@@ -179,6 +185,7 @@ AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
 AC_SUBST([IPTABLES])
 AC_SUBST([IPTABLES_DIR])
+AC_SUBST([IPTABLES_INC])
 AC_CONFIG_FILES([
 	Makefile
 	iptables-module/Makefile
