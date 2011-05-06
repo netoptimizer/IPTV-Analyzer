@@ -12,6 +12,15 @@ Stuff I/we need to change before a release
 
 Implement byte and packet counters, for no-signal detection.
 
+Change the module match function, so its possible to just return match
+"true" on all mpeg2ts packets, not just the drop detections (which is
+actually one TS packet after the actual dropped packet).  This will
+serve as a good filter function.
+
+Something like,
+  --match-on-drops (default off)
+  --disable-drop-detect  /  --detect-drops (default on)
+  --disable-counters     /  --enable-counters
 
 Add README file, for desc stuff about that the kernel module does not
 require recompiling of you kernel.  But it does require the kernel
@@ -30,7 +39,8 @@ the evolution of the code.
 
 == Collector ==
 
-Implement no-signal detection.
+Implement no-signal detection, based on the byte and packet counters
+from the kernel module.
 
 == Homepage ==
 
