@@ -9,10 +9,36 @@ AC_CONFIG_MACRO_DIR([m4])
 #AC_PROG_INSTALL
 #AM_INIT_AUTOMAKE([1.10.2 -Wall foreign subdir-objects])
 AM_INIT_AUTOMAKE([foreign])
-AC_PROG_CC
-AM_PROG_CC_C_O
 #AC_DISABLE_STATIC
 #AC_PROG_LIBTOOL
+
+# Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AM_PROG_CC_C_O
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+# Checks for header files.
+AC_CHECK_HEADERS([netdb.h stddef.h stdlib.h string.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_INLINE
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT8_T
+AC_TYPE_SIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+
+# Checks for library functions.
+AC_CHECK_FUNCS([strchr])
 
 AC_ARG_WITH([kbuild],
 	AS_HELP_STRING([--with-kbuild=PATH],
