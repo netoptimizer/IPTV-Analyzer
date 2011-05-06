@@ -156,7 +156,11 @@ if [[ ! -d "$xtlibdir_check" ]]; then
    AC_MSG_ERROR([Xtables extensions dir ${xtlibdir_check} does not exist], [2])
 fi
 
+# This adds a dependency to pkg-config, alternativly we could define
+# libxtables_CFLAGS and libxtables_LIBS to avoid the need to call
+# pkg-config.
 PKG_CHECK_MODULES([libxtables], [xtables >= 1.4.3])
+
 AC_CHECK_HEADERS([linux/netfilter/x_tables.h], [],
 	[AC_MSG_ERROR([You need to have linux/netfilter/x_tables.h, see INSTALL file for details])])
 
