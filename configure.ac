@@ -156,6 +156,12 @@ elif test \( "$kmajor" -lt 2 -o "$kminor" -lt 6 -o "$kmicro" -lt 28 \); then
 	exit 1;
 fi;
 
+# Need perl for the iptv-collector daemon
+AC_PATH_PROG([PERL], [perl], [no])
+if [[ "$PERL" = "no" ]]; then
+   AC_MSG_ERROR([Cannot find perl - You need to install perl to run collector])
+fi
+
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([kbuilddir])
 AC_SUBST([xtlibdir])
@@ -167,11 +173,26 @@ AC_CONFIG_FILES([
 	collector/lib/IPTV/Analyzer/Version.pm
 ])
 
+#
+# $prefix expand for perl collector
+PERL_PREFIX="";
+if [[ "${prefix}" != "NONE" ]]; then
+   PERL_PREFIX="PREFIX=$prefix"
+fi
+
 AC_OUTPUT
 
-# TODO: Should we call collectors 'perl Makefile.PL' from here?
-#       This ways it would look like its part of the ./configure call
-#       (remember to pass $prefix parameter along)
+# Configure the iptv-collector
+#
+# Which is based upon Perl MakeMaker system.  To integrate, call the
+# MakeMaker system, from the configure script.
+#
+# Remember to pass $prefix parameter along
+echo " Processing Collector Daemon"
+echo " -- Calling Perl MakeMaker system"
+cd collector
+${PERL} Makefile.PL $PERL_PREFIX
+cd ..
 
 echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-"
 echo "   Visit the project homepage at:"

@@ -8,7 +8,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 # Adding to SUBDIRS will automatically call/invoke the Makefile in
 # these dirs
-SUBDIRS = iptables-module
+SUBDIRS = iptables-module collector
 
 #man_MANS := xtables-addons.8
 
