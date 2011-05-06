@@ -15,7 +15,8 @@ prefix      = @prefix@
 exec_prefix = @exec_prefix@
 libexecdir  = @libexecdir@
 #
-configure_xtlibdir = @xtlibdir@
+# Detecting of xtlibdir has been moved to configure script
+xtlibdir = @xtlibdir@
 #
 # Kernel builddir detected (via /lib/modules/$(shell uname -r)/build"])
 #  or set by configure [--with-kbuild=PATH]
@@ -74,35 +75,12 @@ KBUILD_CFLAGS+=-g -O2 -fno-inline
 PWD = $(shell pwd)
 CP = cp -v
 
-# Need sbin in the path to find iptables binary
-PATH:=/usr/local/sbin:/usr/sbin:/sbin:$(PATH)
-
 # Detect iptables version
 iptables_version = $(shell ($(iptables_bin) -V | awk {'print $$2'} | cut -c 2-))
 IPT_FLAGS = -DIPTABLES_VERSION=\"$(iptables_version)\"
 
-# FIXME: Move below auto detecting xtlibdir to configure script
-#
-# Problem statement:
-#
-#  The userspace lib dir is differs on different Linux distributions,
-#  further more the distributions choose not to follow the source code
-#  (and just alter the exec_prefix to libexec).  Instead they force
-#  the usage of /lib/xtables/ or /lib64/xtables/, via
-#
-#    ./configure --with-xtlibdir=/lib/xtables
-#
-# Auto detect userspace lib dir and prefix
 IPTABLES_INC   ?= /usr/include
 #IPTABLES_INC ?= /usr/local/include
-#xtlibdir ?= /lib/xtables
-xtlibdir ?= $(shell \
-	if [ "$(iptables_dir)" = "/" ]; then \
-		echo "/lib/xtables"; \
-	else \
-		echo "$(iptables_dir)/libexec/xtables"; fi)
-
-
 
 # Configure does a version check, that tell/warn people if the iptables
 # version is below 1.4.3 (as we depend >= 1.4.3)

@@ -53,6 +53,18 @@ AC_ARG_WITH([xtlibdir],
 # Try to detect xtlibdir based upon the location of the detected
 # iptables binary IPTABLES_DIR, unless --with-xtlibdir is used.
 #
+# Problem statement:
+#
+#  The userspace lib dir is differs on different Linux distributions,
+#  further more the distributions choose not to follow the source code
+#  (and just alter the exec_prefix to libexec).  Instead they force
+#  the usage of /lib/xtables/ or /lib64/xtables/, via
+#
+#    ./configure --with-xtlibdir=/lib/xtables
+#
+#  We also support this configure switch, but if none given, try to
+#  detect the xtlibdir used by iptables on the system.
+#
 xtlibdir_check="";
 if test "${with_xtlibdir+set}" = set; then
    # No detection and expantion needed, if specified via --with-xtlibdir
