@@ -3,8 +3,11 @@ Recent changes
 
 	Major rewrite of the makefile system.
 
-	Converted to project to use the well-known configure(autotools)
+	Converted to project to use the well-known configure/autotools
 	infrastructure, still in combination with the kernels Kbuild
+	system.
+
+	Also integrated configure with iptv-collector's Perl MakeMaker
 	system.
 
 2011-05-04  Jesper Dangaard Brouer <hawk@comx.dk>
