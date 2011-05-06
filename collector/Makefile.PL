@@ -29,6 +29,15 @@ install::
 	$(NOECHO) test -d $(INST_ETC) || $(MKPATH) $(INST_ETC)
 	$(CP) etc/log4perl.conf.sample  $(INST_ETC)/
 	$(CP) etc/collector.conf.sample $(INST_ETC)/
+
+# Trick to regenerate Version.pm if configure got updated
+lib/IPTV/Analyzer/Version.pm: lib/IPTV/Analyzer/Version.pm.in ../config.status
+	cd .. && ./config.status collector/$@
+
+# Also check if config.status need to be updated
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
 '
     }
 }
