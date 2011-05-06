@@ -18,6 +18,10 @@ use DBI;
 
 use File::Basename; # dirname() for config file loading
 
+# Trick to get the version number, from Version.pm, which is generated
+# by configure script.
+use IPTV::Analyzer::Version;
+
 ###
 # Global setting
 our $cfg; # config
@@ -88,7 +92,7 @@ BEGIN {
      our ($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 
      # Package version
-     $VERSION     = "0.7.1";
+     $VERSION     = $IPTV::Analyzer::Version::VERSION;
 
      @ISA         = qw(Exporter);
      @EXPORT      = qw(

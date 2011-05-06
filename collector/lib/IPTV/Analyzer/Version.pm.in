@@ -1,0 +1,22 @@
+#
+# Configure/autotools version integration trick to Perl
+#
+# The real version number is set in configure.ac via AC_INIT macro.
+# And the configure system expand/create this Version.pm file.
+#
+#  @configure_input@
+#
+package IPTV::Analyzer::Version;
+
+BEGIN {
+     use Exporter ();
+     our ($VERSION, $PACKAGE_VERSION, $PACKAGE_NAME, $PACKAGE_BUGREPORT);
+
+     # Package version info expanded by configure
+     $VERSION           = "@PACKAGE_VERSION@";
+     $PACKAGE_VERSION   = "@PACKAGE_VERSION@";
+     $PACKAGE_NAME      = "@PACKAGE_NAME@";
+     $PACKAGE_BUGREPORT = "@PACKAGE_BUGREPORT@";
+}
+
+1;

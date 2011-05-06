@@ -164,9 +164,14 @@ AC_SUBST([IPTABLES_DIR])
 AC_CONFIG_FILES([
 	Makefile
 	iptables-module/Makefile
+	collector/lib/IPTV/Analyzer/Version.pm
 ])
 
 AC_OUTPUT
+
+# TODO: Should we call collectors 'perl Makefile.PL' from here?
+#       This ways it would look like its part of the ./configure call
+#       (remember to pass $prefix parameter along)
 
 echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-"
 echo "   Visit the project homepage at:"

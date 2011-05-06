@@ -32,12 +32,15 @@ install::
 '
     }
 }
-
+# TODO: Add trick to activate ../configure to update version
+#  if changes to configure.ac happened.
+#  And let Makefile(.PL) depend on changes to Version.pm
 
 my %attr = (
     NAME      => 'iptv-collector',
 #    VERSION   => '0.x.x',
-    VERSION_FROM      => 'lib/IPTV/Analyzer/mpeg2ts.pm', # finds $VERSION
+#    VERSION_FROM      => 'lib/IPTV/Analyzer/mpeg2ts.pm', # finds $VERSION
+    VERSION_FROM      => 'lib/IPTV/Analyzer/Version.pm', # finds $VERSION
     PREREQ_PM => {
 	'Log::Log4perl'   => 0,
 	'Config::File'    => 0,
