@@ -1,6 +1,10 @@
 
 Recent changes
 
+2011-05-06  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.8.0.
+
 	Major rewrite of the makefile system.
 
 	Converted to project to use the well-known configure/autotools
