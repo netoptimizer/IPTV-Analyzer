@@ -1,6 +1,21 @@
 
 Recent changes
 
+	Change default iptables match criteria, to match all mpeg2ts
+	packets.
+
+	To make the module more generic, change the default match criteria
+	to match on all correct mpeg2 TS packets (test for the sync 0x47
+	byte in all TS frames).
+
+	Drop detection is still active, and stats on packet drops are
+	available via the proc filesystem.  These drop detection stats can
+	be disabled via inverting the parameter --drop-detect,
+	 eg. "!	--drop-detect".
+
+	Its still possible to match on drop detection, via the parameter
+	 "--match-drop" (which is default off).
+
 2011-05-06  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.8.0.
