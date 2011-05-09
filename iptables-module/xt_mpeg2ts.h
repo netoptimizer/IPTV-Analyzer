@@ -31,6 +31,9 @@ enum {
 	XT_MPEG2TS_DETECT_DROP = 1 << 0,
 	XT_MPEG2TS_MAX_STREAMS = 1 << 1,
 	XT_MPEG2TS_PARAM_NAME  = 1 << 2,
+	XT_MPEG2TS_MATCH_DROP  = 1 << 3,
+	/*Future:*/
+	XT_MPEG2TS_RECORD_COUNTERS = 1 << 4,
 };
 
 /* Details of this hash structure is hidden in kernel space xt_mpeg2ts.c */

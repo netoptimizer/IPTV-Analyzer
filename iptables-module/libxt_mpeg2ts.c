@@ -30,12 +30,24 @@
 #define xtables_error exit_error
 #endif
 
+/*
+ The default match criteria, since version 0.9.0, is to match on
+ correct MPEG2 TS packets.  Previously (<= 0.8.0) a rule would only
+ match when a drop were detected.
+
+ Its still possible to match on drop detection, via the parameter
+ "--match-drop" (which is default off).
+
+ Stats on packet drops are available via the proc filesystem.  These
+ drop detection stats can be disabled via inverting the parameter
+ --drop-detect, eg. "! --drop-detect".
+
+*/
 static const struct option mpeg2ts_mt_opts[] = {
-	{.name = "name",	.has_arg = true,  .val = 'n'},
-	{.name = "drop",	.has_arg = false, .val = 'd'},
-	{.name = "drop-detect",	.has_arg = false, .val = 'd'},
-	{.name = "max",		.has_arg = true,  .val = 'x'},
-	{.name = "max-streams",	.has_arg = true,  .val = 'x'},
+	{.name = "name",		.has_arg = true,  .val = 'n'},
+	{.name = "drop-detect", 	.has_arg = false, .val = 'd'},
+	{.name = "match-drop",		.has_arg = false, .val = 'm'},
+	{.name = "max-streams",		.has_arg = true,  .val = 'x'},
 	{NULL},
 };
 
@@ -45,7 +57,8 @@ static void mpeg2ts_mt_help(void)
 "mpeg2ts (MPEG2 Transport Stream) match options:\n"
 "VERSION %s\n"
 "   [--name <name>]        Name for proc file /proc/net/xt_mpeg2ts/rule_NAME\n"
-"   [--drop-detect]        Match lost TS frames (occured before this packet)\n"
+"   [--match-drop]         Match on lost TS frames (default: off)\n"
+"   [--drop-detect]        Detect TS frame loss and store stats (default: ON)\n"
 "   [--max-streams <num>]  Track 'max' number of streams (per rule)\n",
 		version
 		);
@@ -56,6 +69,9 @@ static void mpeg2ts_mt_init(struct xt_entry_match *match)
 	struct xt_mpeg2ts_mtinfo *info = (void *)match->data;
 	/* Enable drop detection per default */
 	info->flags = XT_MPEG2TS_DETECT_DROP;
+
+	/* Match on drops is disabled per default */
+	/*  XT_MPEG2TS_MATCH_DROP */
 }
 
 static int mpeg2ts_mt_parse(int c, char **argv, int invert, unsigned int *flags,
@@ -83,13 +99,26 @@ static int mpeg2ts_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 	case 'd': /* --drop-detect */
 		if (*flags & XT_MPEG2TS_DETECT_DROP)
 			xtables_error(PARAMETER_PROBLEM,
-				      "Can't specify --drop option twice");
+			      "Can't specify --drop-detect option twice");
 		*flags |= XT_MPEG2TS_DETECT_DROP;
 
 		if (invert)
 			info->flags &= ~XT_MPEG2TS_DETECT_DROP;
 		else
 			info->flags |= XT_MPEG2TS_DETECT_DROP;
+
+		break;
+
+	case 'm': /* --match-drop */
+		if (*flags & XT_MPEG2TS_MATCH_DROP)
+			xtables_error(PARAMETER_PROBLEM,
+			      "Can't specify --match-drop option twice");
+		*flags |= XT_MPEG2TS_MATCH_DROP;
+
+		if (invert)
+			info->flags &= ~XT_MPEG2TS_MATCH_DROP;
+		else
+			info->flags |= XT_MPEG2TS_MATCH_DROP;
 
 		break;
 
@@ -119,7 +148,7 @@ static int mpeg2ts_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 		/* New xtables style */
 		if (!xtables_strtoui(optarg, NULL, &num, 0, UINT32_MAX))
 			xtables_error(PARAMETER_PROBLEM,
-				      "bad --max-stream: `%s'", optarg);
+				      "bad --max-streams: `%s'", optarg);
 
 		/* DEBUG: printf("--max-stream=%lu\n", num); */
 		info->flags |= XT_MPEG2TS_MAX_STREAMS;
@@ -148,6 +177,9 @@ static void mpeg2ts_mt_print(const void *entry,
 	if (!(info->flags & XT_MPEG2TS_DETECT_DROP))
 		printf(" !drop-detect");
 
+	if ((info->flags & XT_MPEG2TS_MATCH_DROP))
+		printf(" match-drop");
+
 	if (info->flags & XT_MPEG2TS_MAX_STREAMS)
 		printf(" max-streams:%u ", info->cfg.max);
 }
@@ -163,6 +195,9 @@ static void mpeg2ts_mt_save(const void *entry,
 
 	if (!(info->flags & XT_MPEG2TS_DETECT_DROP))
 		printf("! --drop-detect ");
+
+	if (info->flags & XT_MPEG2TS_MATCH_DROP)
+		printf("--match-drop ");
 
 	if (info->flags & XT_MPEG2TS_MAX_STREAMS)
 		printf("--max-streams %u ", info->cfg.max);

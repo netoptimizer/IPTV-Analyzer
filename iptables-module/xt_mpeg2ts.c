@@ -649,9 +649,14 @@ xt_mpeg2ts_mt_check(const struct xt_mtchk_param *par)
 	struct xt_mpeg2ts_mtinfo *info = par->matchinfo;
 
 	/*
-	if (info->flags & ~XT_MPEG2TS_DETECT_DROP)
-		return false;
+	  Add check to see if drop-detect is off and match-drop is on,
+	  which would result in this rule can never match anything
 	*/
+	if (!(info->flags & XT_MPEG2TS_DETECT_DROP))
+		if (info->flags & XT_MPEG2TS_MATCH_DROP) {
+			msg_err(DRV, "Rejected: Rule will never match");
+			return -EINVAL;
+		}
 
 	/* Debugging, this should not be possible */
 	if (!info) {
@@ -1039,7 +1044,6 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 	return skips_total;
 }
 
-
 static bool
 is_mpeg2ts_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 {
@@ -1082,13 +1086,15 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	uint16_t payload_len;
 	const unsigned char *payload_ptr;
 
-	bool res = false;
+	bool res = true;
 	int skips = 0;
 
+	/*
 	if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
 		msg_err(RX_ERR, "You told me to do nothing...?!");
 		return false;
 	}
+	*/
 
 	/*
 	if (!pskb_may_pull((struct sk_buff *)skb, sizeof(struct udphdr)))
@@ -1155,15 +1161,22 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 
 	if (is_mpeg2ts_packet(payload_ptr, payload_len)) {
 		msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
-		skips =
-		  dissect_mpeg2ts(payload_ptr, payload_len, skb, uh, info);
+
+		if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
+			/* ! --drop-detect */
+			/* Don't perform drop detection, just match mpeg2ts */
+			res = true;
+		} else {
+			skips =	dissect_mpeg2ts(payload_ptr, payload_len,
+						skb, uh, info);
+		}
 	} else {
 		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
 			"(pkt from:%pI4 to:%pI4)", &saddr, &daddr);
 		return false;
 	}
 
-	if (info->flags & XT_MPEG2TS_DETECT_DROP)
+	if (info->flags & XT_MPEG2TS_MATCH_DROP)
 		res = !!(skips); /* Convert to a bool */
 
 	return res;
