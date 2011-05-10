@@ -1,30 +1,30 @@
 
-= Before release =
+== Before release ==
 
 Stuff I/we need to change before a release
+
+* Currently no show stoppers for a release.
+
+
+== Future ==
+
+Use of JSON encoding in proc file?  I foresee/predict that we need to
+relay more advanced information via the kernel proc file, to
+userspace. The easiest way would be to encode the proc file string as
+a JSON string.
+
+More advanced info would be need, when starting to implement/record
+packet timestamping, and the PCR clock signals.  Each stream can have
+different threshold levels, regarding averate inter-packet arrival
+time (IAT) and "allowed" bursts, dependend on the bandwidth and the
+PCR clock.  E.g. for a high-bandwidth HD channel is normal to see IAT
+down to 0.3 ms, while for a low-bandwidth channel this would be
+considered a burst.
 
 
 == iptables-module ==
 
 Implement byte and packet counters, for no-signal detection.
-
-Change the module match function, so its possible to just return match
-"true" on all mpeg2ts packets, not just the drop detections (which is
-actually one TS packet after the actual dropped packet).  This will
-serve as a good filter function.
-
-Something like,
-  --match-on-drops (default off)
-  --disable-drop-detect  /  --detect-drops (default on)
-  --disable-counters     /  --enable-counters
-
-Add README file, for desc stuff about that the kernel module does not
-require recompiling of you kernel.  But it does require the kernel
-source as its uses the kernel makefile system.  It also need the
-correct symbol table (Module.symvers) to hook into iptables.
-
-Also describe the interaction with iptables userspace part, where we
-simply generate a dyn-loadable module iptables will use.
 
 
 == Database ==
@@ -40,5 +40,3 @@ from the kernel module.
 
 == Homepage ==
 
-The project needs a homepage.  I prefer a wikipage to start with.
- See: www.iptv-analyzer.org/wiki
