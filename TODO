@@ -40,3 +40,9 @@ from the kernel module.
 
 == Homepage ==
 
+== Ideas ==
+
+To measure the collective burstiness behavior for all of the streams /
+the entire network-stack, we could "just" look at the number of
+packets being processed in NAPI mode.
+
