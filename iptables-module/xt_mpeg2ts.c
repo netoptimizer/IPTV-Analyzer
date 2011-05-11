@@ -257,8 +257,22 @@ struct mpeg2ts_stream { /* Like xt_hashlimit: dsthash_ent */
 	struct hlist_node node;
 	struct mpeg2ts_stream_match match;
 
-	/* Place modified structure members in the end */
-	/* FIXME: Add spacing in struct for cache alignment */
+	/* PID list with last CC value (not updated too often) */
+	int pid_list_len;
+	struct list_head pid_list;
+
+	/* For RCU-protected deletion */
+	struct rcu_head rcu_head;
+
+	/* Place highly modified members after the next cache line */
+
+	/*  Cache alignment, is assured via
+	   ____cacheline_aligned trick, on "packets", this makes "packets"
+	   start on the next cacheline boundary.
+	   Eventhough is currently already correctly aligned on 64-bit.
+	 */
+	uint64_t packets ____cacheline_aligned;
+	uint64_t payload_bytes;
 
 	/* Per stream total skips and discontinuity */
 	/* TODO: Explain difference between skips and discontinuity */
@@ -271,12 +285,10 @@ struct mpeg2ts_stream { /* Like xt_hashlimit: dsthash_ent */
 	/* Usage counter to protect against dealloc/kfree */
 	atomic_t use;
 
-	/* PID list with last CC value */
-	struct list_head pid_list;
-	int pid_list_len;
-
-	/* For RCU-protected deletion */
-	struct rcu_head rcu_head;
+	/* Cacheline notes (64-bit):*/
+	/* size: 128, cachelines: 2 */
+	/* sum members: 104, holes: 0, sum holes: 0 */
+        /* padding: 24 */
 };
 
 
@@ -1022,6 +1034,10 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 		payload_ptr += MP2T_PACKET_SIZE;
 	}
 
+	// TODO: Add flag to avoid/disable this update, for perf testing
+	stream->payload_bytes += payload_len;
+	stream->packets++;
+
 	if (discontinuity > 0) {
 		stream->skips         += skips_total;
 		stream->discontinuity += discontinuity;
@@ -1258,7 +1274,8 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 	}
 
 	res = seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
-			    "pids:%d skips:%llu discontinuity:%llu\n",
+			    "pids:%d skips:%llu discontinuity:%llu "
+			    "payload_bytes:%llu packets:%llu\n",
 			 bucket,
 			 &stream->match.dst_addr,
 			 &stream->match.src_addr,
@@ -1266,7 +1283,9 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 			 ntohs(stream->match.src_port),
 			 stream->pid_list_len,
 			 stream->skips,
-			 stream->discontinuity
+			 stream->discontinuity,
+			 stream->payload_bytes,
+			 stream->packets
 		);
 
 	atomic_dec(&stream->use);
