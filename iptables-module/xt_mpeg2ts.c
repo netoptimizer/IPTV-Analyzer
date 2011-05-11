@@ -261,12 +261,15 @@ struct mpeg2ts_stream { /* Like xt_hashlimit: dsthash_ent */
 	int pid_list_len;
 	struct list_head pid_list;
 
+	/* For RCU-protected deletion */
+	struct rcu_head rcu_head;
+
 	/* Place highly modified members after the next cache line */
 
-	/* Spacing in struct for cache alignment, is done via
+	/*  Cache alignment, is assured via
 	   ____cacheline_aligned trick, on "bytes", this makes "bytes"
-	   start on the next cacheline boundary.  Introducing a
-	   (16bytes) hole here.
+	   start on the next cacheline boundary.
+	   Eventhough is currently already correctly aligned on 64-bit.
 	 */
 	uint64_t bytes ____cacheline_aligned;
 	uint64_t packets;
@@ -282,12 +285,10 @@ struct mpeg2ts_stream { /* Like xt_hashlimit: dsthash_ent */
 	/* Usage counter to protect against dealloc/kfree */
 	atomic_t use;
 
-	/* For RCU-protected deletion */
-	struct rcu_head rcu_head;
-
-	/* Cacheline notes :*/
+	/* Cacheline notes (64-bit):*/
 	/* size: 128, cachelines: 2 */
-	/* sum members: 104, holes: 1, sum holes: 16 */
+	/* sum members: 104, holes: 0, sum holes: 0 */
+        /* padding: 24 */
 };
 
 
