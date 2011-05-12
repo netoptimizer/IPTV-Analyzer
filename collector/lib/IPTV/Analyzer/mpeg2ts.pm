@@ -437,10 +437,15 @@ sub compare_proc_hash($$)
     # Things to ignore in the hash compare
     my $ignore = {
 	'ignore_hash_keys' =>
-	    [ "prev_id", "stream_session_id" ]
+	    [ "prev_id", "stream_session_id",
+	      "packets", "payload_bytes" ] # Ignore the counters
     };
 
     my $res = Compare($globalref->{$global_key}, $inputref, $ignore);
+
+    # TODO: Add check for no-signal detection, by looking at the
+    # counters for packets and payload_bytes.
+
     return $res;
 }
 
@@ -1348,6 +1353,7 @@ sub db_insert($$$$$)
     my $port_dst      = $inputref->{'dport'};
     my $port_src      = $inputref->{'sport'};
     my $pids          = $inputref->{'pids'};
+    # TODO: Add packets and payload_bytes
 
     # Lookup the globalref
     my $global_key  = get_state_hashkey($inputref);
@@ -1429,6 +1435,7 @@ sub db_insert($$$$$)
     $interval = $probe_time - $last_poll if $last_poll;
 
     # FIXME/TODO: Define the event_types somewhere
+    # TODO: Add event_type for no-signal
     my $event_type = 1;
     if (($delta_discon > 0) || ($delta_skips > 0)) {
 	$event_type = 2;
