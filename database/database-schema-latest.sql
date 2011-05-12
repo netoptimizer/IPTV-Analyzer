@@ -54,7 +54,7 @@ CREATE TABLE `log_event` (
   `delta_skips` int(10) unsigned NOT NULL default '0',
   `delta_discon` int(10) unsigned NOT NULL default '0',
   `delta_errsec` int(10) unsigned NOT NULL default '0',
-  `bytes` bigint(20) unsigned default '0',
+  `payload_bytes` bigint(20) unsigned default '0',
   `packets` bigint(20) unsigned default '0',
   `event_type` smallint(5) unsigned NOT NULL default '1',
   `pids` smallint(5) unsigned NOT NULL default '0',
