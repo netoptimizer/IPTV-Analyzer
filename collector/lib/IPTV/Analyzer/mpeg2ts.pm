@@ -441,6 +441,7 @@ sub compare_proc_hash($$)
 	      "packets", "payload_bytes" ] # Ignore the counters
     };
 
+    # Compare: Returns 0 if the structures differ, else returns 1.
     my $res = Compare($globalref->{$global_key}, $inputref, $ignore);
 
     # TODO: Add check for no-signal detection, by looking at the
@@ -760,10 +761,12 @@ sub db_prepare_log_insert()
 	" skips, discontinuity," .
 	" delta_skips, delta_discon," .
 	" event_type," .
+	" packets, delta_packets, " .
+	" payload_bytes, delta_payload_bytes, " .
 	" pids, delta_poll," .
 	" multicast_dst, ip_src," .
 	" probe_time, last_poll) " .
-	"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " .
+	"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," .
 	" FROM_UNIXTIME(?), FROM_UNIXTIME(?))";
 
     my $res = $insert_log_event = $dbh->prepare($insert_query);
@@ -1353,13 +1356,19 @@ sub db_insert($$$$$)
     my $port_dst      = $inputref->{'dport'};
     my $port_src      = $inputref->{'sport'};
     my $pids          = $inputref->{'pids'};
-    # TODO: Add packets and payload_bytes
+    # Get packets and payload_bytes, and handle undef
+    my $packets       = $inputref->{'packets'} || 0;
+    my $payload_bytes = $inputref->{'payload_bytes'} || 0;
 
     # Lookup the globalref
     my $global_key  = get_state_hashkey($inputref);
     #
     my $delta_skips  = 0; # Must not be NULL in DB
     my $delta_discon = 0; # Must not be NULL in DB
+
+    my $delta_packets = 0;
+    my $delta_payload_bytes = 0;
+
 
     # The stream session is must be found or created later
     my $stream_session_id = undef;
@@ -1384,6 +1393,15 @@ sub db_insert($$$$$)
 	if( my $prev_discon = $prevref->{'discontinuity'}) {
 	    $delta_discon = $discontinuity - $prev_discon;
 	}
+
+	# Calculate the delta packets and payload_bytes
+	if( my $prev_packets = $prevref->{'packets'}) {
+	    $delta_packets = $packets - $prev_packets;
+	}
+	if( my $prev_payload_bytes = $prevref->{'payload_bytes'}) {
+	    $delta_payload_bytes = $payload_bytes - $prev_payload_bytes;
+	}
+	# TODO: Test for no-signal event, if counters don't increase
 
 	# Extract prev/stored stream_session_id
 	if (exists               $prevref->{'stream_session_id'}) {
@@ -1429,6 +1447,9 @@ sub db_insert($$$$$)
     $log .= " skips:[$skips] discon:[$discontinuity]";
     $log .= " delta_skips:[$delta_skips]"   if ($delta_skips  > 0);
     $log .= " delta_discon:[$delta_discon]" if ($delta_discon > 0);
+    $log .= " delta_packets:[$delta_packets]" if ($delta_packets > 0);
+    $log .= " delta_payload_bytes:[$delta_payload_bytes]"
+	if ($delta_payload_bytes > 0);
     $logger->info($log);
 
     my $interval = undef;
@@ -1446,6 +1467,8 @@ sub db_insert($$$$$)
 	$skips, $discontinuity,
 	$delta_skips, $delta_discon,
 	$event_type,
+	$packets, $delta_packets,
+	$payload_bytes, $delta_payload_bytes,
 	$pids, $interval,
 	$multicast_dst, $ip_src, #These can be removed later
 	$probe_time, $last_poll

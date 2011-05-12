@@ -1,0 +1,37 @@
+
+= DB changes between version =
+
+Document the DB changes between versions
+
+== From: 0.9.0 to 0.9.1 ===
+
+Need to support packet and byte counters (named "packets" and
+"payload_bytes").  The column "packets" already exist, and the column
+"bytes" need to be renamed to "payload_bytes".
+
+  ALTER TABLE log_event
+  	CHANGE `bytes` `payload_bytes` BIGINT(20) unsigned default '0';
+
+Also store the delta for payload_bytes and packets.  This can be
+easily used for calculation a number of things, e.g. bandwidth
+combined with delta time since last record (delta_poll is not usable
+for this purpose), if TS mapping 7 is used or not.
+
+  ALTER TABLE log_event
+   ADD `delta_payload_bytes` int(10) unsigned NOT NULL default '0',
+   ADD `delta_packets`       int(10) unsigned NOT NULL default '0';
+
+Plus a new event type for "no-signal" detection.  As there previously
+were only one event type (drops), a side table describing the event
+types.
+
+We also need to consider that, potentially/theoretically, is possible
+for two events type to occur in the same poll cycle.  Thus, either we
+need some kind of bit-vector so several events can be recorded
+together, or else the software needs to record two log_event records.
+
+Also need an event type for heartbeat.
+
+To apply these changes run:
+
+  mysql -u root -p tvprobe < database-upgrade-0.9.0-to-0.9.1.sql
