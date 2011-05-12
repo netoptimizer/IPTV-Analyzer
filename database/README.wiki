@@ -32,5 +32,5 @@ If you want to, grant remote access:
 
 At the UNIX prompt write:
 
- mysql -u root -p tvprobe < database_tvprobe.sql
+ mysql -u root -p tvprobe < database-schema-latest.sql
 
