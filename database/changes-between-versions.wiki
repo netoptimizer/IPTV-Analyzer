@@ -12,6 +12,10 @@ Need to support packet and byte counters (named "packets" and
   ALTER TABLE `log_event`
   	CHANGE `bytes` `payload_bytes` BIGINT(20) unsigned default '0';
 
+Should we also store the delta for payload_bytes and packets.  This
+can be easily used for calculation a number of things, e.g. bandwidth
+combined with delta_poll, if TS mapping 7 is used or not.
+
 Plus a new event type for "no-signal" detection.  As there previously
 were only one event type (drops), a side table describing the event
 types.
@@ -21,3 +25,4 @@ for two events type to occur in the same poll cycle.  Thus, either we
 need some kind of bit-vector so several events can be recorded
 together, or else the software needs to record two log_event records.
 
+Also need an event type for heartbeat.
