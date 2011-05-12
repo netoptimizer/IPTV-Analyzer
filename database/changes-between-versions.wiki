@@ -14,7 +14,8 @@ Need to support packet and byte counters (named "packets" and
 
 Also store the delta for payload_bytes and packets.  This can be
 easily used for calculation a number of things, e.g. bandwidth
-combined with delta_poll, if TS mapping 7 is used or not.
+combined with delta time since last record (delta_poll is not usable
+for this purpose), if TS mapping 7 is used or not.
 
   ALTER TABLE log_event
    ADD `delta_payload_bytes` int(10) unsigned NOT NULL default '0',
