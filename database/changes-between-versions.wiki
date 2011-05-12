@@ -9,12 +9,16 @@ Need to support packet and byte counters (named "packets" and
 "payload_bytes").  The column "packets" already exist, and the column
 "bytes" need to be renamed to "payload_bytes".
 
-  ALTER TABLE `log_event`
+  ALTER TABLE log_event
   	CHANGE `bytes` `payload_bytes` BIGINT(20) unsigned default '0';
 
-Should we also store the delta for payload_bytes and packets.  This
-can be easily used for calculation a number of things, e.g. bandwidth
+Also store the delta for payload_bytes and packets.  This can be
+easily used for calculation a number of things, e.g. bandwidth
 combined with delta_poll, if TS mapping 7 is used or not.
+
+  ALTER TABLE log_event
+   ADD `delta_payload_bytes` int(10) unsigned NOT NULL default '0',
+   ADD `delta_packets`       int(10) unsigned NOT NULL default '0';
 
 Plus a new event type for "no-signal" detection.  As there previously
 were only one event type (drops), a side table describing the event
@@ -26,3 +30,7 @@ need some kind of bit-vector so several events can be recorded
 together, or else the software needs to record two log_event records.
 
 Also need an event type for heartbeat.
+
+To apply these changes run:
+
+  mysql -u root -p tvprobe < database-upgrade-0.9.0-to-0.9.1.sql
