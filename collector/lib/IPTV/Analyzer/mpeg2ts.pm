@@ -438,6 +438,7 @@ sub compare_proc_hash($$)
     my $ignore = {
 	'ignore_hash_keys' =>
 	    [ "prev_id", "stream_session_id",
+	      "last_update",
 	      "packets", "payload_bytes" ] # Ignore the counters
     };
 
@@ -579,6 +580,10 @@ sub process_input_queue($@)
 
 	    # 1. Write changes to DB
 	    db_insert($globalref, $hash, $probe_input, $probe_time, $last_poll);
+
+	    # Side effects: db_insert() modifies $hash for next round
+	    # - Save "prev_id" (the autoinc id)
+	    # - Save "last_update" time in the hash (uses $probe_time)
 
 	    # 2. Update the global state
 	    store_into_global_state($globalref, $hash);
@@ -765,9 +770,10 @@ sub db_prepare_log_insert()
 	" payload_bytes, delta_payload_bytes, " .
 	" pids, delta_poll," .
 	" multicast_dst, ip_src," .
+	" delta_update, last_update, " .
 	" probe_time, last_poll) " .
-	"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," .
-	" FROM_UNIXTIME(?), FROM_UNIXTIME(?))";
+	"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," .
+	" FROM_UNIXTIME(?), FROM_UNIXTIME(?), FROM_UNIXTIME(?))";
 
     my $res = $insert_log_event = $dbh->prepare($insert_query);
     if (not $res) {
@@ -1374,8 +1380,8 @@ sub db_insert($$$$$)
     my $stream_session_id = undef;
     my $new_stream_session= 0;
 
-    # Find the previous insert id (if possible)
     my $prev_id = 0;
+    my $last_update = undef;
 
     # Use/look at the previous stored date
     # ------------------------------------
@@ -1383,9 +1389,16 @@ sub db_insert($$$$$)
 	# Get a ref to the previous stored data
 	my $prevref = $globalref->{$global_key};
 
+	# Find the previous insert id (if possible)
 	if (exists     $prevref->{'prev_id'}) {
 	    $prev_id = $prevref->{'prev_id'};
 	}
+
+	# Find the timestamp of the last db update/insert (if possible)
+	if (exists         $prevref->{'last_update'}) {
+	    $last_update = $prevref->{'last_update'};
+	}
+
 	# Calculate the delta skips and discontinuity at this point
 	if( my $prev_skips = $prevref->{'skips'}) {
 	    $delta_skips = $skips - $prev_skips;
@@ -1442,18 +1455,13 @@ sub db_insert($$$$$)
     #  $inputref later
     $inputref->{'stream_session_id'} = $stream_session_id;
 
+    # delta_poll: seconds since last poll
+    my $delta_poll = undef;
+    $delta_poll = $probe_time - $last_poll if $last_poll;
 
-    $log .= "stream:[$multicast_dst]";
-    $log .= " skips:[$skips] discon:[$discontinuity]";
-    $log .= " delta_skips:[$delta_skips]"   if ($delta_skips  > 0);
-    $log .= " delta_discon:[$delta_discon]" if ($delta_discon > 0);
-    $log .= " delta_packets:[$delta_packets]" if ($delta_packets > 0);
-    $log .= " delta_payload_bytes:[$delta_payload_bytes]"
-	if ($delta_payload_bytes > 0);
-    $logger->info($log);
-
-    my $interval = undef;
-    $interval = $probe_time - $last_poll if $last_poll;
+    # delta_update: seconds since last event record in database
+    my $delta_update = undef;
+    $delta_update = $probe_time - $last_update if $last_update;
 
     # FIXME/TODO: Define the event_types somewhere
     # TODO: Add event_type for no-signal
@@ -1462,6 +1470,18 @@ sub db_insert($$$$$)
 	$event_type = 2;
     }
 
+    $log .= "stream:[$multicast_dst]";
+    $log .= " skips:[$skips] discon:[$discontinuity]";
+    $log .= " delta_skips:[$delta_skips]"   if ($delta_skips  > 0);
+    $log .= " delta_discon:[$delta_discon]" if ($delta_discon > 0);
+    $log .= " delta_packets:[$delta_packets]" if ($delta_packets > 0);
+    $log .= " delta_payload_bytes:[$delta_payload_bytes]"
+	if ($delta_payload_bytes > 0);
+    $log .= " delta_update:[$delta_update]" if ($delta_update);
+    $log .= " delta_poll:[$delta_poll]"     if ($delta_poll);
+    $logger->info($log);
+
+
     my $res = $insert_log_event->execute(
 	$probe_id, $daemon_session_id, $stream_session_id,
 	$skips, $discontinuity,
@@ -1469,12 +1489,13 @@ sub db_insert($$$$$)
 	$event_type,
 	$packets, $delta_packets,
 	$payload_bytes, $delta_payload_bytes,
-	$pids, $interval,
-	$multicast_dst, $ip_src, #These can be removed later
+	$pids, $delta_poll,
+	$multicast_dst, $ip_src, # Redundant due to stream_session
+	$delta_update, $last_update,
 	$probe_time, $last_poll
 	);
 
-    #print STDERR "DB last_poll:$last_poll probe_time:$probe_time val:$interval\n";
+    #print STDERR "DB last_poll:$last_poll probe_time:$probe_time val:$delta_poll\n";
 
 
     # Extract the autoincrement id for this insert and save it for the
@@ -1482,6 +1503,12 @@ sub db_insert($$$$$)
     #
     my $autoinc_id = $dbh->{'mysql_insertid'};
     $inputref->{'prev_id'} = $autoinc_id;
+
+    # Save "last_update" the last time we inserted a record in the DB.
+    $inputref->{'last_update'} = $probe_time;
+    # FIXME: Add a timestamp per line in proc file, as the use of
+    #  "probe_time"/info:time "now" is not 100% accurate, as time pass
+    #  while reading each line from the proc file/kernel.
 
     if (not $res) {
 	$logger->fatal("DB error on INSERT (record lost: $log)");

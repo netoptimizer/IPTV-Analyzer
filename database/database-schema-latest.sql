@@ -63,6 +63,8 @@ CREATE TABLE `log_event` (
   `delta_poll` int(10) unsigned default NULL,
   `last_poll` timestamp NOT NULL default '0000-00-00 00:00:00',
   `probe_time` timestamp NOT NULL default '0000-00-00 00:00:00',
+   last_update  timestamp NOT NULL default '0000-00-00 00:00:00',
+   delta_update float unsigned default NULL,
   `multicast_dst` char(15) NOT NULL,
   `ip_src` char(15) default NULL,
   `ttl` smallint(5) unsigned default '0',

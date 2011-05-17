@@ -26,9 +26,23 @@ for this purpose), if TS mapping 7 is used or not.
    ADD `delta_payload_bytes` int(10) unsigned NOT NULL default '0',
    ADD `delta_packets`       int(10) unsigned NOT NULL default '0';
 
-Perhaps add a last_record timestamp and a delta_last_record time, for
-calculating the bandwidth.
+To relate the delta counters, to something, we need to know when the
+last record were updated, so we can determine the seconds these delta
+counters account for.  This way is possible to calculate bandwidth and
+packets per sec.
 
+Add a "last_update" timestamp and a "delta_update" time:
+
+  ALTER TABLE log_event
+   ADD last_update   timestamp NOT NULL default '0000-00-00 00:00:00',
+   ADD delta_update  float unsigned default NULL;
+
+Change "delta_poll" to use type "float" instead of "int(11)"
+(eventhough the precision of "delta_poll" is not as important as
+"delta_update").
+
+  ALTER TABLE log_event
+   MODIFY delta_poll float unsigned default NULL;
 
 
 === Event types ===
