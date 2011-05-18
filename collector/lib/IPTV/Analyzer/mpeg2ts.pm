@@ -445,9 +445,22 @@ sub compare_proc_hash($$)
     # Compare: Returns 0 if the structures differ, else returns 1.
     my $res = Compare($globalref->{$global_key}, $inputref, $ignore);
 
-    # TODO: Add check for no-signal detection, by looking at the
-    # counters for packets and payload_bytes.
-
+    # Check for no-signal detection, by looking at the counters for
+    # packets (and payload_bytes implicit).
+    my $prevref = $globalref->{$global_key};
+    if (exists $prevref->{'packets'}) {
+	my $prev_packets = $prevref->{'packets'};
+	my $packets      = $inputref->{'packets'};
+	if ($prev_packets == $packets) {
+	    # no-signal detected, as the packet count have not changed
+	    # since last poll cycle.
+	    $res = 0;
+	    # TODO: record a flip-flop state for detecting when signal
+	    # returns, and an indication that no-signal was also
+	    # detected in last poll cycle, this is e.g. needed for
+	    # sending snmptraps (see feature/issue #3).
+	}
+    }
     return $res;
 }
 
@@ -1372,9 +1385,8 @@ sub db_insert($$$$$)
     my $delta_skips  = 0; # Must not be NULL in DB
     my $delta_discon = 0; # Must not be NULL in DB
 
-    my $delta_packets = 0;
+    my $delta_packets = undef;
     my $delta_payload_bytes = 0;
-
 
     # The stream session is must be found or created later
     my $stream_session_id = undef;
@@ -1463,15 +1475,43 @@ sub db_insert($$$$$)
     my $delta_update = undef;
     $delta_update = $probe_time - $last_update if $last_update;
 
-    # FIXME/TODO: Define the event_types somewhere
-    # TODO: Add event_type for no-signal
-    my $event_type = 1;
+    # FIXME/TODO: Define the event_types somewhere else
+    my $event_default   = 1;
+    my $event_drop      = 2;
+    my $event_no_signal = 4;
+    my $event_heartbeat = 8;
+    my $event_invalid   = 128;
+
+    # Detect the different event types
+    my $event_type = 0;
+    # - Detect drops
     if (($delta_discon > 0) || ($delta_skips > 0)) {
-	$event_type = 2;
+	$event_type |= $event_drop;
+    }
+    # - Detect no-signal (based on $delta_packets only)
+    if (defined $delta_packets) {
+	if ($delta_packets == 0) {
+	    $event_type |= $event_no_signal;
+	}
+	# This should not happen check
+	if ($delta_packets < 0) {
+	    $logger->error("$log - Correcting negative delta packets");
+	    $delta_packets = 0;
+	    $delta_payload_bytes = 0;
+	    $event_type = $event_invalid;
+	}
+    } else {
+	# DB don't want NULL/undef in delta_packets
+	$delta_packets = 0;
+	$event_type |= $event_no_signal;
+    }
+    if ($event_type == 0) {
+	$event_type = $event_default;
     }
 
     $log .= "stream:[$multicast_dst]";
     $log .= " skips:[$skips] discon:[$discontinuity]";
+    $log .= " event:[$event_type]";
     $log .= " delta_skips:[$delta_skips]"   if ($delta_skips  > 0);
     $log .= " delta_discon:[$delta_discon]" if ($delta_discon > 0);
     $log .= " delta_packets:[$delta_packets]" if ($delta_packets > 0);
