@@ -3,6 +3,14 @@
 --  From version: 0.9.0
 --  To   version: 0.9.1
 --
+
+ALTER TABLE log_event
+      MODIFY delta_poll float unsigned default NULL;
+
+ALTER TABLE log_event
+      ADD last_update   timestamp NOT NULL default '0000-00-00 00:00:00',
+      ADD delta_update  float unsigned default NULL;
+
 -- Add delta colums for payload_bytes and packets
 
 ALTER TABLE log_event
