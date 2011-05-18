@@ -1,6 +1,13 @@
 
 Recent changes
 
+	Implemented packet and byte counters in the xt_mpeg2ts kernel
+	module.  The iptv-collector, collects these counters and record
+	delta values and timestamps to the database.
+
+	Updated database layout to support counters and delta update
+	timestamps.
+
 2011-05-09  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.9.0.
