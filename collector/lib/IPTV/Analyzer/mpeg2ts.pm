@@ -1362,11 +1362,12 @@ sub detect_event_type($$$$$$$)
     my $log = "Event on Input:[$probe_input] ";
 
     # FIXME/TODO: Define the event_types somewhere else
-    my $event_new_stream =   1;
-    my $event_drop       =   2;
-    my $event_no_signal  =   4;
-    my $event_heartbeat  =  64;
-    my $event_invalid    = 128;
+    my $event_new_stream =   1; # New stream detected
+    my $event_drop       =   2; # Drops detected, both skips and discon
+    my $event_no_signal  =   4; # Stream have stopped transmitting data
+    my $event_transition =  32; # The event_state changed since last poll
+    my $event_heartbeat  =  64; # Heartbeat event to monitor status
+    my $event_invalid    = 128; # Some invalid event situation arose
 
     # Detect the different event types
     # --------------------------------
@@ -1388,10 +1389,11 @@ sub detect_event_type($$$$$$$)
 	# This should not happen check
 	if ($delta_packets < 0) {
 	    $logger->error("$log - negative delta packets");
-	    $event_type |= $event_invalid;
+	    $event_type = $event_invalid;
 	}
     }
     if ($event_type == 0) {
+	# Assume this is a heartbeat check, if no event is detected.
 	$event_type = $event_heartbeat;
     }
 
@@ -1401,7 +1403,7 @@ sub detect_event_type($$$$$$$)
     # $log info data
     my $mc_dst = $inputref->{'dst'};
     my $ip_src        = $inputref->{'src'};
-    my $log .= "$ip_src->$mc_dst:";
+    $log .= "$ip_src->$mc_dst:";
 
     # Different "no-signal" state transitions
     #  where is only care about some of them
@@ -1433,6 +1435,14 @@ sub detect_event_type($$$$$$$)
 
     # Store the event "state" for next round
     $inputref->{'event_state'} = $event_type;
+
+    # IDEA: Track general transitions.
+    #  For drop events, this could be use for filtering events
+    #  for channels with excessive drops, in every poll cycle.
+    #
+    if ($event_state != $event_type) {
+	$event_type |= $event_transition;
+    }
 
     return $event_type;
 }

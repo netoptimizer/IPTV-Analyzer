@@ -58,7 +58,7 @@ CREATE TABLE `log_event` (
   `delta_payload_bytes` int(10) unsigned NOT NULL default '0',
   `packets` bigint(20) unsigned default '0',
   `delta_packets` int(10) unsigned NOT NULL default '0',
-  `event_type` smallint(5) unsigned NOT NULL default '1',
+  `event_type` int(10) unsigned NOT NULL default '0',
   `pids` smallint(5) unsigned NOT NULL default '0',
   `delta_poll` int(10) unsigned default NULL,
   `last_poll` timestamp NOT NULL default '0000-00-00 00:00:00',
@@ -69,8 +69,26 @@ CREATE TABLE `log_event` (
   `ip_src` char(15) default NULL,
   `ttl` smallint(5) unsigned default '0',
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1985836 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=65536 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
+
+DROP TABLE IF EXISTS event_type;
+CREATE TABLE event_type (
+  bitmask     int(10) unsigned NOT NULL default '0',
+  label       varchar(15) NOT NULL,
+  description varchar(255),
+  PRIMARY KEY (bitmask)
+) ENGINE=InnoDB
+
+LOCK TABLES event_type WRITE;
+INSERT INTO event_type (bitmask, label, description) VALUES
+(  1, "new_stream", "New stream detected"),
+(  2, "drop"      , "Drops detected, both skips and discon"),
+(  4, "no_signal" , "Stream have stopped transmitting data"),
+( 32, "transition", "The event_state changed since last poll"),
+( 64, "heartbeat" , "Heartbeat event to monitor status"),
+(128, "invalid"   , "Some invalid event situation arose");
+UNLOCK TABLES;
 
 --
 -- Table structure for table `probes`
