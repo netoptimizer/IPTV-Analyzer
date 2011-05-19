@@ -438,7 +438,8 @@ sub compare_proc_hash($$)
     my $ignore = {
 	'ignore_hash_keys' =>
 	    [ "prev_id", "stream_session_id",
-	      "last_update",
+	      "last_update", # timestamp of last DB insert
+	      "event_state", # keeping an event type state
 	      "packets", "payload_bytes" ] # Ignore the counters
     };
 
@@ -1337,7 +1338,104 @@ sub db_create_stream_session($$$$)
     return $id;
 }
 
+sub snmptrap_no_signal()
+{
+    # TODO: Implement snmptrap functionality
+    # use module Net::SNMP
+    my $inputref    = shift;
+    my $no_signal   = shift; #1=no-signal 0=signal/recovered
+    my $probe_input = shift;
 
+
+}
+
+sub detect_event_type($$$$$$$)
+{
+    my $inputref      = shift;
+    my $event_state   = shift;
+    my $probe_input   = shift;
+    my $delta_discon  = shift;
+    my $delta_skips   = shift;
+    my $delta_packets = shift;
+    my $new_stream    = shift;
+
+    my $log = "Event on Input:[$probe_input] ";
+
+    # FIXME/TODO: Define the event_types somewhere else
+    my $event_new_stream =   1;
+    my $event_drop       =   2;
+    my $event_no_signal  =   4;
+    my $event_heartbeat  =  64;
+    my $event_invalid    = 128;
+
+    # Detect the different event types
+    # --------------------------------
+    my $event_type = 0;
+
+    # - Detect new stream
+    if ($new_stream) {
+	$event_type |= $event_new_stream;
+    }
+    # - Detect drops
+    if (($delta_discon > 0) || ($delta_skips > 0)) {
+	$event_type |= $event_drop;
+    }
+    # - Detect no-signal (based on $delta_packets only)
+    if (defined $delta_packets) {
+	if ($delta_packets == 0) {
+	    $event_type |= $event_no_signal;
+	}
+	# This should not happen check
+	if ($delta_packets < 0) {
+	    $logger->error("$log - negative delta packets");
+	    $event_type |= $event_invalid;
+	}
+    }
+    if ($event_type == 0) {
+	$event_type = $event_heartbeat;
+    }
+
+    # Compare to previous event_state
+    # -------------------------------
+
+    # $log info data
+    my $mc_dst = $inputref->{'dst'};
+    my $ip_src        = $inputref->{'src'};
+    my $log .= "$ip_src->$mc_dst:";
+
+    # Different "no-signal" state transitions
+    #  where is only care about some of them
+    # -----
+    # (1) signal    -> no-signal (react)
+    # (2) no-signal -> no-signal (don't care)
+    # (3) no-signal -> signal    (react)
+    # (4) signal    -> signal    (don't care)
+    #
+    if ( $event_state & $event_no_signal ) {
+	# Previous state had no-signal detected
+	if ( !($event_type & $event_no_signal) ) {
+	    # Current state have signal
+	    # = transition: (3) no-signal -> signal
+	    $logger->info("$log no-signal -> signal");
+	    ###snmptrap_no_signal($inputref, 0, $probe_input);
+	    # FIXME: call snmptrap
+	}
+    } else {
+	# Previous state had signal
+	if ( $event_type & $event_no_signal ) {
+	    # Current state have no-signal
+	    # = transition: (1) signal -> no-signal
+	    $logger->info("$log signal -> no-signal");
+	    ###snmptrap_no_signal($inputref, 1, $probe_input);
+	    # FIXME: call snmptrap
+	}
+    }
+
+    # Store the event "state" for next round
+    $inputref->{'event_state'} = $event_type;
+
+    return $event_type;
+}
 
 sub db_insert($$$$$)
 {
@@ -1394,12 +1492,18 @@ sub db_insert($$$$$)
 
     my $prev_id = 0;
     my $last_update = undef;
+    my $event_state = 0;
 
-    # Use/look at the previous stored date
+    # Use/look at the previous stored data
     # ------------------------------------
     if (exists        $globalref->{$global_key}) {
 	# Get a ref to the previous stored data
 	my $prevref = $globalref->{$global_key};
+
+	# Extract the previous event_state
+	if (exists $prevref->{'event_state'}) {
+	    $event_state = $prevref->{'event_state'};
+	}
 
 	# Find the previous insert id (if possible)
 	if (exists     $prevref->{'prev_id'}) {
@@ -1422,11 +1526,11 @@ sub db_insert($$$$$)
 	# Calculate the delta packets and payload_bytes
 	if( my $prev_packets = $prevref->{'packets'}) {
 	    $delta_packets = $packets - $prev_packets;
+	    # Set variable to indicate $delta_packets is valid? or use undef?
 	}
 	if( my $prev_payload_bytes = $prevref->{'payload_bytes'}) {
 	    $delta_payload_bytes = $payload_bytes - $prev_payload_bytes;
 	}
-	# TODO: Test for no-signal event, if counters don't increase
 
 	# Extract prev/stored stream_session_id
 	if (exists               $prevref->{'stream_session_id'}) {
@@ -1475,38 +1579,18 @@ sub db_insert($$$$$)
     my $delta_update = undef;
     $delta_update = $probe_time - $last_update if $last_update;
 
-    # FIXME/TODO: Define the event_types somewhere else
-    my $event_default   = 1;
-    my $event_drop      = 2;
-    my $event_no_signal = 4;
-    my $event_heartbeat = 8;
-    my $event_invalid   = 128;
+    my $event_type = detect_event_type($inputref, $event_state, $probe_input,
+				       $delta_discon, $delta_skips,
+				       $delta_packets, $new_stream_session);
 
-    # Detect the different event types
-    my $event_type = 0;
-    # - Detect drops
-    if (($delta_discon > 0) || ($delta_skips > 0)) {
-	$event_type |= $event_drop;
-    }
-    # - Detect no-signal (based on $delta_packets only)
-    if (defined $delta_packets) {
-	if ($delta_packets == 0) {
-	    $event_type |= $event_no_signal;
-	}
-	# This should not happen check
-	if ($delta_packets < 0) {
-	    $logger->error("$log - Correcting negative delta packets");
-	    $delta_packets = 0;
-	    $delta_payload_bytes = 0;
-	    $event_type = $event_invalid;
-	}
-    } else {
+    if (!defined($delta_packets)) {
 	# DB don't want NULL/undef in delta_packets
 	$delta_packets = 0;
-	$event_type |= $event_no_signal;
     }
-    if ($event_type == 0) {
-	$event_type = $event_default;
+    if ($delta_packets < 0) {
+	$logger->error("$log - correcting negative delta packets");
+	$delta_packets = 0;
+	$delta_payload_bytes = 0;
     }
 
     $log .= "stream:[$multicast_dst]";
