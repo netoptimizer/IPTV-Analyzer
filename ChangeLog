@@ -8,6 +8,10 @@ Recent changes
 	Updated database layout to support counters and delta update
 	timestamps.
 
+	The collector handels detection of state transitions from, signal
+	to no-signal, and back from no-signal to signal.  This is useful
+	for (future) snmptrap facilities.
+
 2011-05-09  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.9.0.
