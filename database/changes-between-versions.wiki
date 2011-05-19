@@ -50,6 +50,7 @@ Change "delta_poll" to use type "float" instead of "int(11)"
 Introducing new event types in this version.
 
 * New event type(4): "no-signal" detection.
+* New event type(32): "transition".
 * New event type(64): "heartbeat".
 * New event type(128): "invalid".
 
@@ -81,3 +82,20 @@ the bits, MySQL select supports the "bin" cast
   ALTER TABLE log_event
     MODIFY event_type INT(10) unsigned NOT NULL default '0';
 
+Create side table:
+
+  DROP TABLE IF EXISTS event_type;
+  CREATE TABLE event_type (
+    bitmask     int(10) unsigned NOT NULL default '0',
+    label       varchar(15) NOT NULL,
+    description varchar(255),
+    PRIMARY KEY (bitmask)
+  ) ENGINE=InnoDB
+
+  INSERT INTO event_type (bitmask, label, description) VALUES
+  (  1, "new_stream", "New stream detected"),
+  (  2, "drop"      , "Drops detected, both skips and discon"),
+  (  4, "no_signal" , "Stream have stopped transmitting data"),
+  ( 32, "transition", "The event_state changed since last poll"),
+  ( 64, "heartbeat" , "Heartbeat event to monitor status"),
+  (128, "invalid"   , "Some invalid event situation arose");

@@ -4,6 +4,24 @@
 --  To   version: 0.9.1
 --
 
+DROP TABLE IF EXISTS event_type;
+CREATE TABLE event_type (
+  bitmask     int(10) unsigned NOT NULL default '0',
+  label       varchar(15) NOT NULL,
+  description varchar(255),
+  PRIMARY KEY (bitmask)
+) ENGINE=InnoDB;
+
+LOCK TABLES event_type WRITE;
+INSERT INTO event_type (bitmask, label, description) VALUES
+(  1, "new_stream", "New stream detected"),
+(  2, "drop"      , "Drops detected, both skips and discon"),
+(  4, "no_signal" , "Stream have stopped transmitting data"),
+( 32, "transition", "The event_state changed since last poll"),
+( 64, "heartbeat" , "Heartbeat event to monitor status"),
+(128, "invalid"   , "Some invalid event situation arose");
+UNLOCK TABLES;
+
 ALTER TABLE log_event
       MODIFY event_type int(10) unsigned NOT NULL default '0';
 
