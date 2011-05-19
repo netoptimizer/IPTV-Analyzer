@@ -49,11 +49,17 @@ Change "delta_poll" to use type "float" instead of "int(11)"
 
 Introducing new event types in this version.
 
-* New event type: "no-signal" detection.
-* New event type: "heartbeat".
+* New event type(4): "no-signal" detection.
+* New event type(64): "heartbeat".
+* New event type(128): "invalid".
+
+Old event types:
+
+* Event type(2): "drop".
+* Event type(1): "new_stream".
 
 Need a side table describing the event types, as there previously were
-only one event type (drops).
+only one event type (drops) (and implicit "new_stream" event).
 
 Event datatype, design discussion: We also need to consider that,
 potentially/theoretically, is possible for two events type to occur in
@@ -65,3 +71,13 @@ approach is, that each time a new event type is created, the database
 needs to be altered.
 
 Future event types, could be related to burst, jitter, PCR-clock issues.
+
+Change the datatype of "event_type", to support a large bit-vector
+number. Choose to simply use an 32-bit INT type (instead of MySQLs BIT
+type, as its strange to use, and it does not convert well).  To view
+the bits, MySQL select supports the "bin" cast
+(e.g. "select bin(event_type) from log_event;").
+
+  ALTER TABLE log_event
+    MODIFY event_type INT(10) unsigned NOT NULL default '0';
+

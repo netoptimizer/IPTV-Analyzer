@@ -5,6 +5,9 @@
 --
 
 ALTER TABLE log_event
+      MODIFY event_type int(10) unsigned NOT NULL default '0';
+
+ALTER TABLE log_event
       MODIFY delta_poll float unsigned default NULL;
 
 ALTER TABLE log_event
