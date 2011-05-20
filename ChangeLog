@@ -12,6 +12,8 @@ Recent changes
 	to no-signal, and back from no-signal to signal.  This is useful
 	for (future) snmptrap facilities.
 
+	Support periodic updating streams each heartbeat ticks.
+
 2011-05-09  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.9.0.
