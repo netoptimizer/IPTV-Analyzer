@@ -34,6 +34,9 @@ our %global_state;
 # Global database handle
 our $dbh;
 
+# Global heartbeat state, hack to update all streams on heartbeat
+our $global_heartbeat_state = 0;
+
 ###
 # Logging system
 use Log::Log4perl qw(get_logger :levels);
@@ -110,6 +113,9 @@ BEGIN {
 		        get_config
 		        validate_config
 		        heartbeat_update
+		        heartbeat_state_active
+		        heartbeat_state_clear
+		        heartbeat_state_read
 		        close_daemon_sessions
 		        close_stream_sessions
                       );
@@ -456,12 +462,15 @@ sub compare_proc_hash($$)
 	    # no-signal detected, as the packet count have not changed
 	    # since last poll cycle.
 	    $res = 0;
-	    # TODO: record a flip-flop state for detecting when signal
-	    # returns, and an indication that no-signal was also
-	    # detected in last poll cycle, this is e.g. needed for
-	    # sending snmptraps (see feature/issue #3).
 	}
     }
+
+    # Check if heartbeat is requested
+    my $heartbeat = heartbeat_state_read();
+    if ($heartbeat) {
+	$res = 0; # Indicate need for update
+    }
+
     return $res;
 }
 
@@ -647,6 +656,21 @@ sub process_inputs() {
 
 	process_input_queue($key, \@input_queue);
     }
+}
+
+sub heartbeat_state_active()
+{
+    $global_heartbeat_state = 1;
+}
+
+sub heartbeat_state_clear()
+{
+    $global_heartbeat_state = 0;
+}
+
+sub heartbeat_state_read()
+{
+    return $global_heartbeat_state;
 }
 
 sub heartbeat_update()

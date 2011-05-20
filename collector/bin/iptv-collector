@@ -307,7 +307,10 @@ while ($run) {
     $ticks++;
 
     if (($ticks % $heartbeat_interval_ticks) == 0) {
+	heartbeat_state_active();
 	heartbeat_update();
+    } else {
+	heartbeat_state_clear();
     }
 }
 
