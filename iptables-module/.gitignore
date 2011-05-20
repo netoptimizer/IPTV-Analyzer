@@ -1,0 +1,10 @@
+*.ko
+*.so
+*.o
+*~
+*.mod.c
+Module.symvers
+modules.order
+.*.cmd
+.xt_mpeg2ts.o.d
+.tmp_versions
