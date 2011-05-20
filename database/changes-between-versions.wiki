@@ -44,7 +44,6 @@ Change "delta_poll" to use type "float" instead of "int(11)"
   ALTER TABLE log_event
    MODIFY delta_poll float unsigned default NULL;
 
-
 === Event types ===
 
 Introducing new event types in this version.
@@ -99,3 +98,14 @@ Create side table:
   ( 32, "transition", "The event_state changed since last poll"),
   ( 64, "heartbeat" , "Heartbeat event to monitor status"),
   (128, "invalid"   , "Some invalid event situation arose");
+
+=== Extra change ===
+
+As the database gets update anyhow, also complete the renaming from
+mp2t to mpeg2ts.
+
+ ALTER TABLE daemon_session
+  CHANGE `mp2t_created` `mpeg2ts_created` timestamp NOT NULL default '0000-00-00 00:00:00',
+  CHANGE `mp2t_version` `mpeg2ts_version` varchar(50) default NULL;
+
+

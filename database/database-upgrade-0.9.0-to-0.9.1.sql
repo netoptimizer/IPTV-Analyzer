@@ -43,3 +43,8 @@ ALTER TABLE log_event
 ALTER TABLE log_event
       CHANGE `bytes` `payload_bytes` bigint(20) unsigned default '0';
 
+-- Fix the last renaming from mp2t to mpeg2ts
+
+ALTER TABLE daemon_session
+      CHANGE `mp2t_created` `mpeg2ts_created` timestamp NOT NULL default '0000-00-00 00:00:00',
+      CHANGE `mp2t_version` `mpeg2ts_version` varchar(50) default NULL;

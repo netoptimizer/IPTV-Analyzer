@@ -1120,7 +1120,7 @@ sub db_create_daemon_session($$)
 
     my $query =
 	"INSERT INTO daemon_session " .
-	" (probe_id, daemon_pid, mp2t_created, mp2t_version)" .
+	" (probe_id, daemon_pid, mpeg2ts_created, mpeg2ts_version)" .
 	" VALUES (?, ?, FROM_UNIXTIME(?), ?)";
 
     my $log = "Creating new daemon_session for probe_id:[$probe_id]";
@@ -1137,8 +1137,8 @@ sub db_create_daemon_session($$)
     my $id = $dbh->{'mysql_insertid'};
 
     $log .= " daemon_session_id:[$id]";
-    $log .= " mp2t_ver:[$version]";
-    $log .= " mp2t_created:[$created]";
+    $log .= " mpeg2ts_ver:[$version]";
+    $log .= " mpeg2ts_created:[$created]";
     $logger->info($log);
 
     db_commit();

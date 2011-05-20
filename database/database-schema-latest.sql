@@ -29,8 +29,8 @@ CREATE TABLE `daemon_session` (
   `heartbeat` timestamp NOT NULL default '0000-00-00 00:00:00',
   `probe_id` int(11) default NULL,
   `daemon_pid` smallint(5) unsigned default NULL,
-  `mp2t_created` timestamp NOT NULL default '0000-00-00 00:00:00',
-  `mp2t_version` varchar(50) default NULL,
+  `mpeg2ts_created` timestamp NOT NULL default '0000-00-00 00:00:00',
+  `mpeg2ts_version` varchar(50) default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
