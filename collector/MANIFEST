@@ -1,6 +1,8 @@
 bin/iptv-collector
 etc/collector.conf.sample
 etc/log4perl.conf.sample
+etc/version
+etc/version.in
 input/proc_rule_test001.input
 input/README
 lib/IPTV/Analyzer/Log4perlTrapper.pm

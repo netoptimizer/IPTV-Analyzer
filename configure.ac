@@ -220,6 +220,7 @@ AC_CONFIG_FILES([
 	Makefile
 	iptables-module/Makefile
 	collector/lib/IPTV/Analyzer/Version.pm
+	collector/etc/version
 ])
 
 #
