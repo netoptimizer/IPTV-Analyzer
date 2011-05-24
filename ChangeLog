@@ -1,12 +1,18 @@
 
-Recent changes
+2011-05-24  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.9.1.
+
+	New features include bytes and packet counters, no-signal detection,
+	heartbeat system per stream, and new event types.
 
 	Implemented packet and byte counters in the xt_mpeg2ts kernel
 	module.  The iptv-collector, collects these counters and record
 	delta values and timestamps to the database.
 
-	Updated database layout to support counters and delta update
-	timestamps.
+	NOTICE: Database changes. Updated database layout to support
+	counters and delta update timestamps. Its possible to upgrade
+	the database schema without loosing your current data.
 
 	The collector handels detection of state transitions from, signal
 	to no-signal, and back from no-signal to signal.  This is useful

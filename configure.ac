@@ -1,7 +1,7 @@
 #
 # Notice: The VERSION is defined/controlled by AC_INIT
 #
-AC_INIT([iptv-analyzer], [0.9.1-rc2], [hawk@comx.dk], [], [www.iptv-analyzer.org])
+AC_INIT([iptv-analyzer], [0.9.1], [hawk@comx.dk], [], [www.iptv-analyzer.org])
 #AC_INIT(package,        version, [bug-report], [tarname], [url])
 #
 AC_CONFIG_HEADERS([config.h])
@@ -250,4 +250,8 @@ echo "       http://$PACKAGE_URL"
 echo ""
 echo "   Send bugreports, patches and insults to:"
 echo "       $PACKAGE_BUGREPORT"
+echo ""
+echo "   If upgrading, notice database changes in this release, see:"
+echo "     database/database-upgrade-0.9.0-to-0.9.1.sql"
+echo "     database/changes-between-versions.wiki"
 echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-"
