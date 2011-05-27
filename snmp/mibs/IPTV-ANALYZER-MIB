@@ -1,0 +1,188 @@
+IPTV-ANALYZER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Counter32, Gauge32,
+	Integer32, Unsigned32, IpAddress
+	FROM SNMPv2-SMI
+    cxexperimental, cxnet
+	FROM CXNET-CORE-MIB
+
+iptvAnalyzer MODULE-IDENTITY
+    LAST-UPDATED "201105260000Z"
+    ORGANIZATION "ComX Networks A/S"
+    CONTACT-INFO
+	"email: hawk@comx.dk
+         Author: Jesper Dangaard Brouer"
+    DESCRIPTION
+        "The MIB module is part of the IPTV-Analyzer
+	 project, and is used for documenting the
+	 snmptraps used by the iptv-collector."
+    ::= { cxnet 43 }
+
+
+--  The General Group is for global settings of the collecor deamon
+
+--    The variables can be used for identifying the collecor probe
+
+collectorGeneralGroup  OBJECT IDENTIFIER ::= { iptvAnalyzer 1 }
+
+-- collector.conf: variable probe_ip
+  collectorId OBJECT-TYPE
+       SYNTAX       IpAddress
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+          "Main identifier of the IPTV-collector daemon,
+	  is an IP-address.  This comes from the collector.conf
+	  variable probe_ip"
+       ::= { collectorGeneralGroup 1 }
+
+-- collector.conf: variable probe_name
+  collectorName OBJECT-TYPE
+       SYNTAX       OCTET STRING
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+          "Textual identifier of the IPTV-collector daemon.
+	  This comes from the collector.conf variable probe_name"
+       ::= { collectorGeneralGroup 2 }
+
+
+--  Trap section
+
+iptvAnalyzerTrap  OBJECT IDENTIFIER ::= { iptvAnalyzer 2 }
+
+--  Trap Support Objects
+--    The following are support objects for the traps.
+
+collectorTrapControl OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 1 }
+
+  collectorEventType  OBJECT-TYPE
+    SYNTAX INTEGER {
+      new_stream   (1), -- New stream detected
+      drop         (2), -- Drops detected, both skips and discon
+      no_signal    (4), -- Stream have stopped transmitting data
+      ok_signal    (8), -- Indicate signal returned (clear no-signal trap)
+      ttl_change  (16), -- Indicate TTL changed
+      transition  (32), -- The event_state changed since last poll
+      heartbeat   (64), -- Heartbeat event to monitor status
+      invalid    (128)  -- Some invalid event situation arose
+    }
+    MAX-ACCESS   read-only
+    STATUS   current
+    DESCRIPTION
+         "The different Event Types used by the collector."
+       ::= { collectorTrapControl 1 }
+
+--  collectorEventName  OBJECT-TYPE
+--  collectorEventBitVector  OBJECT-TYPE
+
+--  multicastDest   OBJECT-TYPE
+--  streamerSource  OBJECT-TYPE
+
+
+  ospfSetTrap OBJECT-TYPE
+       SYNTAX       OCTET STRING (SIZE(4))
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+          "A 4-octet string serving as a bit map for
+          the trap events defined by the OSPF traps.  This
+          object is used to enable and disable specific
+          OSPF traps where a 1 in the bit field
+          represents enabled.  The right-most bit (least
+          significant) represents trap 0.
+
+          This object is persistent and when written
+
+          the entity SHOULD save the change to non-volatile
+          storage."
+        ::= { collectorTrapControl 2 }
+
+
+  ospfPacketType OBJECT-TYPE
+       SYNTAX       INTEGER {
+                       hello (1),
+                       dbDescript (2),
+                       lsReq (3),
+                       lsUpdate (4),
+                       lsAck (5),
+                       nullPacket (6) }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+          "OSPF packet types.  When the last value of a trap
+          using this object is needed, but no traps of
+          that type have been sent, this value pertaining
+          to this object should be returned as nullPacket."
+       ::= { collectorTrapControl 3 }
+
+  ospfPacketSrc OBJECT-TYPE
+       SYNTAX       IpAddress
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+          "The IP address of an inbound packet that cannot
+          be identified by a neighbor instance.  When
+          the last value of a trap using this object is
+          needed, but no traps of that type have been sent,
+          this value pertaining to this object should
+          be returned as 0.0.0.0."
+       ::= { collectorTrapControl 4 }
+
+--  Traps
+
+collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
+
+  collectorGeneralEvent NOTIFICATION-TYPE
+       OBJECTS {
+          collectorId, -- The originator of the trap
+          collectorName,
+	  collectorEventType, -- The event type
+--          ospfVirtIfAreaId,
+--          ospfVirtIfNeighbor,
+--          ospfVirtIfState  -- The new state
+          }
+       STATUS       current
+       DESCRIPTION
+          "An ospfVirtIfStateChange trap signifies that there
+          has been a change in the state of an OSPF virtual
+          interface.
+
+          This trap should be generated when the interface
+          state regresses (e.g., goes from Point-to-Point to Down)
+          or progresses to a terminal state
+          (i.e., Point-to-Point)."
+       ::= { collectorTraps 1 }
+
+
+--  collectorNoSignal  NOTIFICATION-TYPE
+--  collectorNewStream NOTIFICATION-TYPE
+
+  ospfNbrStateChange NOTIFICATION-TYPE
+       OBJECTS {
+          collectorId, -- The originator of the trap
+          collectorName,
+          ospfNbrAddressLessIndex,
+          ospfNbrRtrId,
+          ospfNbrState  -- The new state
+          }
+       STATUS       current
+       DESCRIPTION
+          "An ospfNbrStateChange trap signifies that
+          there has been a change in the state of a
+          non-virtual OSPF neighbor.  This trap should be
+          generated when the neighbor state regresses
+          (e.g., goes from Attempt or Full to 1-Way or
+          Down) or progresses to a terminal state (e.g.,
+          2-Way or Full).  When an neighbor transitions
+          from or to Full on non-broadcast multi-access
+          and broadcast networks, the trap should be
+          generated by the designated router.  A designated
+          router transitioning to Down will be noted by
+          ospfIfStateChange."
+       ::= { collectorTraps 2 }
+
+
+
+END
