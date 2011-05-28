@@ -7,7 +7,7 @@ IPTV::Analyzer::snmptrap - module for sending SNMP traps events
 =head1 SYNOPSIS
 
 The IPTV::Analyzer::snmptrap module is a helper module for sending
-SNMP traps when events like no-signal occurs.
+SNMP traps, when e.g. events like no-signal occurs.
 
 =cut
 
@@ -70,18 +70,18 @@ sub close_snmp_session()
 }
 
 # taken from snmptrapd-sendtest.pl / Net-SNMPTrapd-0.04
-our %opt;
-$opt{version}   = $opt{version}   || 2;
-$opt{community} = $opt{community} || 'public';
-$opt{integer}   = $opt{integer}   || 1;
-$opt{string}    = $opt{string}    || 'String';
-$opt{oid}       = $opt{oid}       || '1.2.3.4.5.6.7.8.9';
-$opt{ip}        = $opt{ip}        || '10.10.10.1';
-$opt{counter32} = $opt{counter32} || 32323232;
-$opt{gauge32}   = $opt{gauge32}   || 42424242;
-$opt{timeticks} = $opt{timeticks} || time();
-$opt{opaque}    = $opt{opaque}    || 'opaque data';
-$opt{inform}    = $opt{inform}    || 0;
+#our %opt;
+#$opt{version}   = $opt{version}   || 2;
+#$opt{community} = $opt{community} || 'public';
+#$opt{integer}   = $opt{integer}   || 1;
+#$opt{string}    = $opt{string}    || 'String';
+#$opt{oid}       = $opt{oid}       || '1.2.3.4.5.6.7.8.9';
+#$opt{ip}        = $opt{ip}        || '10.10.10.1';
+#$opt{counter32} = $opt{counter32} || 32323232;
+#$opt{gauge32}   = $opt{gauge32}   || 42424242;
+#$opt{timeticks} = $opt{timeticks} || time();
+#$opt{opaque}    = $opt{opaque}    || 'opaque data';
+#$opt{inform}    = $opt{inform}    || 0;
 
 
 sub send_snmptrap($$$$)
@@ -96,53 +96,70 @@ sub send_snmptrap($$$$)
 	return 0;
     }
 
+    # FIXME: get data for options
     my $probe_ip   = "1.2.3.4"; # $cfg{'probe_ip'}
     my $probe_name = "probe_name"; # $cfg{'probe_name'}
+    my $inputKey      = "rule_eth42";
+    my $inputShortloc = "cph";
+    my $inputSwitch   = "cphcs1";
+
+    my $streamNoSignal = '1.3.6.1.4.1.26124.43.2.2.2';
+    my $trap = $streamNoSignal;
 
     my $result = $snmp_session->snmpv2_trap(
-	-varbindlist  => [
-	     '1.3.6.1.2.1.1.3.0',         TIMETICKS,         time(),
-	     '1.3.6.1.6.3.1.1.4.1.0',     OBJECT_IDENTIFIER, '1.3.6.1.4.1.26124.43.2.2.1',
+    -varbindlist  => [
+	 # First two is required options
+	 # FIXME: Change TIMETICKS to correct mpeg2ts "uptime"
+	 '1.3.6.1.2.1.1.3.0',         TIMETICKS,         time(),
+	 '1.3.6.1.6.3.1.1.4.1.0',     OBJECT_IDENTIFIER, $trap,
 
-	     # SNMPv2-MIB::sysLocation.0 ?
-	     #  snmptranslate -On SNMPv2-MIB::sysLocation.0
-	     #  .1.3.6.1.2.1.1.6.0
+	 # CollectorId
+	 '1.3.6.1.4.1.26124.43.1.1',  IPADDRESS,  $probe_ip,
+	 # CollectorName
+	 '1.3.6.1.4.1.26124.43.1.2',  OCTET_STRING,  $probe_name,
 
-	     # CollectorId
-	     '1.3.6.1.4.1.26124.43.1.1',  IPADDRESS,  $probe_ip,
-	     # CollectorName
-	     '1.3.6.1.4.1.26124.43.1.2',  OCTET_STRING,  $probe_name,
+	 # eventType -- Event type: noSignal(4) / okSignal(8)
+	 '1.3.6.1.4.1.26124.43.2.1.1.1', INTEGER, $event_type,
 
-	     # Event_type ID
-	     '1.3.6.1.4.1.26124.43.2.1',  INTEGER,           $event_type,
-	     # Event_type as text
-	     '1.3.6.1.4.1.26124.43.1.2',  OCTET_STRING,      $event_name,
-	     # Multicast dst IP
-	     '1.3.6.1.4.1.26124.2.1.3',  IPADDRESS,         $multicast,
-	     # Src IP
-	     '1.3.6.1.4.1.26124.2.1.4',  IPADDRESS,         $src_ip,
+	 # eventName
+	 '1.3.6.1.4.1.26124.43.2.1.1.2', OCTET_STRING, $event_name,
 
-	     # Also report the NIC interface?  IF-MIB::ifIndex
-	     #"1.3.6.1.2.1.2.2.1.1.$ifIndex", INTEGER,    $ifIndex,
+	 # multicastDest
+	 '1.3.6.1.4.1.26124.43.2.1.2.1', IPADDRESS, $multicast,
 
+	 # streamerSource
+	 '1.3.6.1.4.1.26124.43.2.1.2.2', IPADDRESS, $src_ip,
 
-	     '1.3.6.1.4.1.26124.42.3.3',  INTEGER,           $opt{integer},
-	     '1.3.6.1.4.1.26124.42.3.4',  OCTET_STRING,      $opt{string},
-	     '1.3.6.1.4.1.26124.42.3.5',  OBJECT_IDENTIFIER, $opt{oid},
-	     '1.3.6.1.4.1.26124.42.3.6',  IPADDRESS,         $opt{ip},
-	     '1.3.6.1.4.1.26124.42.3.7',  COUNTER32,         $opt{counter32},
-	     '1.3.6.1.4.1.26124.42.3.8',  GAUGE32,           $opt{gauge32},
-	     '1.3.6.1.4.1.26124.42.3.9',  TIMETICKS,         $opt{timeticks},
-	     '1.3.6.1.4.1.26124.42.3.10', OPAQUE,            $opt{opaque}
-	  ]
-	)
+	 # inputKey,     -- The collectors input[key]
+	 '1.3.6.1.4.1.26124.43.2.1.3.1', OCTET_STRING, $inputKey,
+	 # inputShortloc
+	 '1.3.6.1.4.1.26124.43.2.1.3.2', OCTET_STRING, $inputShortloc,
+	 # inputSwitch
+	 '1.3.6.1.4.1.26124.43.2.1.3.3', OCTET_STRING, $inputSwitch,
 
+	 # Also report the NIC interface?  IF-MIB::ifIndex
+	 #"1.3.6.1.2.1.2.2.1.1.$ifIndex", INTEGER,    $ifIndex,
+
+# Example of datatypes
+#	'1.3.6.1.4.1.26124.42.3.3',  INTEGER,           $opt{integer},
+#	'1.3.6.1.4.1.26124.42.3.4',  OCTET_STRING,      $opt{string},
+#	'1.3.6.1.4.1.26124.42.3.5',  OBJECT_IDENTIFIER, $opt{oid},
+#	'1.3.6.1.4.1.26124.42.3.6',  IPADDRESS,         $opt{ip},
+#	'1.3.6.1.4.1.26124.42.3.7',  COUNTER32,         $opt{counter32},
+#	'1.3.6.1.4.1.26124.42.3.8',  GAUGE32,           $opt{gauge32},
+#	'1.3.6.1.4.1.26124.42.3.9',  TIMETICKS,         $opt{timeticks},
+#	'1.3.6.1.4.1.26124.42.3.10', OPAQUE,            $opt{opaque}
+	] );
 }
 
 1;
 __END__
 # Below is documentation for the module.
 #  One way of reading it: "perldoc IPTV/Analyzer/mpeg2ts.pm"
+
+=head1 DESCRIPTION
+
+The MIB is defined in snmp/mibs/IPTV-ANALYZER-MIB.txt
 
 =head1 DEPENDENCIES
 
