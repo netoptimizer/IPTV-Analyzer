@@ -20,22 +20,22 @@ iptvAnalyzer MODULE-IDENTITY
     ::= { cxnet 43 }
 
 
---  The General Group is for global settings of the collecor deamon
+--  The General Group is for global settings of the collector deamon
 
---    The variables can be used for identifying the collecor probe
+--    The variables can be used for identifying the collector probe
 
 collectorGeneralGroup  OBJECT IDENTIFIER ::= { iptvAnalyzer 1 }
 
 -- collector.conf: variable probe_ip
   collectorId OBJECT-TYPE
-       SYNTAX       IpAddress
-       MAX-ACCESS   read-write
-       STATUS       current
-       DESCRIPTION
+      SYNTAX       IpAddress
+      MAX-ACCESS   read-write
+      STATUS       current
+      DESCRIPTION
           "Main identifier of the IPTV-collector daemon,
 	  is an IP-address.  This comes from the collector.conf
 	  variable probe_ip"
-       ::= { collectorGeneralGroup 1 }
+      ::= { collectorGeneralGroup 1 }
 
 -- collector.conf: variable probe_name
   collectorName OBJECT-TYPE
@@ -58,77 +58,55 @@ iptvAnalyzerTrap  OBJECT IDENTIFIER ::= { iptvAnalyzer 2 }
 collectorTrapControl OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 1 }
 
   collectorEventType  OBJECT-TYPE
-    SYNTAX INTEGER {
-      new_stream   (1), -- New stream detected
-      drop         (2), -- Drops detected, both skips and discon
-      no_signal    (4), -- Stream have stopped transmitting data
-      ok_signal    (8), -- Indicate signal returned (clear no-signal trap)
-      ttl_change  (16), -- Indicate TTL changed
-      transition  (32), -- The event_state changed since last poll
-      heartbeat   (64), -- Heartbeat event to monitor status
-      invalid    (128)  -- Some invalid event situation arose
-    }
-    MAX-ACCESS   read-only
-    STATUS   current
-    DESCRIPTION
-         "The different Event Types used by the collector."
-       ::= { collectorTrapControl 1 }
+      SYNTAX INTEGER {
+        new_stream   (1), -- New stream detected
+	drop         (2), -- Drops detected, both skips and discon
+	no_signal    (4), -- Stream have stopped transmitting data
+	ok_signal    (8), -- Indicate signal returned (clear no-signal trap)
+	ttl_change  (16), -- Indicate TTL changed
+	transition  (32), -- The event_state changed since last poll
+	heartbeat   (64), -- Heartbeat event to monitor status
+	invalid    (128)  -- Some invalid event situation arose
+      }
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The different Event Types used by the collector."
+      ::= { collectorTrapControl 1 }
 
---  collectorEventName  OBJECT-TYPE
+  collectorEventName  OBJECT-TYPE
+      SYNTAX OCTET STRING ( SIZE(16) )
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "Textual name representatiog of the Event Type"
+      ::= { collectorTrapControl 2 }
+
 --  collectorEventBitVector  OBJECT-TYPE
 
---  multicastDest   OBJECT-TYPE
---  streamerSource  OBJECT-TYPE
+  multicastDest   OBJECT-TYPE
+      SYNTAX       IpAddress
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+          "The multicast IP address of the mpeg2ts stream.
+          This can also be a ordenary IP if multicast is not used."
+      ::= { collectorTrapControl 4 }
+
+  streamerSource  OBJECT-TYPE
+      SYNTAX       IpAddress
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+          "The multicast IP address of the mpeg2ts stream.
+          This can also be a ordenary IP if multicast is not used."
+      ::= { collectorTrapControl 5 }
+
+--  streamDstPort  OBJECT-TYPE
+--  streamSrcPort  OBJECT-TYPE
+--  channelName    OBJECT-TYPE
 
 
-  ospfSetTrap OBJECT-TYPE
-       SYNTAX       OCTET STRING (SIZE(4))
-       MAX-ACCESS   read-write
-       STATUS       current
-       DESCRIPTION
-          "A 4-octet string serving as a bit map for
-          the trap events defined by the OSPF traps.  This
-          object is used to enable and disable specific
-          OSPF traps where a 1 in the bit field
-          represents enabled.  The right-most bit (least
-          significant) represents trap 0.
-
-          This object is persistent and when written
-
-          the entity SHOULD save the change to non-volatile
-          storage."
-        ::= { collectorTrapControl 2 }
-
-
-  ospfPacketType OBJECT-TYPE
-       SYNTAX       INTEGER {
-                       hello (1),
-                       dbDescript (2),
-                       lsReq (3),
-                       lsUpdate (4),
-                       lsAck (5),
-                       nullPacket (6) }
-       MAX-ACCESS   read-only
-       STATUS       current
-       DESCRIPTION
-          "OSPF packet types.  When the last value of a trap
-          using this object is needed, but no traps of
-          that type have been sent, this value pertaining
-          to this object should be returned as nullPacket."
-       ::= { collectorTrapControl 3 }
-
-  ospfPacketSrc OBJECT-TYPE
-       SYNTAX       IpAddress
-       MAX-ACCESS   read-only
-       STATUS       current
-       DESCRIPTION
-          "The IP address of an inbound packet that cannot
-          be identified by a neighbor instance.  When
-          the last value of a trap using this object is
-          needed, but no traps of that type have been sent,
-          this value pertaining to this object should
-          be returned as 0.0.0.0."
-       ::= { collectorTrapControl 4 }
 
 --  Traps
 
