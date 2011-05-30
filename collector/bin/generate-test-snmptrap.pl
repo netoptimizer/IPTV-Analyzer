@@ -18,6 +18,11 @@ errors in production.
 
 use strict;
 use warnings;
+use Data::Dumper;
+
+use IPTV::Analyzer::Config;
+#my $cfg = get_config();
+#my $cfg = IPTV::Analyzer::Config->new();
 
 use IPTV::Analyzer::mpeg2ts;
 use IPTV::Analyzer::snmptrap;
@@ -55,8 +60,9 @@ $opt{src_ip}    = $opt{src_ip}     || '10.10.10.42';
 
 =cut
 
-print "open_snmp_session()\n";
-open_snmp_session($opt{traphost}, $opt{community});
+print "open_snmp_session() to $opt{traphost}\n";
+open_snmp_session("127.0.0.1", "public");
+#open_snmp_session($opt{traphost}, $opt{community});
 
 print "send_snmptrap()\n";
 send_snmptrap(4, "no-signal", $opt{multicast}, $opt{src_ip});
