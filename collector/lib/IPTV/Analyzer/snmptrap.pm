@@ -22,6 +22,8 @@ use Data::Dumper;
 use Log::Log4perl qw(get_logger :levels);
 our $logger = get_logger(__PACKAGE__);
 
+use IPTV::Analyzer::Config;
+
 BEGIN {
      use Exporter ();
      our ($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
@@ -91,14 +93,19 @@ sub send_snmptrap($$$$)
     my $multicast  = shift;
     my $src_ip     = shift;
 
+    my $cfg = get_config();
+
     if ( !defined($snmp_session) ) {
 	$logger->fatal("Cannot send SNMPtrap, no snmp session opened!");
 	return 0;
     }
 
     # FIXME: get data for options
+    # General config for collector id:
     my $probe_ip   = "1.2.3.4"; # $cfg{'probe_ip'}
     my $probe_name = "probe_name"; # $cfg{'probe_name'}
+    #
+    # Specific config for input this trap concerns:
     my $inputKey      = "rule_eth42";
     my $inputShortloc = "cph";
     my $inputSwitch   = "cphcs1";
