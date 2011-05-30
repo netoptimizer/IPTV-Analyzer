@@ -1,0 +1,218 @@
+IPTV-ANALYZER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    cxexperimental, cxnet
+        FROM CXNET-CORE-MIB
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress,
+	FROM SNMPv2-SMI
+    OBJECT-GROUP, NOTIFICATION-GROUP
+        FROM SNMPv2-CONF;
+
+
+iptvAnalyzer MODULE-IDENTITY
+    LAST-UPDATED "201105270000Z"
+    ORGANIZATION "ComX Networks A/S"
+    CONTACT-INFO
+	"email: hawk@comx.dk
+         Author: Jesper Dangaard Brouer"
+    DESCRIPTION
+        "The MIB module is part of the IPTV-Analyzer
+	 project, and is used for documenting the
+	 snmptraps used by the iptv-collector."
+    -- 1.3.6.1.4.1.26124.43
+    ::= { cxnet 43 }
+
+
+--  The General Group is for global settings of the collector deamon
+
+--    The variables can be used for identifying the collector probe
+
+collectorGeneralGroup  OBJECT IDENTIFIER ::= { iptvAnalyzer 1 }
+
+-- collector.conf: variable probe_ip
+  collectorId OBJECT-TYPE
+      SYNTAX       IpAddress
+      MAX-ACCESS   read-write
+      STATUS       current
+      DESCRIPTION
+          "Main identifier of the IPTV-collector daemon,
+	  is an IP-address.  This comes from the collector.conf
+	  variable probe_ip"
+      -- 1.3.6.1.4.1.26124.43.1.1
+      ::= { collectorGeneralGroup 1 }
+
+-- collector.conf: variable probe_name
+  collectorName OBJECT-TYPE
+       SYNTAX       OCTET STRING
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+          "Textual identifier of the IPTV-collector daemon.
+	  This comes from the collector.conf variable probe_name"
+       -- 1.3.6.1.4.1.26124.43.1.2
+       ::= { collectorGeneralGroup 2 }
+
+
+--  Trap section
+
+iptvAnalyzerTrap  OBJECT IDENTIFIER ::= { iptvAnalyzer 2 }
+--  1.3.6.1.4.1.26124.43.2
+
+--  Trap Support Objects
+--    The following are support objects for the traps.
+
+collectorTrapControl OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 1 }
+--  1.3.6.1.4.1.26124.43.2.1
+
+-- Sub divide: Event properties
+collectorEvent OBJECT IDENTIFIER ::= { collectorTrapControl 1 }
+--  1.3.6.1.4.1.26124.43.2.1.1
+
+  eventType  OBJECT-TYPE
+      -- Notice MIBs do NOT like underscores in definitions, thus the
+      -- event type naming is converted to camel notation.
+      SYNTAX INTEGER {
+        newStream    (1), -- New stream detected
+	drop         (2), -- Drops detected, both skips and discon
+	noSignal     (4), -- Stream have stopped transmitting data
+	okSignal     (8), -- Indicate signal returned (clear no-signal trap)
+	ttlChange   (16), -- Indicate TTL changed
+	transition  (32), -- The event_state changed since last poll
+	heartbeat   (64), -- Heartbeat event to monitor status
+	invalid    (128)  -- Some invalid event situation arose
+      }
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The different Event Types used by the collector."
+      --  1.3.6.1.4.1.26124.43.2.1.1.1
+      ::= { collectorEvent 1 }
+
+  eventName  OBJECT-TYPE
+      SYNTAX OCTET STRING ( SIZE(15) )
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "Textual name representatiog of the Event Type"
+      -- 1.3.6.1.4.1.26124.43.2.1.1.2
+      ::= { collectorEvent 2 }
+
+  -- Future:
+  --  EventBitVector  OBJECT-TYPE
+  --    Can contain more events in its bitVector
+
+-- Sub divide: Stream properties
+streamEvent OBJECT IDENTIFIER ::= { collectorTrapControl 2 }
+--  1.3.6.1.4.1.26124.43.2.1.2
+
+  multicastDest   OBJECT-TYPE
+      SYNTAX       IpAddress
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+          "The multicast IP address of the mpeg2ts stream.
+          This can also be a ordenary IP if multicast is not used."
+      --  1.3.6.1.4.1.26124.43.2.1.2.1
+      ::= { streamEvent 1 }
+
+  streamerSource  OBJECT-TYPE
+      SYNTAX       IpAddress
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+          "The multicast IP address of the mpeg2ts stream.
+          This can also be a ordenary IP if multicast is not used."
+      --  1.3.6.1.4.1.26124.43.2.1.2.2
+      ::= { streamEvent 2 }
+
+-- Future:
+--  streamTimeToLive OBJECT-TYPE
+--  streamDstPort  OBJECT-TYPE
+--  streamSrcPort  OBJECT-TYPE
+--  channelName    OBJECT-TYPE
+
+
+-- Sub divide: Config "input" settings from collector.conf
+collectorInput OBJECT IDENTIFIER ::= { collectorTrapControl 3 }
+--  1.3.6.1.4.1.26124.43.2.1.3
+
+  inputKey  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The input[key] used in collector.conf. This is used for
+	  referencing the mpeg2ts proc file input."
+      --  1.3.6.1.4.1.26124.43.2.1.3.1
+      ::= { collectorInput 1 }
+
+  inputShortloc  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The input[key][shortloc] used in collector.conf. This is used for
+	  referencing input options."
+      --  1.3.6.1.4.1.26124.43.2.1.3.2
+      ::= { collectorInput 2 }
+
+  inputSwitch  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The input[key][switch] used in collector.conf. This is used for
+	  referencing input options."
+      --  1.3.6.1.4.1.26124.43.2.1.3.3
+      ::= { collectorInput 3 }
+
+
+--
+--  Traps
+--    Defining what objects a given trap contains
+--
+collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
+-- 1.3.6.1.4.1.26124.43.2.2
+
+  generalEvent  NOTIFICATION-TYPE
+      OBJECTS {
+          collectorId, -- The originator of the trap
+	  collectorName,
+	  eventType, -- The event type
+	  eventName,
+	  -- Perhaps use sysLocation from SNMPv2-MIB, and use input[key][location]?
+      }
+      STATUS       current
+      DESCRIPTION
+          "General event"
+      --  1.3.6.1.4.1.26124.43.2.2.1
+      ::= { collectorTraps 1 }
+
+  streamNoSignal  NOTIFICATION-TYPE
+      OBJECTS {
+          collectorId, -- The originator of the trap
+	  collectorName,
+	  eventType, -- Event type: noSignal(4) / okSignal(8)
+	  eventName,
+	  multicastDest,
+	  streamerSource,
+	  inputKey,     -- The collectors input[key]
+	  inputShortloc
+	  inputSwitch,
+	  -- Perhaps use:
+	  --  sysLocation from SNMPv2-MIB, and use input[key][location]?
+	  --  sysName which is normally FQDN/hostname
+      }
+      STATUS       current
+      DESCRIPTION
+          "This trap should be generated when the collector detects
+	  no_signal for a given stream.  The trap is generated both
+	  when the signal disappears (eventType==noSignal(4)) and when
+	  the signal starts transmitting again (eventType==okSignal(8))."
+      --  1.3.6.1.4.1.26124.43.2.2.2
+      ::= { collectorTraps 2 }
+
+-- Future:
+--  detectNewStream NOTIFICATION-TYPE
+
+END

@@ -1389,6 +1389,8 @@ sub detect_event_type($$$$$$$)
     my $event_new_stream =   1; # New stream detected
     my $event_drop       =   2; # Drops detected, both skips and discon
     my $event_no_signal  =   4; # Stream have stopped transmitting data
+    my $event_ok_signal  =   8; # Indicate signal returned (clear no-signal trap)
+    my $event_ttl_change =  16; # Indicate TTL changed
     my $event_transition =  32; # The event_state changed since last poll
     my $event_heartbeat  =  64; # Heartbeat event to monitor status
     my $event_invalid    = 128; # Some invalid event situation arose

@@ -85,8 +85,6 @@ INSERT INTO event_type (bitmask, label, description) VALUES
 (  1, "new_stream", "New stream detected"),
 (  2, "drop"      , "Drops detected, both skips and discon"),
 (  4, "no_signal" , "Stream have stopped transmitting data"),
-(  8, "ok_signal" , "Indicate signal returned (clear no-signal trap)"),
-( 16, "ttl_change", "Indicate TTL changed"),
 ( 32, "transition", "The event_state changed since last poll"),
 ( 64, "heartbeat" , "Heartbeat event to monitor status"),
 (128, "invalid"   , "Some invalid event situation arose");

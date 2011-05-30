@@ -1,0 +1,30 @@
+CXNET-CORE-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Definitions for CXNET-CORE-MIB.
+--
+-- $Id: CXNET-CORE-MIB.mib 3652 2006-08-31 10:18:05Z jln $
+--
+-- ©2006 ComX Networks A/S
+--
+-- Tais M. Hansen <tmh@comx.dk>
+--
+
+IMPORTS
+  enterprises, MODULE-IDENTITY
+    FROM SNMPv2-SMI;
+
+cxnet MODULE-IDENTITY
+  LAST-UPDATED "200608021543Z"
+  ORGANIZATION "ComX Networks A/S"
+  CONTACT-INFO "email: <what-email-should-we-use@comx.dk>"
+  DESCRIPTION "<insert really good description here>"
+  REVISION "200608021538Z"
+  DESCRIPTION "First draft"
+  ::= { enterprises 26124 }
+
+-- cxnet core
+
+cxexperimental  OBJECT IDENTIFIER ::= { cxnet 42 }
+
+END

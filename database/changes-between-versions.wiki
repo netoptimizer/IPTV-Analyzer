@@ -3,6 +3,20 @@
 
 Document the DB changes between versions
 
+== From: 0.9.1 to 0.9.2 ===
+
+To apply changes described below run:
+
+  cd database/
+  mysql -u root -p tvprobe < database-upgrade-0.9.1-to-0.9.2.sql
+
+Add two more events to table "event_type".
+
+  INSERT INTO event_type (bitmask, label, description) VALUES
+    (  8, "ok_signal" , "Indicate signal returned (clear no-signal trap)"),
+    ( 16, "ttl_change", "Indicate TTL changed");
+
+
 == From: 0.9.0 to 0.9.1 ===
 
 To apply changes described below run:
