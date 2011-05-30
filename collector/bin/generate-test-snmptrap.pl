@@ -22,17 +22,17 @@ use warnings;
 use IPTV::Analyzer::mpeg2ts;
 use IPTV::Analyzer::snmptrap;
 
-use Getopt::Long qw(:config no_ignore_case); #bundling
+use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 
 my %opt;
 my ($opt_help, $opt_man);
 
 GetOptions(
+  'traphost|h=s'  => \$opt{traphost},
   'community=s'   => \$opt{community},
   'multicast=s'   => \$opt{multicast},
   'src_ip|ip=s'   => \$opt{src_ip},
-  'traphost|h=s'  => \$opt{traphost},
   'help!'         => \$opt_help,
   'man!'          => \$opt_man
 ) or pod2usage(-verbose => 0);
@@ -41,12 +41,12 @@ pod2usage(-verbose => 1) if defined $opt_help;
 pod2usage(-verbose => 2) if defined $opt_man;
 
 # Assign default values if not defined
+$opt{traphost}  = $opt{traphost}   || '127.0.0.1';
 $opt{community} = $opt{community}  || 'public';
 $opt{multicast} = $opt{multicast}  || '224.1.2.3';
 $opt{src_ip}    = $opt{src_ip}     || '10.10.10.42';
-$opt{traphost}  = $opt{traphost}   || '127.0.0.1';
 
-=head1 OPTIONS
+=head2 OPTIONS
 
     --traphost|-h  Who to send the trap to (default: 127.0.0.1)
     --community    The SNMPv2 community (default: public)
