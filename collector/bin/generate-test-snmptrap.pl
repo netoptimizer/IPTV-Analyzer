@@ -59,7 +59,7 @@ print "open_snmp_session()\n";
 open_snmp_session($opt{traphost}, $opt{community});
 
 print "send_snmptrap()\n";
-send_snmptrap(4, "no-signal", $opt{multicast}, $opt{ip});
+send_snmptrap(4, "no-signal", $opt{multicast}, $opt{src_ip});
 
 print "close_snmp_session()\n";
 close_snmp_session();
