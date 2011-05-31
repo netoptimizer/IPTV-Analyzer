@@ -44,10 +44,6 @@ our $global_heartbeat_state = 0;
 use Log::Log4perl qw(get_logger :levels);
 our $logger = get_logger(__PACKAGE__);
 
-# Load the config
-# FIXME: Should be possible to load config somewhere else...
-$cfg = IPTV::Analyzer::Config->new();
-
 sub TIEHANDLE {
     my $class = shift;
     bless [], $class;
@@ -90,6 +86,21 @@ BEGIN {
 		        close_daemon_sessions
 		        close_stream_sessions
                       );
+}
+
+
+INIT {
+    # Get the config settings, possible side effect load config.
+    # -----------------------
+    # This module rely on the $cfg config object is globally
+    # available, due to historical reasons.  But it causes confusion
+    # that the config file is loaded, when someone calles "use" on
+    # this module, as this result in the module being executed via the
+    # BEGIN section.  Try to use the INIT section and "get_config", and
+    # rely on the Config.pm module to load it for us.
+
+    # get_config() will load the config, if not already loaded.
+    $cfg = IPTV::Analyzer::Config::get_config();
 }
 
 sub read_input_key($$) {

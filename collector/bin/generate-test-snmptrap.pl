@@ -21,11 +21,12 @@ use warnings;
 use Data::Dumper;
 
 use IPTV::Analyzer::Config;
-#my $cfg = get_config();
+my $cfg = get_config();
 #my $cfg = IPTV::Analyzer::Config->new();
 
-use IPTV::Analyzer::mpeg2ts;
+#use IPTV::Analyzer::mpeg2ts;
 use IPTV::Analyzer::snmptrap;
+
 
 use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;

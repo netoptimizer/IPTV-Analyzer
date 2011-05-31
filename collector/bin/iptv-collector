@@ -56,7 +56,7 @@ our $logger = get_logger("IPTV::Analyzer::mpeg2ts");
 
 # Config options
 use IPTV::Analyzer::Config;
-our $cfg  = IPTV::Analyzer::Config->new();
+our $cfg  = get_config();
 our $interval = $cfg->{'collector_interval'} || 10;
 our $heartbeat_interval_ticks = $cfg->{'collector_heartbeat_ticks'} || 60;
 

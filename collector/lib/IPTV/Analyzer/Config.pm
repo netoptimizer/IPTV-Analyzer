@@ -14,6 +14,7 @@ config file.
 
 use strict;
 use warnings;
+use Carp;
 
 use Config::File;
 use Data::Dumper;
@@ -32,6 +33,13 @@ BEGIN {
                        get_config
                       );
 }
+
+INIT {
+    # Auto load the config, when this module is loaded.
+    # This is done due to the mpeg2ts module, and how it access its $cfg
+    new();
+}
+
 
 # Global var
 our $singleton_cfg = undef;
@@ -101,7 +109,8 @@ sub new()
 
     # Implement singleton object, to avoid loading config several times
     if (defined($singleton_cfg)) {
-	$logger->info("Config already loaded, returning current config.");
+	$logger->logcarp("Config already loaded, returning current config."
+	    . " Use get_config() instead");
 	return $singleton_cfg;
     }
     else {
@@ -125,7 +134,6 @@ sub new()
 
     return $self;
 }
-
 
 ###
 # Config file processing
@@ -157,6 +165,8 @@ sub get_config {
 	    return  $singleton_cfg;
 	} else {
 	    # Create and load config if it didn't exist
+	    my $log="Force loading config, you didn't load it earlier";
+	    carp("${log}, its needed"); # log4perl not init'ed yet
 	    return new();
 	}
     }
