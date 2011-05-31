@@ -1,26 +1,30 @@
 IPTV-ANALYZER-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    cxexperimental, cxnet
+    cxnet
         FROM CXNET-CORE-MIB
-    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress,
-	FROM SNMPv2-SMI
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress
+        FROM SNMPv2-SMI
     OBJECT-GROUP, NOTIFICATION-GROUP
         FROM SNMPv2-CONF;
 
 
 iptvAnalyzer MODULE-IDENTITY
-    LAST-UPDATED "201105270000Z"
+    LAST-UPDATED "201105300000Z"
     ORGANIZATION "ComX Networks A/S"
     CONTACT-INFO
 	"email: hawk@comx.dk
          Author: Jesper Dangaard Brouer"
+    DESCRIPTION
+       "Fixing syntax of the MIB file"
+    REVISION     "201105300000Z"
     DESCRIPTION
         "The MIB module is part of the IPTV-Analyzer
 	 project, and is used for documenting the
 	 snmptraps used by the iptv-collector."
     -- 1.3.6.1.4.1.26124.43
     ::= { cxnet 43 }
+--    ::= { 26124 43 }
 
 
 --  The General Group is for global settings of the collector deamon
@@ -179,7 +183,7 @@ collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
           collectorId, -- The originator of the trap
 	  collectorName,
 	  eventType, -- The event type
-	  eventName,
+	  eventName
 	  -- Perhaps use sysLocation from SNMPv2-MIB, and use input[key][location]?
       }
       STATUS       current
@@ -197,8 +201,8 @@ collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
 	  multicastDest,
 	  streamerSource,
 	  inputKey,     -- The collectors input[key]
-	  inputShortloc
-	  inputSwitch,
+	  inputShortloc,
+	  inputSwitch
 	  -- Perhaps use:
 	  --  sysLocation from SNMPv2-MIB, and use input[key][location]?
 	  --  sysName which is normally FQDN/hostname
