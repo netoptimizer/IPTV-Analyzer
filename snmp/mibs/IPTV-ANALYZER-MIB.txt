@@ -4,9 +4,7 @@ IMPORTS
     cxnet
         FROM CXNET-CORE-MIB
     MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress
-        FROM SNMPv2-SMI
-    OBJECT-GROUP, NOTIFICATION-GROUP
-        FROM SNMPv2-CONF;
+        FROM SNMPv2-SMI;
 
 
 iptvAnalyzer MODULE-IDENTITY
@@ -24,7 +22,6 @@ iptvAnalyzer MODULE-IDENTITY
 	 snmptraps used by the iptv-collector."
     -- 1.3.6.1.4.1.26124.43
     ::= { cxnet 43 }
---    ::= { 26124 43 }
 
 
 --  The General Group is for global settings of the collector deamon
@@ -76,10 +73,10 @@ collectorEvent OBJECT IDENTIFIER ::= { collectorTrapControl 1 }
       -- Notice MIBs do NOT like underscores in definitions, thus the
       -- event type naming is converted to camel notation.
       SYNTAX INTEGER {
-        newStream    (1), -- New stream detected
+	newStream    (1), -- New stream detected
 	drop         (2), -- Drops detected, both skips and discon
 	noSignal     (4), -- Stream have stopped transmitting data
-	okSignal     (8), -- Indicate signal returned (clear no-signal trap)
+	                  -- to clear "noSignal" use eventSeverity = 0
 	ttlChange   (16), -- Indicate TTL changed
 	transition  (32), -- The event_state changed since last poll
 	heartbeat   (64), -- Heartbeat event to monitor status
@@ -100,6 +97,33 @@ collectorEvent OBJECT IDENTIFIER ::= { collectorTrapControl 1 }
 	  "Textual name representatiog of the Event Type"
       -- 1.3.6.1.4.1.26124.43.2.1.1.2
       ::= { collectorEvent 2 }
+
+  eventSeverity  OBJECT-TYPE
+      -- severity levels taken from ZenOSS
+      --   http://community.zenoss.org/docs/DOC-4766#d0e6170
+      --   Number	Name		Color in ZenOSS
+      --       0	Clear		Green
+      --       1	Debug		Grey
+      --       2	Info		Blue
+      --       3	Warning		Yellow
+      --       4	Error		Orange
+      --       5	Critical	Red
+      SYNTAX INTEGER {
+	clear    (0), -- Clears the eventType
+	debug    (1),
+	info     (2),
+	warning  (3),
+	error    (4),
+	critical (5)
+      }
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The severity level of an event.  Primarily used for
+	  clearing eventTypes, e.g. clear no_signal event."
+      --  1.3.6.1.4.1.26124.43.2.1.1.3
+      ::= { collectorEvent 3 }
+
 
   -- Future:
   --  EventBitVector  OBJECT-TYPE
@@ -196,8 +220,9 @@ collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
       OBJECTS {
           collectorId, -- The originator of the trap
 	  collectorName,
-	  eventType, -- Event type: noSignal(4) / okSignal(8)
-	  eventName,
+	  eventType,     -- Event type: noSignal(4)
+	  eventName,	 -- "no_signal"
+	  eventSeverity, -- clear(0) indicate signal have returned
 	  multicastDest,
 	  streamerSource,
 	  inputKey,     -- The collectors input[key]
