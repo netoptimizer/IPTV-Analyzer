@@ -37,7 +37,7 @@ GetOptions(
   'traphost|h=s'  => \$opt{traphost},
   'community=s'   => \$opt{community},
   'multicast=s'   => \$opt{multicast},
-  'src_ip|ip=s'   => \$opt{src_ip},
+  'src_ip'        => \$opt{src_ip},
   'help!'         => \$opt_help,
   'man!'          => \$opt_man
 ) or pod2usage(-verbose => 0);
@@ -48,7 +48,7 @@ pod2usage(-verbose => 2) if defined $opt_man;
 # Assign default values if not defined
 $opt{traphost}  = $opt{traphost}   || '127.0.0.1';
 $opt{community} = $opt{community}  || 'public';
-$opt{multicast} = $opt{multicast}  || '224.1.2.3';
+$opt{multicast} = $opt{multicast}  || '224.224.224.224';
 $opt{src_ip}    = $opt{src_ip}     || '10.10.10.42';
 
 =head2 OPTIONS
@@ -61,11 +61,23 @@ $opt{src_ip}    = $opt{src_ip}     || '10.10.10.42';
 =cut
 
 print "open_snmp_session() to $opt{traphost}\n";
-open_snmp_session("127.0.0.1", "public");
-#open_snmp_session($opt{traphost}, $opt{community});
+my $res_ses = open_snmp_session($opt{traphost}, $opt{community});
+#open_snmp_session("127.0.0.1", "public");
+if (!$res_ses) {
+    print " - ERROR: cannot open session\n";
+} else {
+    print " - Established SNMP session\n";
+}
+
 
 print "send_snmptrap()\n";
-send_snmptrap(4, "no-signal", $opt{multicast}, $opt{src_ip});
+my $res = send_snmptrap(4, "no_signal", $opt{multicast}, $opt{src_ip});
+if (!$res) {
+    print " - ERROR: cannot send snmptrap\n";
+} else {
+    print " - SNMP trap transmitted\n";
+}
+
 
 print "close_snmp_session()\n";
 close_snmp_session();

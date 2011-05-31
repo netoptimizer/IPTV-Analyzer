@@ -157,6 +157,8 @@ sub send_snmptrap($$$$)
 #	'1.3.6.1.4.1.26124.42.3.9',  TIMETICKS,         $opt{timeticks},
 #	'1.3.6.1.4.1.26124.42.3.10', OPAQUE,            $opt{opaque}
 	] );
+
+    return $result;
 }
 
 1;
