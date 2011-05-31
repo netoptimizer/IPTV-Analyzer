@@ -340,6 +340,18 @@ sub get_time_info_created($)
     return $created;
 }
 
+sub get_time_info_delta($)
+{
+    my $globalref = shift;
+    my $value = 0;
+    # The hashkey name 'time_info' is made by get_state_hashkey()
+    if (exists $globalref->{'time_info'}) {
+	$value = $globalref->{'time_info'}{'delta'};
+    }
+    return $value;
+}
+
+
 sub get_version_info($)
 {
     my $globalref = shift;
@@ -1193,10 +1205,15 @@ sub snmptrap_no_signal()
     # TODO: Implement snmptrap functionality
     # use module Net::SNMP
     my $inputref    = shift;
-    my $no_signal   = shift; #1=no-signal 0=signal/recovered
     my $probe_input = shift;
 
+    my $no_signal   = shift; #1=no-signal 0=signal/recovered
 
+    # Extract the TIMETICKS for the trap
+    my $globalref = $global_state{$probe_input};
+    my $timeticks = int(get_time_info_delta($globalref));
+
+    
 }
 
 sub detect_event_type($$$$$$$)
@@ -1215,7 +1232,7 @@ sub detect_event_type($$$$$$$)
     my $event_new_stream =   1; # New stream detected
     my $event_drop       =   2; # Drops detected, both skips and discon
     my $event_no_signal  =   4; # Stream have stopped transmitting data
-    my $event_ok_signal  =   8; # Indicate signal returned (clear no-signal trap)
+#   my $event_ok_signal  =   8; # Indicate signal returned (clear no-signal trap)
     my $event_ttl_change =  16; # Indicate TTL changed
     my $event_transition =  32; # The event_state changed since last poll
     my $event_heartbeat  =  64; # Heartbeat event to monitor status
@@ -1271,7 +1288,7 @@ sub detect_event_type($$$$$$$)
 	    # Current state have signal
 	    # = transition: (3) no-signal -> signal
 	    $logger->info("$log no-signal -> signal");
-	    ###snmptrap_no_signal($inputref, 0, $probe_input);
+	    ###snmptrap_no_signal($inputref, $probe_input, 0);
 	    # FIXME: call snmptrap
 	}
     } else {
@@ -1280,7 +1297,7 @@ sub detect_event_type($$$$$$$)
 	    # Current state have no-signal
 	    # = transition: (1) signal -> no-signal
 	    $logger->info("$log signal -> no-signal");
-	    ###snmptrap_no_signal($inputref, 1, $probe_input);
+	    ###snmptrap_no_signal($inputref, $probe_input, 1);
 	    # FIXME: call snmptrap
 	}
     }

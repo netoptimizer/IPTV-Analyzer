@@ -72,7 +72,7 @@ if (!$res_ses) {
 
 
 print "send_snmptrap()\n";
-my $res = send_snmptrap(4, "no_signal", $opt{multicast}, $opt{src_ip});
+my $res = send_snmptrap(4, $opt{multicast}, $opt{src_ip});
 if (!$res) {
     print " - ERROR: cannot send snmptrap\n";
 } else {

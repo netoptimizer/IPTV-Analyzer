@@ -86,10 +86,117 @@ sub close_snmp_session()
 #$opt{inform}    = $opt{inform}    || 0;
 
 
-sub send_snmptrap($$$$)
+# Which config file input[] source does this trap concern
+sub construct_input_identification($)
+{
+    my $inputKey = shift;
+    my $cfg = get_config();
+
+    # Specific config for input this trap concerns
+    my $inputShortloc = $cfg->get_input_value($inputKey, "shortloc");
+    my $inputSwitch   = $cfg->get_input_value($inputKey, "switch");
+
+    my @array = (
+	# inputKey,     -- The collectors input[key]
+	'1.3.6.1.4.1.26124.43.2.1.3.1', OCTET_STRING, $inputKey,
+	# inputShortloc    input[key][shortloc]
+	'1.3.6.1.4.1.26124.43.2.1.3.2', OCTET_STRING, $inputShortloc,
+	# inputSwitch      input[key][switch]
+	'1.3.6.1.4.1.26124.43.2.1.3.3', OCTET_STRING, $inputSwitch
+    );
+    return @array;
+}
+
+sub construct_probe_identification()
+{
+    my $cfg = get_config();
+    my $probe_ip   = $cfg->get_probe_ip;
+    my $probe_name = $cfg->get_probe_name;
+    my @array = (
+	# CollectorId
+	'1.3.6.1.4.1.26124.43.1.1',  IPADDRESS,  $probe_ip,
+	# CollectorName
+	'1.3.6.1.4.1.26124.43.1.2',  OCTET_STRING,  $probe_name,
+    );
+    return @array;
+}
+
+sub construct_trap_oid($$)
+{
+    my $trap_oid  = shift;
+    my $timeticks = shift || 0;
+
+    # The first two variable-bindings fields in the snmpV2-trap are
+    # specified by SNMPv2 and should be:
+    #  sysUpTime.0   - ('1.3.6.1.2.1.1.3.0',     TIMETICKS, $timeticks)
+    #  snmpTrapOID.0 - ('1.3.6.1.6.3.1.1.4.1.0', OBJECT_IDENTIFIER, $oid)
+
+    my @array = (
+	 '1.3.6.1.2.1.1.3.0',         TIMETICKS,         $timeticks,
+	 '1.3.6.1.6.3.1.1.4.1.0',     OBJECT_IDENTIFIER, $trap_oid,
+	);
+    return @array;
+}
+
+sub construct_event($$$)
+{
+    my $event_type     = shift;
+    my $event_name     = shift;
+    my $event_severity = shift;
+    my @array = (
+	# eventType
+	'1.3.6.1.4.1.26124.43.2.1.1.1', INTEGER, $event_type,
+	# eventName
+	'1.3.6.1.4.1.26124.43.2.1.1.2', OCTET_STRING, $event_name,
+	# eventSeverity (indicate clear/ok signal)
+	'1.3.6.1.4.1.26124.43.2.1.1.3', INTEGER, $event_severity,
+	);
+    return @array;
+}
+
+sub construct_event_no_signal()
+{
+    my $event_type     = 4; # no_signal FIXME: extract this num from Config
+    my $event_name     = "no_signal";
+    my $event_severity = "5";
+    my @array = construct_event($event_type, $event_name, $event_severity);
+    return @array;
+}
+
+sub construct_event_no_signal_clear()
+{
+    my $event_type     = 4; # no_signal FIXME: extract this num from Config
+    my $event_name     = "no_signal";
+    my $event_severity = "0"; # CLEARs no_signal
+    my @array = construct_event($event_type, $event_name, $event_severity);
+    return @array;
+}
+
+our %global_trap_oids = {
+    'streamNoSignal' => '1.3.6.1.4.1.26124.43.2.2.2',
+    'generalEvent'   => '1.3.6.1.4.1.26124.43.2.2.1',
+    'unknown'        => '1.3.6.1.4.1.26124.43',
+};
+
+sub lookup_trap($)
+{
+    my $trapname = shift;
+    my $oid;
+    my $result=0;
+    if (exists $global_trap_oids{"$trapname"} ) {
+	$oid = $global_trap_oids{"$trapname"};
+	$result = 1;
+    } else {
+	$oid = $global_trap_oids{"unknown"};
+    }
+    #return ($oid, $result);
+    return $oid;
+}
+
+
+sub send_snmptrap($$$)
 {
     my $event_type = shift || 0;
-    my $event_name = shift || "please-implement";
     my $multicast  = shift;
     my $src_ip     = shift;
 
@@ -100,54 +207,41 @@ sub send_snmptrap($$$$)
 	return 0;
     }
 
-    # General config for collector id:
-    my $probe_ip   = $cfg->get_probe_ip;
-    my $probe_name = $cfg->get_probe_name;
-    #
-    # FIXME: get data for options
-    # Specific config for input this trap concerns:
-    my $inputKey      = "rule_eth42";
-    my $inputShortloc = "cph";
-    my $inputSwitch   = "cphcs1";
-
-    my $event_severity = 5;
-
+    # The first two variable-bindings fields in snmpV2-trap are required
     my $streamNoSignal = '1.3.6.1.4.1.26124.43.2.2.2';
     my $trap = $streamNoSignal;
+    #my $trap = lookup_trap("streamNoSignal");
+    my @trap_oid = construct_trap_oid($trap, 0);
 
-    my $result = $snmp_session->snmpv2_trap(
-    -varbindlist  => [
-	 # First two are required options
-	 # FIXME: Change TIMETICKS to correct mpeg2ts "uptime"
-	 '1.3.6.1.2.1.1.3.0',         TIMETICKS,         time(),
-	 '1.3.6.1.6.3.1.1.4.1.0',     OBJECT_IDENTIFIER, $trap,
+    # General identification of the probe
+    my @ident_probe = construct_probe_identification();
 
-	 # CollectorId
-	 '1.3.6.1.4.1.26124.43.1.1',  IPADDRESS,  $probe_ip,
-	 # CollectorName
-	 '1.3.6.1.4.1.26124.43.1.2',  OCTET_STRING,  $probe_name,
+    # Specific identification of config input[key]
+    my @ident_input = construct_input_identification("rule_eth42");
 
-	 # eventType -- Event type: noSignal(4) / okSignal(8)
-	 '1.3.6.1.4.1.26124.43.2.1.1.1', INTEGER, $event_type,
-	 # eventName
-	 '1.3.6.1.4.1.26124.43.2.1.1.2', OCTET_STRING, $event_name,
-	 # eventSeverity (indicate clear/ok signal)
-	 '1.3.6.1.4.1.26124.43.2.1.1.3', INTEGER, $event_severity,
+    # The event type
+    my @event_oids = construct_event_no_signal();
+
+    my @oid_array =
+	(
+	 @trap_oid,
+	 @ident_probe,
+	 @event_oids,
 
 	 # multicastDest
 	 '1.3.6.1.4.1.26124.43.2.1.2.1', IPADDRESS, $multicast,
 	 # streamerSource
 	 '1.3.6.1.4.1.26124.43.2.1.2.2', IPADDRESS, $src_ip,
 
-	 # inputKey,     -- The collectors input[key]
-	 '1.3.6.1.4.1.26124.43.2.1.3.1', OCTET_STRING, $inputKey,
-	 # inputShortloc
-	 '1.3.6.1.4.1.26124.43.2.1.3.2', OCTET_STRING, $inputShortloc,
-	 # inputSwitch
-	 '1.3.6.1.4.1.26124.43.2.1.3.3', OCTET_STRING, $inputSwitch,
+	 @ident_input
+	);
 
-	 # Also report the NIC interface?  IF-MIB::ifIndex
-	 #"1.3.6.1.2.1.2.2.1.1.$ifIndex", INTEGER,    $ifIndex,
+    my $result = $snmp_session->snmpv2_trap(
+	-varbindlist  => \@oid_array
+	);
+
+    return $result;
+}
 
 # Example of datatypes
 #	'1.3.6.1.4.1.26124.42.3.3',  INTEGER,           $opt{integer},
@@ -158,10 +252,7 @@ sub send_snmptrap($$$$)
 #	'1.3.6.1.4.1.26124.42.3.8',  GAUGE32,           $opt{gauge32},
 #	'1.3.6.1.4.1.26124.42.3.9',  TIMETICKS,         $opt{timeticks},
 #	'1.3.6.1.4.1.26124.42.3.10', OPAQUE,            $opt{opaque}
-	] );
 
-    return $result;
-}
 
 1;
 __END__

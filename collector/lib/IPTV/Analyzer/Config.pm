@@ -325,6 +325,34 @@ sub get_probe_name()
     return $value;
 }
 
+# Part of $cfg
+#my $cfg_example2 = {
+#    'probe_ip'   => '10.10.10.42',
+#    'probe_name' => 'tvprobe42',
+#    'input' => {
+#	'inputKey' => {
+#	    'valueKey'   => 'albcs35',
+#	    'procfile'   => '/proc/net/xt_mpeg2ts/rule_test',
+#	    'shortloc'   => 'alb',
+#
+sub get_input_value()
+{
+    my $self     = shift;
+    my $inputKey = shift;
+    my $valueKey = shift;
+
+    my $value="";
+    if (exists     $self->{'input'}->{"$inputKey"}) {
+	if (exists $self->{'input'}->{"$inputKey"}->{"$valueKey"}) {
+	    $value=$self->{'input'}->{"$inputKey"}->{"$valueKey"};
+	} else {
+	    my $txtcfg = "input[$inputKey][$valueKey]";
+	    $logger->warn("No config setting for $txtcfg");
+	}
+    }
+    return $value;
+}
+
 
 
 1;
