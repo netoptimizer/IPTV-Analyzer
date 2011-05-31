@@ -255,11 +255,12 @@ sub sig_handler {
 
 #http://search.cpan.org/~mschilli/Log-Log4perl-1.26/lib/Log/Log4perl/FAQ.pm#My_program_already_uses_warn%28%29_and_die%28%29._How_can_I_switch_to_Log4perl?
 
-$SIG{__WARN__} = sub {
-    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
-#    WARN @_;
-    $logger->warn(@_);
-};
+#$SIG{__WARN__} = sub {
+#    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
+###    WARN @_;
+####    $logger->warn(@_) if defined @_;
+#    warn(@_) if defined @_;
+#};
 
 $SIG{__DIE__} = sub {
     if($^S) {
