@@ -36,6 +36,8 @@ BEGIN {
 # Global var
 our $singleton_cfg = undef;
 
+#TODO: Add eventTypes to this module?
+
 ###
 # Logging system
 #
@@ -289,6 +291,31 @@ sub validate_config {
 
     return $res;
 }
+
+###
+# Accessing elements
+#
+#  Due to historical reasons, the mpeg2ts module simply access
+#  elements directly, using the module as an hash.
+#
+#  But for future usage, we want to be are bit more "clean" and
+#  provide helper functions to access elements in the config "object".
+#
+sub get_probe_ip()
+{
+    my $self = shift;
+    my $value = $self{'probe_ip'};
+    return $value;
+}
+
+sub get_probe_name()
+{
+    my $self = shift;
+    my $value = $self{'probe_name'};
+    return $value;
+}
+
+
 
 1;
 __END__
