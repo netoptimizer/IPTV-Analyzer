@@ -100,22 +100,24 @@ sub send_snmptrap($$$$)
 	return 0;
     }
 
-    # FIXME: get data for options
     # General config for collector id:
-    my $probe_ip   = "1.2.3.4"; # $cfg{'probe_ip'}
-    my $probe_name = "probe_name"; # $cfg{'probe_name'}
+    my $probe_ip   = $cfg->get_probe_ip;
+    my $probe_name = $cfg->get_probe_name;
     #
+    # FIXME: get data for options
     # Specific config for input this trap concerns:
     my $inputKey      = "rule_eth42";
     my $inputShortloc = "cph";
     my $inputSwitch   = "cphcs1";
+
+    my $event_severity = 5;
 
     my $streamNoSignal = '1.3.6.1.4.1.26124.43.2.2.2';
     my $trap = $streamNoSignal;
 
     my $result = $snmp_session->snmpv2_trap(
     -varbindlist  => [
-	 # First two is required options
+	 # First two are required options
 	 # FIXME: Change TIMETICKS to correct mpeg2ts "uptime"
 	 '1.3.6.1.2.1.1.3.0',         TIMETICKS,         time(),
 	 '1.3.6.1.6.3.1.1.4.1.0',     OBJECT_IDENTIFIER, $trap,
@@ -127,13 +129,13 @@ sub send_snmptrap($$$$)
 
 	 # eventType -- Event type: noSignal(4) / okSignal(8)
 	 '1.3.6.1.4.1.26124.43.2.1.1.1', INTEGER, $event_type,
-
 	 # eventName
 	 '1.3.6.1.4.1.26124.43.2.1.1.2', OCTET_STRING, $event_name,
+	 # eventSeverity (indicate clear/ok signal)
+	 '1.3.6.1.4.1.26124.43.2.1.1.3', INTEGER, $event_severity,
 
 	 # multicastDest
 	 '1.3.6.1.4.1.26124.43.2.1.2.1', IPADDRESS, $multicast,
-
 	 # streamerSource
 	 '1.3.6.1.4.1.26124.43.2.1.2.2', IPADDRESS, $src_ip,
 

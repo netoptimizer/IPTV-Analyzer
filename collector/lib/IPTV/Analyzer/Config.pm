@@ -304,14 +304,14 @@ sub validate_config {
 sub get_probe_ip()
 {
     my $self = shift;
-    my $value = $self{'probe_ip'};
+    my $value = $self->{'probe_ip'};
     return $value;
 }
 
 sub get_probe_name()
 {
     my $self = shift;
-    my $value = $self{'probe_name'};
+    my $value = $self->{'probe_name'};
     return $value;
 }
 
