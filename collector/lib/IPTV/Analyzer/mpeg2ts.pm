@@ -1217,8 +1217,9 @@ sub snmptrap_no_signal($$$)
     my $timeticks = int(get_time_info_delta($globalref) * 100);
 
     # Located in snmptrap.pm module
-    send_snmptrap("no_signal", $severity_name, $probe_input,
-		  $timeticks, $mc_dst, $ip_src);
+    my $res = send_snmptrap("no_signal", $severity_name, $probe_input,
+			    $timeticks, $mc_dst, $ip_src);
+    # TODO: log snmptrap events and failure
 }
 
 sub detect_event_type($$$$$$$)
@@ -1289,7 +1290,7 @@ sub detect_event_type($$$$$$$)
 	if ( !($event_type & $event_no_signal) ) {
 	    # Current state have signal
 	    # = transition: (3) no-signal -> signal
-	    $logger->info("$log no-signal -> signal");
+	    $logger->warn("$log no-signal -> signal (send snmptrap)");
 	    snmptrap_no_signal("clear", $probe_input, $inputref);
 	}
     } else {
@@ -1297,7 +1298,7 @@ sub detect_event_type($$$$$$$)
 	if ( $event_type & $event_no_signal ) {
 	    # Current state have no-signal
 	    # = transition: (1) signal -> no-signal
-	    $logger->info("$log signal -> no-signal");
+	    $logger->warn("$log signal -> no-signal (send snmptrap)");
 	    snmptrap_no_signal("critical", $probe_input, $inputref);
 	}
     }
