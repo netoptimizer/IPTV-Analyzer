@@ -23,6 +23,7 @@ use Log::Log4perl qw(get_logger :levels);
 our $logger = get_logger(__PACKAGE__);
 
 use IPTV::Analyzer::Config;
+use IPTV::Analyzer::Version;
 
 BEGIN {
      use Exporter ();
@@ -106,6 +107,17 @@ sub construct_input_identification($)
     );
     return @array;
 }
+
+sub construct_version()
+{
+    my $version = $IPTV::Analyzer::Version::VERSION || "0.0.0";
+    my @array = (
+	# collectorsVersion
+	'1.3.6.1.4.1.26124.43.2.1.4.1',  OCTET_STRING, $version,
+    );
+    return @array;
+}
+
 
 sub construct_probe_identification()
 {
@@ -205,6 +217,9 @@ sub send_snmptrap($$$$$$)
     my $trap = lookup_trap($event_name);
     my @trap_oid = construct_trap_oid($trap, $timeticks);
 
+    # The collectornVersion info
+    my @version  = construct_version();
+
     # The event type
     my @event_oids = construct_event_via_name($event_name, $severity_name);
 
@@ -219,6 +234,7 @@ sub send_snmptrap($$$$$$)
     my @oid_array =
 	(
 	 @trap_oid,
+	 @version,
 	 @ident_probe,
 	 @event_oids,
 

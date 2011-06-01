@@ -194,6 +194,27 @@ collectorInput OBJECT IDENTIFIER ::= { collectorTrapControl 3 }
       --  1.3.6.1.4.1.26124.43.2.1.3.3
       ::= { collectorInput 3 }
 
+-- Sub divide: collector information
+collectorInfo OBJECT IDENTIFIER ::= { collectorTrapControl 4 }
+--  1.3.6.1.4.1.26124.43.2.1.4
+
+  collectorVersion  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The version of the IPTV-collector."
+      --  1.3.6.1.4.1.26124.43.2.1.4.1
+      ::= { collectorInfo 1 }
+
+  mpeg2tsVersion  OBJECT-TYPE
+      SYNTAX OCTET STRING
+      MAX-ACCESS   read-only
+      STATUS       current
+      DESCRIPTION
+	  "The version of the mpeg2ts kernel module."
+      --  1.3.6.1.4.1.26124.43.2.1.4.2
+      ::= { collectorInfo 2 }
 
 --
 --  Traps
@@ -204,6 +225,7 @@ collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
 
   generalEvent  NOTIFICATION-TYPE
       OBJECTS {
+	  collectorVersion,
           collectorId, -- The originator of the trap
 	  collectorName,
 	  eventType, -- The event type
@@ -218,6 +240,7 @@ collectorTraps  OBJECT IDENTIFIER ::= { iptvAnalyzerTrap 2 }
 
   streamNoSignal  NOTIFICATION-TYPE
       OBJECTS {
+	  collectorVersion,
           collectorId, -- The originator of the trap
 	  collectorName,
 	  eventType,     -- Event type: noSignal(4)
