@@ -1,4 +1,17 @@
 
+recent changes
+
+	SNMP trap feature implemented.
+
+	The collector sends SNMP "no_signal" traps, when the state
+	transition from, signal to no-signal, and back from no-signal to
+	signal.
+
+	There is a SNMP MIB, describing the SNMP traps, located in
+	"snmp/mibs/" named "IPTV-ANALYZER-MIB.txt".  The traps are placed
+	under Enterprise OID 26124, which belongs to ComX Networks A/S.
+
+
 2011-05-24  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.9.1.
