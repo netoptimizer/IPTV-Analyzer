@@ -31,6 +31,7 @@ BEGIN {
      @ISA         = qw(Exporter);
      @EXPORT      = qw(
                        get_config
+                       lookup_event
                       );
 }
 
@@ -40,11 +41,23 @@ INIT {
     new();
 }
 
-
 # Global var
 our $singleton_cfg = undef;
 
-#TODO: Add eventTypes to this module?
+# Simply define event_types here
+#  TODO: Replace with select from Database.
+#  TODO: Move into object
+our $global_event_types = {
+    'unknown'    =>   0, # Unknown event name lookup
+    'new_stream' =>   1, # New stream detected
+    'drop'       =>   2, # Drops detected, both skips and discon
+    'no_signal'  =>   4, # Stream have stopped transmitting data
+#   'ok_signal', =>   8, # Indicate signal returned (clear no-signal trap)
+    'ttl_change' =>  16, # Indicate TTL changed
+    'transition' =>  32, # The event_state changed since last poll
+    'heartbeat'  =>  64, # Heartbeat event to monitor status
+    'invalid'    => 128, # Some invalid event situation arose
+};
 
 ###
 # Logging system
@@ -91,6 +104,23 @@ sub load_log4perl_config()
 	Log::Log4perl->init(\$logger_fallback_config);
 	$logger->error($log);
     }
+}
+
+
+###
+# Helper functions
+#
+sub lookup_event($)
+{
+    my $event_name = shift;
+    my $event_type;
+    if (exists        $global_event_types->{"$event_name"} ) {
+	$event_type = $global_event_types->{"$event_name"};
+    } else {
+	$logger->logcarp("Eventname $event_name, is unknown");
+	$event_type = $global_event_types->{"unknown"};
+    }
+    return $event_type;
 }
 
 

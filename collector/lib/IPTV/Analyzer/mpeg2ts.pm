@@ -1228,15 +1228,12 @@ sub detect_event_type($$$$$$$)
 
     my $log = "Event on Input:[$probe_input] ";
 
-    # FIXME/TODO: Define the event_types somewhere else
-    my $event_new_stream =   1; # New stream detected
-    my $event_drop       =   2; # Drops detected, both skips and discon
-    my $event_no_signal  =   4; # Stream have stopped transmitting data
-#   my $event_ok_signal  =   8; # Indicate signal returned (clear no-signal trap)
-    my $event_ttl_change =  16; # Indicate TTL changed
-    my $event_transition =  32; # The event_state changed since last poll
-    my $event_heartbeat  =  64; # Heartbeat event to monitor status
-    my $event_invalid    = 128; # Some invalid event situation arose
+    # The event_types are defined in Config.pm
+    # Lookup below event types, as they always come into use in code path
+    #  - Stream have stopped transmitting data
+    my $event_no_signal  = lookup_event("no_signal");
+    #  - The event_state changed since last poll
+    my $event_transition =  lookup_event("transition");
 
     # Detect the different event types
     # --------------------------------
@@ -1244,11 +1241,11 @@ sub detect_event_type($$$$$$$)
 
     # - Detect new stream
     if ($new_stream) {
-	$event_type |= $event_new_stream;
+	$event_type |= lookup_event("new_stream");
     }
     # - Detect drops
     if (($delta_discon > 0) || ($delta_skips > 0)) {
-	$event_type |= $event_drop;
+	$event_type |= lookup_event("drop");
     }
     # - Detect no-signal (based on $delta_packets only)
     if (defined $delta_packets) {
@@ -1258,12 +1255,12 @@ sub detect_event_type($$$$$$$)
 	# This should not happen check
 	if ($delta_packets < 0) {
 	    $logger->error("$log - negative delta packets");
-	    $event_type = $event_invalid;
+	    $event_type = lookup_event(invalid);
 	}
     }
     if ($event_type == 0) {
 	# Assume this is a heartbeat check, if no event is detected.
-	$event_type = $event_heartbeat;
+	$event_type = lookup_event("heartbeat");
     }
 
     # Compare to previous event_state
@@ -1271,7 +1268,7 @@ sub detect_event_type($$$$$$$)
 
     # $log info data
     my $mc_dst = $inputref->{'dst'};
-    my $ip_src        = $inputref->{'src'};
+    my $ip_src = $inputref->{'src'};
     $log .= "$ip_src->$mc_dst:";
 
     # Different "no-signal" state transitions
