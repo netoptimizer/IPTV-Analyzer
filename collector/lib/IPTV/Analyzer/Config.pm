@@ -32,6 +32,7 @@ BEGIN {
      @EXPORT      = qw(
                        get_config
                        lookup_event
+                       lookup_severity
                       );
 }
 
@@ -52,11 +53,30 @@ our $global_event_types = {
     'new_stream' =>   1, # New stream detected
     'drop'       =>   2, # Drops detected, both skips and discon
     'no_signal'  =>   4, # Stream have stopped transmitting data
-#   'ok_signal', =>   8, # Indicate signal returned (clear no-signal trap)
+#   'ok_signal', =>   8, # (NOT USED, see severity instead)
     'ttl_change' =>  16, # Indicate TTL changed
     'transition' =>  32, # The event_state changed since last poll
     'heartbeat'  =>  64, # Heartbeat event to monitor status
     'invalid'    => 128, # Some invalid event situation arose
+};
+
+# severity levels taken from ZenOSS
+#   http://community.zenoss.org/docs/DOC-4766#d0e6170
+#   Number	Name		Color in ZenOSS
+#       0	Clear		Green
+#       1	Debug		Grey
+#       2	Info		Blue
+#       3	Warning		Yellow
+#       4	Error		Orange
+#       5	Critical	Red
+#
+our $global_severity_levels = {
+    'clear'    =>  0, # Clears the eventType
+    'debug'    =>  1,
+    'info'     =>  2,
+    'warning'  =>  3,
+    'error'    =>  4,
+    'critical' =>  5
 };
 
 ###
@@ -123,6 +143,18 @@ sub lookup_event($)
     return $event_type;
 }
 
+sub lookup_severity($)
+{
+    my $name = shift;
+    my $type;
+    if (exists  $global_severity_levels->{"$name"} ) {
+	$type = $global_severity_levels->{"$name"};
+    } else {
+	$logger->logcarp("Severity name $name, is unknown, using level debug");
+	$type = $global_severity_levels>{"debug"};
+    }
+    return $type;
+}
 
 ###
 # Object related methods
@@ -380,8 +412,8 @@ sub get_input_value()
 	    $logger->warn("No config setting available for $txtcfg");
 	}
     } else {
-	my $txtcfg = "input[$inputKey] cannot read $valueKey";
-	$logger->warn("No config for $txtcfg");
+	#my $txtcfg = "input[$inputKey] cannot read $valueKey";
+	#$logger->warn("No config for $txtcfg");
     }
     return $value;
 }

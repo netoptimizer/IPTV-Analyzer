@@ -154,29 +154,12 @@ sub construct_event($$$)
     return @array;
 }
 
-sub construct_event_no_signal()
-{
-    my $event_name     = "no_signal";
-    my $event_type     = lookup_event($event_name);
-    my $event_severity = "5";
-    my @array = construct_event($event_type, $event_name, $event_severity);
-    return @array;
-}
-
-sub construct_event_no_signal_clear()
-{
-    my $event_name     = "no_signal";
-    my $event_type     = lookup_event($event_name);
-    my $event_severity = "0"; # CLEARs no_signal
-    my @array = construct_event($event_type, $event_name, $event_severity);
-    return @array;
-}
-
 sub construct_event_via_name($$)
 {
     my $event_name     = shift;
-    my $event_severity = shift;
+    my $severity_name  = shift;
     my $event_type     = lookup_event($event_name);
+    my $event_severity = lookup_severity($severity_name);
     my @array = construct_event($event_type, $event_name, $event_severity);
     return @array;
 }
@@ -204,11 +187,11 @@ sub lookup_trap($)
 
 sub send_snmptrap($$$$$)
 {
-    my $event_name = shift;
-    my $severity   = shift;
-    my $inputkey   = shift;
-    my $multicast  = shift;
-    my $src_ip     = shift;
+    my $event_name    = shift;
+    my $severity_name = shift;
+    my $inputkey      = shift;
+    my $multicast     = shift;
+    my $src_ip        = shift;
 
     my $cfg = get_config();
 
@@ -223,7 +206,7 @@ sub send_snmptrap($$$$$)
 
     # The event type
     #my @event_oids = construct_event_no_signal($severity);
-    my @event_oids = construct_event_via_name($event_name, $severity);
+    my @event_oids = construct_event_via_name($event_name, $severity_name);
 
     # General identification of the probe
     my @ident_probe = construct_probe_identification();
