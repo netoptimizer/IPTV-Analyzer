@@ -1,6 +1,10 @@
 
 recent changes
 
+2011-06-01  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.9.2.
+
 	SNMP trap feature implemented.
 
 	The collector sends SNMP "no_signal" traps, when the state
@@ -12,7 +16,7 @@ recent changes
 	under Enterprise OID 26124, which belongs to ComX Networks A/S.
 	The CXNET-CORE-MIB.txt file describe this Enterprise OID.
 
-	The iptc-collector now depends on the CPAN module NET::SNMP.
+	The iptv-collector now depends on the CPAN module NET::SNMP.
 
 2011-05-24  Jesper Dangaard Brouer <hawk@comx.dk>
 
