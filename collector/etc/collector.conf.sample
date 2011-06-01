@@ -25,11 +25,15 @@ probe_name = tvprobe-dev2
 # measure on several interfaces, and the measurement points could (via
 # e.g. fiber) be far a part.
 
+# SNMP trap setup
+snmptraphost  = 87.72.129.222;
+snmpcommunity = public;
+
 # Input files to parse
 # --------------------
 # The keys used for identifying an input in the DB is:
 #  1. probe_ip
-#  2. the input[hashkey] e.g. 'rule_eth42'
+#  2. the input[hashkey] e.g. 'rule_input_eth0'
 #  3. the short location [shortloc] value
 #  4. the switch name [switch] value
 #
@@ -38,26 +42,29 @@ probe_name = tvprobe-dev2
 # other keys without changing the id.
 #
 # Required option, which proc file to read
-input[rule_eth42][procfile]  = /proc/net/xt_mpeg2ts/rule_test
+input[rule_in_eth0][procfile]  = /proc/net/xt_mpeg2ts/rule_in_eth0
 #
-# Required options that identifies this input
-input[rule_eth42][shortloc]  = alb
-input[rule_eth42][switch]    = albcr3
+# The proc file is created with:
+#  iptables -t mangle -I PREROUTING -i eth0 -p udp -m mpeg2ts --name input_eth0
+#
+# REQUIRED OPTIONS that identifies this input
+input[rule_in_eth0][shortloc]  = alb
+input[rule_in_eth0][switch]    = albcr3
 #
 # Optional update-able config settings
-input[rule_eth42][description]= Main signal
-input[rule_eth42][distance]   = 2
-input[rule_eth42][location]   = Serverrum A
-input[rule_eth42][address]    = Herstedvang 42, 2620 Albertslund
-input[rule_eth42][switchport] = e1/4
-input[rule_eth42][switchtype] = HP9300
-input[rule_eth42][input_ip]   = 192.168.16.42
-input[rule_eth42][input_dev]  = eth42
+input[rule_in_eth0][description]= Main signal
+input[rule_in_eth0][distance]   = 2
+input[rule_in_eth0][location]   = Serverrum A
+input[rule_in_eth0][address]    = Herstedvang 42, 2620 Albertslund
+input[rule_in_eth0][switchport] = e1/4
+input[rule_in_eth0][switchtype] = HP9300
+input[rule_in_eth0][input_ip]   = 192.168.16.42
+input[rule_in_eth0][input_dev]  = eth42
 
 # Remember: Change to use complete path as the daemon chdir's to "/"
-input[test1][procfile] = ../input/proc_rule_test001.input
-input[test1][shortloc] = cph
-input[test1][switch]   = switch002a
-input[test1][distance] = 44
-input[test1][description] = Test case
-input[test1][hidden]   = yes
+#input[test1][procfile] = ../input/proc_rule_test001.input
+#input[test1][shortloc] = cph
+#input[test1][switch]   = switch002a
+#input[test1][distance] = 44
+#input[test1][description] = Test case
+#input[test1][hidden]   = yes
