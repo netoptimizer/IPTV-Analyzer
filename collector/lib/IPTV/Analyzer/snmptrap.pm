@@ -172,7 +172,7 @@ sub construct_event_no_signal_clear()
     return @array;
 }
 
-our %global_trap_oids = {
+our $global_trap_oids = {
     'streamNoSignal' => '1.3.6.1.4.1.26124.43.2.2.2',
     'generalEvent'   => '1.3.6.1.4.1.26124.43.2.2.1',
     'unknown'        => '1.3.6.1.4.1.26124.43',
@@ -183,11 +183,11 @@ sub lookup_trap($)
     my $trapname = shift;
     my $oid;
     my $result=0;
-    if (exists $global_trap_oids{"$trapname"} ) {
-	$oid = $global_trap_oids{"$trapname"};
+    if (exists $global_trap_oids->{"$trapname"} ) {
+	$oid = $global_trap_oids->{"$trapname"};
 	$result = 1;
     } else {
-	$oid = $global_trap_oids{"unknown"};
+	$oid = $global_trap_oids->{"unknown"};
     }
     #return ($oid, $result);
     return $oid;
@@ -208,19 +208,20 @@ sub send_snmptrap($$$)
     }
 
     # The first two variable-bindings fields in snmpV2-trap are required
-    my $streamNoSignal = '1.3.6.1.4.1.26124.43.2.2.2';
-    my $trap = $streamNoSignal;
-    #my $trap = lookup_trap("streamNoSignal");
+    #my $streamNoSignal = '1.3.6.1.4.1.26124.43.2.2.2';
+    #my $trap = $streamNoSignal;
+    my $trap = lookup_trap("streamNoSignal");
     my @trap_oid = construct_trap_oid($trap, 0);
+
+    # The event type
+    my @event_oids = construct_event_no_signal();
+
 
     # General identification of the probe
     my @ident_probe = construct_probe_identification();
 
     # Specific identification of config input[key]
     my @ident_input = construct_input_identification("rule_eth42");
-
-    # The event type
-    my @event_oids = construct_event_no_signal();
 
     my @oid_array =
 	(
