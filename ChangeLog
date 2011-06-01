@@ -10,6 +10,7 @@ recent changes
 	There is a SNMP MIB, describing the SNMP traps, located in
 	"snmp/mibs/" named "IPTV-ANALYZER-MIB.txt".  The traps are placed
 	under Enterprise OID 26124, which belongs to ComX Networks A/S.
+	The CXNET-CORE-MIB.txt file describe this Enterprise OID.
 
 
 2011-05-24  Jesper Dangaard Brouer <hawk@comx.dk>
