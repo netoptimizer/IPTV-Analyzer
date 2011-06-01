@@ -38,7 +38,8 @@ GetOptions(
   'traphost|h=s'  => \$opt{traphost},
   'community=s'   => \$opt{community},
   'multicast=s'   => \$opt{multicast},
-  'src_ip'        => \$opt{src_ip},
+  'src_ip=s'      => \$opt{src_ip},
+  'timeticks=i'   => \$opt{src_ip},
   'help!'         => \$opt_help,
   'man!'          => \$opt_man
 ) or pod2usage(-verbose => 0);
@@ -51,6 +52,7 @@ $opt{traphost}  = $opt{traphost}   || '127.0.0.1';
 $opt{community} = $opt{community}  || 'public';
 $opt{multicast} = $opt{multicast}  || '224.224.224.224';
 $opt{src_ip}    = $opt{src_ip}     || '10.10.10.42';
+$opt{timeticks} = $opt{timeticks}  || 6000;
 
 =head2 OPTIONS
 
@@ -58,6 +60,7 @@ $opt{src_ip}    = $opt{src_ip}     || '10.10.10.42';
     --community    The SNMPv2 community (default: public)
     --multicast    The multicast dst address having issues (default: 224.1.2.3)
     --src_ip       The streams source IP-address (default:10.10.10.42)
+    --timeticks    The uptime reported in SNMP-v2 trap (default: 6000(=1min))
 
 =cut
 
@@ -73,7 +76,7 @@ if (!$res_ses) {
 
 print "send_snmptrap()\n";
 my $res = send_snmptrap("no_signal", "critical", "rule_input",
-			$opt{multicast}, $opt{src_ip});
+			$opt{timeticks}, $opt{multicast}, $opt{src_ip});
 if (!$res) {
     print " - ERROR: cannot send snmptrap\n";
 } else {

@@ -58,7 +58,7 @@ sub open_snmp_session($$)
 	);
 
     if (!defined($snmp_session)) {
-	$logger->fatal("Cannot start a SNMP session: $error");
+	$logger->fatal("Cannot open a SNMP session: $error");
 	return 0;
 	#exit 1
     }
@@ -185,11 +185,12 @@ sub lookup_trap($)
     return $oid;
 }
 
-sub send_snmptrap($$$$$)
+sub send_snmptrap($$$$$$)
 {
     my $event_name    = shift;
     my $severity_name = shift;
     my $inputkey      = shift;
+    my $timeticks     = shift || 0;
     my $multicast     = shift;
     my $src_ip        = shift;
 
@@ -201,11 +202,10 @@ sub send_snmptrap($$$$$)
     }
 
     # The first two required variable-bindings fields in snmpV2-trap
-    my $trap = lookup_trap("no_signal");
-    my @trap_oid = construct_trap_oid($trap, 0);
+    my $trap = lookup_trap($event_name);
+    my @trap_oid = construct_trap_oid($trap, $timeticks);
 
     # The event type
-    #my @event_oids = construct_event_no_signal($severity);
     my @event_oids = construct_event_via_name($event_name, $severity_name);
 
     # General identification of the probe

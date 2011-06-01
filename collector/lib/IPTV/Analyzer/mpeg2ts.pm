@@ -23,6 +23,7 @@ use File::Basename; # dirname() for config file loading
 use IPTV::Analyzer::Version;
 
 use IPTV::Analyzer::Config;
+use IPTV::Analyzer::snmptrap;
 
 ###
 # Global setting
@@ -1200,20 +1201,24 @@ sub db_create_stream_session($$$$)
     return $id;
 }
 
-sub snmptrap_no_signal()
+sub snmptrap_no_signal($$$)
 {
-    # TODO: Implement snmptrap functionality
-    # use module Net::SNMP
-    my $inputref    = shift;
-    my $probe_input = shift;
+    my $severity_name = shift; # clear/critical
+    my $probe_input   = shift;
+    my $inputref      = shift;
 
-    my $no_signal   = shift; #1=no-signal 0=signal/recovered
+    # extract stream id data from $inputref
+    my $mc_dst = $inputref->{'dst'} || "0.0.0.0";
+    my $ip_src = $inputref->{'src'} || "0.0.0.0";
 
     # Extract the TIMETICKS for the trap
     my $globalref = $global_state{$probe_input};
-    my $timeticks = int(get_time_info_delta($globalref));
+    # timeticks is in hundredths of seconds
+    my $timeticks = int(get_time_info_delta($globalref) * 100);
 
-    
+    # Located in snmptrap.pm module
+    send_snmptrap("no_signal", $severity_name, $probe_input,
+		  $timeticks, $mc_dst, $ip_src);
 }
 
 sub detect_event_type($$$$$$$)
@@ -1255,7 +1260,7 @@ sub detect_event_type($$$$$$$)
 	# This should not happen check
 	if ($delta_packets < 0) {
 	    $logger->error("$log - negative delta packets");
-	    $event_type = lookup_event(invalid);
+	    $event_type = lookup_event("invalid");
 	}
     }
     if ($event_type == 0) {
@@ -1266,9 +1271,9 @@ sub detect_event_type($$$$$$$)
     # Compare to previous event_state
     # -------------------------------
 
-    # $log info data
-    my $mc_dst = $inputref->{'dst'};
-    my $ip_src = $inputref->{'src'};
+    #  stream id data
+    my $mc_dst = $inputref->{'dst'} || "0.0.0.0";
+    my $ip_src = $inputref->{'src'} || "0.0.0.0";
     $log .= "$ip_src->$mc_dst:";
 
     # Different "no-signal" state transitions
@@ -1285,8 +1290,7 @@ sub detect_event_type($$$$$$$)
 	    # Current state have signal
 	    # = transition: (3) no-signal -> signal
 	    $logger->info("$log no-signal -> signal");
-	    ###snmptrap_no_signal($inputref, $probe_input, 0);
-	    # FIXME: call snmptrap
+	    snmptrap_no_signal("clear", $probe_input, $inputref);
 	}
     } else {
 	# Previous state had signal
@@ -1294,8 +1298,7 @@ sub detect_event_type($$$$$$$)
 	    # Current state have no-signal
 	    # = transition: (1) signal -> no-signal
 	    $logger->info("$log signal -> no-signal");
-	    ###snmptrap_no_signal($inputref, $probe_input, 1);
-	    # FIXME: call snmptrap
+	    snmptrap_no_signal("critical", $probe_input, $inputref);
 	}
     }
 

@@ -41,10 +41,8 @@ use Proc::Daemon;    # libproc-daemon-perl
 use Proc::PID::File; # libproc-pid-file-perl
 
 use File::Basename;
-
-# Hack to get include path to IPTV::Analyzer::mpeg2ts
-# use lib dirname($0);
 use IPTV::Analyzer::mpeg2ts;
+use IPTV::Analyzer::snmptrap;
 
 # Trick to catch stderr messages from e.g. DB calls into Log4perl
 use IPTV::Analyzer::Log4perlTrapper;
@@ -59,6 +57,8 @@ use IPTV::Analyzer::Config;
 our $cfg  = get_config();
 our $interval = $cfg->{'collector_interval'} || 10;
 our $heartbeat_interval_ticks = $cfg->{'collector_heartbeat_ticks'} || 60;
+our $snmptraphost  = $cfg->{'snmptraphost'} || "87.72.129.222";
+our $snmpcommunity = $cfg->{'snmpcommunity'} || "public";
 
 # State variables
 our $ticks = 0;
@@ -250,6 +250,7 @@ sub sig_handler {
     heartbeat_update();
     close_daemon_sessions();
     close_stream_sessions();
+    close_snmp_session();
     $run = 0;
 }
 
@@ -299,6 +300,8 @@ daemon3();
 # IPTV::Analyzer::mpeg2ts
 db_connect();
 
+open_snmp_session($snmptraphost, $snmpcommunity);
+
 # The loop
 while ($run) {
 
@@ -320,6 +323,7 @@ $logger->info("Stopping IPTV::Analyzer collector daemon (version:$ver)");
 
 db_commit();
 db_disconnect();
+close_snmp_session();
 exit;
 
 __END__
