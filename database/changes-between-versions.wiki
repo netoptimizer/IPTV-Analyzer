@@ -3,17 +3,13 @@
 
 Document the DB changes between versions
 
-== From: 0.9.1 to 0.9.2 ===
+== Future planned changes ===
 
-To apply changes described below run:
+The future plan is to, implement a TTL snmptrap event.
 
-  cd database/
-  mysql -u root -p tvprobe < database-upgrade-0.9.1-to-0.9.2.sql
-
-Add two more events to table "event_type".
+Add a TTL event to table "event_type".
 
   INSERT INTO event_type (bitmask, label, description) VALUES
-    (  8, "ok_signal" , "Indicate signal returned (clear no-signal trap)"),
     ( 16, "ttl_change", "Indicate TTL changed");
 
 
