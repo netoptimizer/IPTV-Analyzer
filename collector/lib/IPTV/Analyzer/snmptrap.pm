@@ -156,8 +156,8 @@ sub construct_event($$$)
 
 sub construct_event_no_signal()
 {
-    my $event_type     = 4; # no_signal FIXME: extract this num from Config
     my $event_name     = "no_signal";
+    my $event_type     = lookup_event($event_name);
     my $event_severity = "5";
     my @array = construct_event($event_type, $event_name, $event_severity);
     return @array;
@@ -165,15 +165,24 @@ sub construct_event_no_signal()
 
 sub construct_event_no_signal_clear()
 {
-    my $event_type     = 4; # no_signal FIXME: extract this num from Config
     my $event_name     = "no_signal";
+    my $event_type     = lookup_event($event_name);
     my $event_severity = "0"; # CLEARs no_signal
     my @array = construct_event($event_type, $event_name, $event_severity);
     return @array;
 }
 
+sub construct_event_via_name($$)
+{
+    my $event_name     = shift;
+    my $event_severity = shift;
+    my $event_type     = lookup_event($event_name);
+    my @array = construct_event($event_type, $event_name, $event_severity);
+    return @array;
+}
+
 our $global_trap_oids = {
-    'streamNoSignal' => '1.3.6.1.4.1.26124.43.2.2.2',
+    'no_signal'      => '1.3.6.1.4.1.26124.43.2.2.2', # MIB: streamNoSignal
     'generalEvent'   => '1.3.6.1.4.1.26124.43.2.2.1',
     'unknown'        => '1.3.6.1.4.1.26124.43',
 };
@@ -193,10 +202,11 @@ sub lookup_trap($)
     return $oid;
 }
 
-
-sub send_snmptrap($$$)
+sub send_snmptrap($$$$$)
 {
-    my $event_type = shift || 0;
+    my $event_name = shift;
+    my $severity   = shift;
+    my $inputkey   = shift;
     my $multicast  = shift;
     my $src_ip     = shift;
 
@@ -207,21 +217,21 @@ sub send_snmptrap($$$)
 	return 0;
     }
 
-    # The first two variable-bindings fields in snmpV2-trap are required
-    #my $streamNoSignal = '1.3.6.1.4.1.26124.43.2.2.2';
-    #my $trap = $streamNoSignal;
-    my $trap = lookup_trap("streamNoSignal");
+    # The first two required variable-bindings fields in snmpV2-trap
+    my $trap = lookup_trap("no_signal");
     my @trap_oid = construct_trap_oid($trap, 0);
 
     # The event type
-    my @event_oids = construct_event_no_signal();
-
+    #my @event_oids = construct_event_no_signal($severity);
+    my @event_oids = construct_event_via_name($event_name, $severity);
 
     # General identification of the probe
     my @ident_probe = construct_probe_identification();
 
     # Specific identification of config input[key]
-    my @ident_input = construct_input_identification("rule_eth42");
+    my @ident_input = construct_input_identification($inputkey);
+
+    # TODO: Stream identification
 
     my @oid_array =
 	(
@@ -237,9 +247,25 @@ sub send_snmptrap($$$)
 	 @ident_input
 	);
 
+
+    # Check oid_array for undef's as snmpv2_trap cannot handle these
+    for my $n (2 .. $#oid_array)
+    {
+	if (! defined $oid_array[$n] ) {
+	    my $theoid = $oid_array[$n-2];
+	    my $log="OID $theoid contains undef (SNMP trap will fail)";
+	    $logger->error($log);
+	}
+    }
+
     my $result = $snmp_session->snmpv2_trap(
 	-varbindlist  => \@oid_array
 	);
+
+    if(!$result) {
+	#print "snmperror, input oid_array:" . Dumper(\@oid_array) . "\n";
+	$logger->error("Could not send SNMP trap");
+    }
 
     return $result;
 }

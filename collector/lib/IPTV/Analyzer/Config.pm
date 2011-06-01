@@ -377,8 +377,11 @@ sub get_input_value()
 	    $value=$self->{'input'}->{"$inputKey"}->{"$valueKey"};
 	} else {
 	    my $txtcfg = "input[$inputKey][$valueKey]";
-	    $logger->warn("No config setting for $txtcfg");
+	    $logger->warn("No config setting available for $txtcfg");
 	}
+    } else {
+	my $txtcfg = "input[$inputKey] cannot read $valueKey";
+	$logger->warn("No config for $txtcfg");
     }
     return $value;
 }
