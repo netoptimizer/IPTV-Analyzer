@@ -26,8 +26,8 @@ probe_name = tvprobe-dev2
 # e.g. fiber) be far a part.
 
 # SNMP trap setup
-snmptraphost  = 87.72.129.222;
-snmpcommunity = public;
+snmptraphost  = 87.72.129.222
+snmpcommunity = public
 
 # Input files to parse
 # --------------------
