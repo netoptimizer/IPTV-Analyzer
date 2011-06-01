@@ -1053,10 +1053,8 @@ sub heartbeat_daemon_session($)
 	$logger->warn($log);
     }
 
-    #my $daemon_session_id = get_daemon_session($globalref, $input_key);
-    my $daemon_session_id;
-    if (exists               $globalref->{'daemon_session_id'}) {
-	$daemon_session_id = $globalref->{'daemon_session_id'};
+    my  $daemon_session_id = get_daemon_session($globalref, $input_key);
+    if ($daemon_session_id) {
 	db_heartbeat_daemon_session($daemon_session_id);
     } else {
 	my $log = "Heartbeat failed: No daemon_session_id found";
