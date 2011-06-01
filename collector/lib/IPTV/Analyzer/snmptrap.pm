@@ -68,7 +68,9 @@ sub open_snmp_session($$)
 
 sub close_snmp_session()
 {
-    $snmp_session->close();
+    if (defined $snmp_session) {
+	$snmp_session->close();
+    }
     $snmp_session = undef;
 }
 
