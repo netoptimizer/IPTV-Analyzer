@@ -84,6 +84,7 @@ The following Debian packages are needed by the collector daemon:
 * mysql-client
 * mysql-server
 * liblog-dispatch-perl (for email extention to Log4perl)
+* libnet-snmp-perl
 
 == COPYRIGHT AND LICENCE ==
 
