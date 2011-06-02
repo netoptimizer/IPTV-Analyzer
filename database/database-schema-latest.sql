@@ -78,7 +78,7 @@ CREATE TABLE event_type (
   label       varchar(15) NOT NULL,
   description varchar(255),
   PRIMARY KEY (bitmask)
-) ENGINE=InnoDB
+) ENGINE=InnoDB;
 
 LOCK TABLES event_type WRITE;
 INSERT INTO event_type (bitmask, label, description) VALUES
