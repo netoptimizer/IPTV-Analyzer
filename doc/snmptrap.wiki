@@ -65,6 +65,8 @@ the files to make them look more like the ZenOSS naming scheme.)
 
 Import these into ZenOSS:
 
+  su - zenoss
+  export ZENOSS_MIBS=/usr/local/zenoss/share/mibs/site/
   cd ${ZENOSS_MIBS}
   zenmib run -v 10 cxnet-core.mib iptv-analyzer.mib
 
@@ -74,6 +76,13 @@ cannot find the Enterprice OID mapping, and stuff does not work.
 See if the MIB got imported and decoded via your webbrowser:
 
  http://zenoss.yourdomain.dk:8080/zport/dmd/Mibs/mibs/IPTV-ANALYZER-MIB/
+
+== Sending an SNMP test trap ==
+
+In "collector/bin" there is a script for generating test traps:
+
+  cd collector/bin
+  ./generate-test-snmptrap.pl --help
 
 
 = NOTES =
