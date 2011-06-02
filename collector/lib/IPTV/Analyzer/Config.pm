@@ -176,7 +176,7 @@ sub new()
 	return $singleton_cfg;
     }
     else {
-	$logger->info("Loading config.");
+	$logger->debug("Loading config.");
     }
 
     # Loading config
@@ -204,16 +204,27 @@ sub new()
 sub load_config {
     my $cfgfile = shift || "collector.conf";
     my $cfgdir;
-    my $cfgdir_default = "/etc/iptv-analyzer/";
-    if ( -e "${cfgdir_default}${cfgfile}" ) {
+    my $cfgdir_default = "/etc/iptv-analyzer";
+    my $cfgdir_local   = dirname($0); # Current script dir
+    if ( -e "${cfgdir_default}/${cfgfile}" ) {
 	$cfgdir = $cfgdir_default;
-    } else {
+    } elsif ( -e "${cfgdir_local}/${cfgfile}" ) {
 	# Use the config from the dir of the script
-	$cfgdir = dirname($0);
-	my $l = "Cannot find config file ${cfgdir_default}${cfgfile} - ";
+	$cfgdir = $cfgdir_local;
+	my $l = "Cannot find config file ${cfgdir_default}/${cfgfile} - ";
 	   $l.= "instead use config from dir of script: ${cfgdir}/${cfgfile}";
 	$logger->warn($l);
+    } else {
+	my $txtcfg="${cfgdir_default}/${cfgfile}";
+	my $log1="Cannot find the config file: ${txtcfg}";
+	my $log2="Please look at example config: etc/${cfgfile}.sample";
+	$logger->fatal($log1);
+	$logger->fatal($log2);
+	# Also print to STDERR, a misconfigured log4perl might hide the above
+	print STDERR "\n - FATAL-ERROR - $log1\n\n";
+	exit(2);
     }
+
     my $cfg = Config::File::read_config_file("${cfgdir}/${cfgfile}");
     return $cfg;
 }
