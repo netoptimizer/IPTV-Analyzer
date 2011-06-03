@@ -45,7 +45,7 @@ snmpcommunity = public
 input[rule_in_eth0][procfile]  = /proc/net/xt_mpeg2ts/rule_in_eth0
 #
 # The proc file is created with:
-#  iptables -t mangle -I PREROUTING -i eth0 -p udp -m mpeg2ts --name input_eth0
+#  iptables -t mangle -I PREROUTING -i eth0 -p udp -m mpeg2ts --name in_eth0
 #
 # REQUIRED OPTIONS that identifies this input
 input[rule_in_eth0][shortloc]  = alb
