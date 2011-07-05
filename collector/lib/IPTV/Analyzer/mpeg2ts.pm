@@ -685,8 +685,8 @@ sub db_reconnect() {
     # Use cfg file options for db_reconnect_{delay,tries}
     my $delay = $cfg->{'db_reconnect_delay'} || 30;
     my $tries = $cfg->{'db_reconnect_tries'} || 10;
-    my $i = 0;
-    for ($i; $i < $tries; $i++) {
+    my $i;
+    for ($i=0; $i < $tries; $i++) {
 
 	# Connect to DB
 	$dbh = DBI->connect($dsn, $cfg->{dbuser}, $cfg->{dbpass},
