@@ -1,6 +1,20 @@
 
 recent changes
 
+2011-12-02  Jesper Dangaard Brouer <hawk@comx.dk>
+
+	* Version 0.9.3.
+
+	This release is a minor update, with minor fixes.
+
+	Some versions of Perl, gave a false positive warning:
+	  "Useless use of private variable in void context"
+	Which is now fixed.
+
+	Fix typo in database/database-schema-latest.sql.
+
+	Give fatal warning, if config file is missing.
+
 2011-06-01  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.9.2.
