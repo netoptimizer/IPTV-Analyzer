@@ -65,7 +65,7 @@ my %attr = (
 	'DBI'             => 0,
 	'DBD::mysql'      => 0,
 	'Log::Dispatch::Email' => 0,
-	'NET:SNMP'        => 0,
+	'Net::SNMP'       => 0,
     },
     PL_FILES  => {},    # Prevent old MakeMaker from running Build.PL
     EXE_FILES => \@exe_files,
