@@ -4,7 +4,7 @@
  * This module analyses the contents of MPEG2 Transport Stream (TS)
  * packets, and can detect TS/CC packet drops.
  *
- * Copyright (C) Jesper Dangaard Brouer <hawk@comx.dk>, 2009-2011+
+ * Copyright (C) Jesper Dangaard Brouer <netoptimizer@brouer.com>, 2009-2013
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License; either

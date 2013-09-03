@@ -11,7 +11,7 @@ iptvAnalyzer MODULE-IDENTITY
     LAST-UPDATED "201105300000Z"
     ORGANIZATION "ComX Networks A/S"
     CONTACT-INFO
-	"email: hawk@comx.dk
+	"email: netoptimizer@brouer.com
          Author: Jesper Dangaard Brouer"
     DESCRIPTION
        "Fixing syntax of the MIB file"

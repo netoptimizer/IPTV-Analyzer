@@ -446,11 +446,11 @@ This module uses the module L<Config::File> for parsing input files.
 
 =head1 AUTHOR
 
-Jesper Dangaard Brouer, E<lt>hawk@comx.dkE<gt> or E<lt>hawk@diku.dkE<gt>.
+Jesper Dangaard Brouer, E<lt>netoptimizer@brouer.comE<gt>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009-2011+ by Jesper Dangaard Brouer, ComX Networks A/S.
+Copyright (C) 2009-2013 by Jesper Dangaard Brouer
 
 This file is licensed under the terms of the GNU General Public
 License 2.0. or newer. See <http://www.gnu.org/licenses/gpl-2.0.html>.

@@ -88,8 +88,7 @@ The following Debian packages are needed by the collector daemon:
 
 == COPYRIGHT AND LICENCE ==
 
-Copyright (C) 2009-2011 by Jesper Dangaard Brouer <hawk@comx.dk>,
-	   ComX Networks A/S
+Copyright (C) 2009-2013 by Jesper Dangaard Brouer <netoptimizer@brouer.com>
 
 This software is licensed under the terms of the GNU General Public
 License 2.0. or newer. See <http://www.gnu.org/licenses/gpl-2.0.html>.
