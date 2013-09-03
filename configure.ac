@@ -105,21 +105,29 @@ elif test "${xtlibdir}" = "detect"; then
 
    AC_MSG_NOTICE([Entering auto-detect mode for Xtables extensions dir xtlibdir])
    test_dir=""
-   if [[ "${IPTABLES_DIR}" = "/" ]]; then
-      # Need to test for /lib{,64}/xtables/
-      test_dir=/lib/xtables
-      if [[ -d "$test_dir" ]]; then
-          AC_MSG_NOTICE([ - Found xtlibdir: $test_dir])
-	  xtlibdir=$test_dir
-      else
-	 test_dir=/lib64/xtables
-         if [[ -d "$test_dir" ]]; then
-             AC_MSG_NOTICE([ - Found xtlibdir: $test_dir])
-	     xtlibdir=$test_dir
-	 else
-             xtlibdir=""
-	     test_dir=""
-	 fi
+   if [[ "${IPTABLES_DIR}" = "/" -o "${IPTABLES_DIR}" = "/usr" ]]; then
+
+      # First detect via pkt-config
+      xtlibdir="$(pkg-config --variable=xtlibdir xtables)"
+      if [[ -z "$xtlibdir" ]]; then
+	  # Try a more low level detect method
+          # Need to test for /lib{,64}/xtables/ and /usr/lib{,64}/xtables/
+	  if [[ -d    /lib/xtables ]]; then
+	      xtlibdir=/lib/xtables
+	  elif [[ -d  /lib64/xtables ]]; then
+	      xtlibdir=/lib64/xtables
+	  elif [[ -d  /usr/lib/xtables ]]; then
+	      xtlibdir=/usr/lib/xtables
+	  elif [[ -d  /usr/lib64/xtables ]]; then
+	      xtlibdir=/usr/lib64/xtables
+	  else
+	      xtlibdir=""
+	      test_dir=""
+	  fi
+      fi
+      if [[ -n "$xtlibdir" ]]; then
+         AC_MSG_NOTICE([ - Found xtlibdir: $xtlibdir])
+	 test_dir=$xtlibdir
       fi
    else
       test_dir=${IPTABLES_DIR}/libexec/xtables
@@ -142,6 +150,9 @@ elif test "${xtlibdir}" = "detect"; then
                xtlibdir='${libexecdir}/xtables'
             fi
          fi
+      else
+	  xtlibdir="$(pkg-config --variable=xtlibdir xtables)"
+	  test_dir=$xtlibdir
       fi
    fi
    # Double check the $test_dir
