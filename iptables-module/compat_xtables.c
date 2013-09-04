@@ -8,7 +8,9 @@
  */
 #include <linux/ip.h>
 #include <linux/kernel.h>
+#include <linux/kmod.h>
 #include <linux/list.h>
+#include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/version.h>
@@ -17,6 +19,9 @@
 #include <linux/netfilter_arp.h>
 #include <net/ip.h>
 #include <net/route.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+#	include <linux/export.h>
+#endif
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 
