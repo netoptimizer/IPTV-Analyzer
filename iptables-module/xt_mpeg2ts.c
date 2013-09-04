@@ -41,6 +41,16 @@ MODULE_VERSION(XT_MODULE_VERSION);
 MODULE_ALIAS("ipt_mp2t");
 MODULE_ALIAS("ipt_mpeg2ts");
 
+/* COMPAT trick: Kernel >= 3.8.0
+ *   commit b67bfe0d42: hlist: drop the node parameter from iterators
+ *  workaround this with some defines
+ */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
+#  define HLIST_NODE_POS  struct hlist_node *pos;
+#else
+#  define HLIST_NODE_POS
+#endif
+
 /* Proc related */
 static struct proc_dir_entry *mpeg2ts_procdir;
 static const struct file_operations dl_file_ops;
@@ -471,9 +481,9 @@ mpeg2ts_stream_find(struct xt_rule_mpeg2ts_conn_htable *ht,
 		    const struct mpeg2ts_stream_match *match)
 {
 	struct mpeg2ts_stream *entry;
-	struct hlist_node  *pos;
 	uint32_t hash;
 	int cnt = 0;
+	HLIST_NODE_POS;
 
 #if PERFTUNE
 	int parallel = 0;
@@ -488,8 +498,11 @@ mpeg2ts_stream_find(struct xt_rule_mpeg2ts_conn_htable *ht,
 		/* The hlist_for_each_entry_rcu macro uses the
 		 * appropiate rcu_dereference() to access the
 		 * mpeg2ts_stream pointer */
-		hlist_for_each_entry_rcu(entry, pos,
-				     &ht->stream_hash[hash], node) {
+		hlist_for_each_entry_rcu(entry,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
+					 pos,
+#endif
+					 &ht->stream_hash[hash], node) {
 			cnt++;
 			if (match_cmp(entry, match))
 				goto found;
@@ -750,9 +763,13 @@ conn_htable_destroy(struct xt_rule_mpeg2ts_conn_htable *ht)
 	spin_lock(&ht->lock);
 	for (i = 0; i < ht->cfg.size; i++) {
 		struct mpeg2ts_stream *stream;
-		struct hlist_node *pos, *n;
-		hlist_for_each_entry_safe(stream, pos, n,
-					  &ht->stream_hash[i], node) {
+		struct hlist_node *n;
+		HLIST_NODE_POS;
+		hlist_for_each_entry_safe(stream,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
+					  pos,
+#endif
+					  n, &ht->stream_hash[i], node) {
 
 			hlist_del_rcu(&stream->node);
 			ht->count--;
@@ -1299,9 +1316,9 @@ static int mpeg2ts_seq_show(struct seq_file *s, void *v)
 	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
 	unsigned int *bucket = v;
 	struct mpeg2ts_stream *stream;
-	struct hlist_node *pos;
 	struct timespec delta;
 	struct timespec now;
+	HLIST_NODE_POS;
 
 	/*
 	  The syntax for the proc output is "key:value" constructs,
@@ -1345,7 +1362,10 @@ static int mpeg2ts_seq_show(struct seq_file *s, void *v)
 	} else {
 		rcu_read_lock();
 		if (!hlist_empty(&htable->stream_hash[*bucket])) {
-			hlist_for_each_entry_rcu(stream, pos,
+			hlist_for_each_entry_rcu(stream,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
+						 pos,
+#endif
 						 &htable->stream_hash[*bucket],
 						 node) {
 				if (mpeg2ts_seq_show_real(stream, s, *bucket)) {
