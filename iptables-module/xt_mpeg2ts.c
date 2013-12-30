@@ -1106,6 +1106,14 @@ is_mpeg2ts_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 }
 
 
+static uint16_t
+get_rtp_header_length(const unsigned char *payload_ptr, uint16_t payload_len)
+{
+	/* currently, only non-padded, non-extended, non-mixed RTP is supported */
+	return *payload_ptr == 0x80 ? 12 : 0;
+}
+
+
 static bool
 xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 {
@@ -1115,7 +1123,9 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	struct udphdr _udph;
 	__be32 saddr, daddr;
 	uint16_t ulen;
-	uint16_t hdr_size;
+	uint16_t format;
+	uint16_t udp_hdr_size;
+	uint16_t rtp_hdr_size;
 	uint16_t payload_len;
 	const unsigned char *payload_ptr;
 
@@ -1171,18 +1181,18 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	ulen = ntohs(uh->len);
 
 	/* How much do we need to skip to access payload data */
-	hdr_size    = par->thoff + sizeof(struct udphdr);
-	payload_ptr = skb_network_header(skb) + hdr_size;
-	/* payload_ptr = skb->data + hdr_size; */
-	BUG_ON(payload_ptr != (skb->data + hdr_size));
+	udp_hdr_size    = par->thoff + sizeof(struct udphdr);
+	payload_ptr = skb_network_header(skb) + udp_hdr_size;
+	/* payload_ptr = skb->data + udp_hdr_size; */
+	BUG_ON(payload_ptr != (skb->data + udp_hdr_size));
 
 	/* Different ways to determine the payload_len.  Think the
 	 * safest is to use the skb->len, as we really cannot trust
 	 * the contents of the packet.
-	  payload_len = ntohs(iph->tot_len)- hdr_size;
+	  payload_len = ntohs(iph->tot_len)- udp_hdr_size;
 	  payload_len = ulen - sizeof(struct udphdr);
 	*/
-	payload_len = skb->len - hdr_size;
+	payload_len = skb->len - udp_hdr_size;
 
 /* Not sure if we need to clone packets
 	if (skb_shared(skb))
@@ -1192,21 +1202,30 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 		msg_dbg(RX_STATUS, "skb(0x%p) NOT cloned", skb);
 */
 
-	if (is_mpeg2ts_packet(payload_ptr, payload_len)) {
-		msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
-
-		if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
-			/* ! --drop-detect */
-			/* Don't perform drop detection, just match mpeg2ts */
-			res = true;
+	format = info->flags & XT_MPEG2TS_FORMAT;
+	if (format == XT_MPEG2TS_FORMAT_AUTO || format == XT_MPEG2TS_FORMAT_RTP) {
+		rtp_hdr_size = get_rtp_header_length(payload_ptr, payload_len);
+		if (!rtp_hdr_size) {
+			if (format == XT_MPEG2TS_FORMAT_RTP)
+				return false;
 		} else {
-			skips =	dissect_mpeg2ts(payload_ptr, payload_len,
-						skb, uh, info);
+			payload_ptr += rtp_hdr_size;
+			payload_len -= rtp_hdr_size;
 		}
-	} else {
-		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
-			"(pkt from:%pI4 to:%pI4)", &saddr, &daddr);
+	}
+	if (!is_mpeg2ts_packet(payload_ptr, payload_len)) {
 		return false;
+	}
+
+	msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
+
+	if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
+		/* ! --drop-detect */
+		/* Don't perform drop detection, just match mpeg2ts */
+		res = true;
+	} else {
+		skips =	dissect_mpeg2ts(payload_ptr, payload_len,
+					skb, uh, info);
 	}
 
 	if (info->flags & XT_MPEG2TS_MATCH_DROP)
