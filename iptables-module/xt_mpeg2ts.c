@@ -752,7 +752,7 @@ conn_htable_destroy(struct xt_rule_mpeg2ts_conn_htable *ht)
 	unsigned int i;
 
 	/* Remove proc entry */
-	remove_proc_entry(ht->pde->name, mpeg2ts_procdir);
+	proc_remove(ht->pde);
 
 	msg_info(IFDOWN, "Destroy stream elements (%u count) in htable(%u)",
 		 ht->count, ht->id);
@@ -1232,8 +1232,8 @@ static struct xt_match mpeg2ts_mt_reg __read_mostly = {
 
 static void *mpeg2ts_seq_start(struct seq_file *s, loff_t *pos)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
+	struct inode *inode = s->private;
+	struct xt_rule_mpeg2ts_conn_htable *htable = PDE_DATA(inode);
 	unsigned int *bucket;
 
 	if (*pos >= htable->cfg.size)
@@ -1252,8 +1252,8 @@ static void *mpeg2ts_seq_start(struct seq_file *s, loff_t *pos)
 
 static void *mpeg2ts_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
+	struct inode *inode = s->private;
+	struct xt_rule_mpeg2ts_conn_htable *htable = PDE_DATA(inode);
 	unsigned int *bucket = v;
 
 	if (v == SEQ_START_TOKEN) {
@@ -1312,8 +1312,8 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 
 static int mpeg2ts_seq_show(struct seq_file *s, void *v)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
+	struct inode *inode = s->private;
+	struct xt_rule_mpeg2ts_conn_htable *htable = PDE_DATA(inode);
 	unsigned int *bucket = v;
 	struct mpeg2ts_stream *stream;
 	struct timespec delta;
@@ -1392,7 +1392,7 @@ static int mpeg2ts_proc_open(struct inode *inode, struct file *file)
 
 	if (!ret) {
 		struct seq_file *sf = file->private_data;
-		sf->private = PDE(inode);
+		sf->private = inode;
 	}
 	return ret;
 }
