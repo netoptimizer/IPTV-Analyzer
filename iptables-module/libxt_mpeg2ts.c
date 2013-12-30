@@ -181,7 +181,7 @@ static void mpeg2ts_mt_print(const void *entry,
 		printf(" match-drop");
 
 	if (info->flags & XT_MPEG2TS_MAX_STREAMS)
-		printf(" max-streams:%u ", info->cfg.max);
+		printf(" max-streams:%u", info->cfg.max);
 }
 
 static void mpeg2ts_mt_save(const void *entry,
@@ -191,16 +191,16 @@ static void mpeg2ts_mt_save(const void *entry,
 
 	/* We need to handle --name, --drop-detect, and --max-streams. */
 	if (info->flags & XT_MPEG2TS_PARAM_NAME)
-		printf("--name \"%s\" ",  info->rule_name);
+		printf(" --name \"%s\"",  info->rule_name);
 
 	if (!(info->flags & XT_MPEG2TS_DETECT_DROP))
-		printf("! --drop-detect ");
+		printf(" ! --drop-detect");
 
 	if (info->flags & XT_MPEG2TS_MATCH_DROP)
-		printf("--match-drop ");
+		printf(" --match-drop");
 
 	if (info->flags & XT_MPEG2TS_MAX_STREAMS)
-		printf("--max-streams %u ", info->cfg.max);
+		printf(" --max-streams %u", info->cfg.max);
 
 }
 
