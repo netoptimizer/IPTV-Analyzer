@@ -51,6 +51,19 @@ MODULE_ALIAS("ipt_mpeg2ts");
 #  define HLIST_NODE_POS
 #endif
 
+/* Compatibility with kernels before commit 59d8053 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
+#  define PDE_DATA(x) (PDE(x)->data)
+void proc_remove(struct proc_dir_entry *de)
+{
+	/* can't use remove_proc_subtree() here, it only exists since 3.9
+	 * and we only want to remove a single entry anyway
+	 */
+	if (de)
+		remove_proc_entry(de->name, de->parent);
+}
+#endif
+
 /* Proc related */
 static struct proc_dir_entry *mpeg2ts_procdir;
 static const struct file_operations dl_file_ops;
@@ -752,7 +765,7 @@ conn_htable_destroy(struct xt_rule_mpeg2ts_conn_htable *ht)
 	unsigned int i;
 
 	/* Remove proc entry */
-	remove_proc_entry(ht->pde->name, mpeg2ts_procdir);
+	proc_remove(ht->pde);
 
 	msg_info(IFDOWN, "Destroy stream elements (%u count) in htable(%u)",
 		 ht->count, ht->id);
@@ -1106,6 +1119,14 @@ is_mpeg2ts_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 }
 
 
+static uint16_t
+get_rtp_header_length(const unsigned char *payload_ptr, uint16_t payload_len)
+{
+	/* currently, only non-padded, non-extended, non-mixed RTP is supported */
+	return *payload_ptr == 0x80 ? 12 : 0;
+}
+
+
 static bool
 xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 {
@@ -1115,7 +1136,9 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	struct udphdr _udph;
 	__be32 saddr, daddr;
 	uint16_t ulen;
-	uint16_t hdr_size;
+	uint16_t format;
+	uint16_t udp_hdr_size;
+	uint16_t rtp_hdr_size;
 	uint16_t payload_len;
 	const unsigned char *payload_ptr;
 
@@ -1171,18 +1194,18 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	ulen = ntohs(uh->len);
 
 	/* How much do we need to skip to access payload data */
-	hdr_size    = par->thoff + sizeof(struct udphdr);
-	payload_ptr = skb_network_header(skb) + hdr_size;
-	/* payload_ptr = skb->data + hdr_size; */
-	BUG_ON(payload_ptr != (skb->data + hdr_size));
+	udp_hdr_size    = par->thoff + sizeof(struct udphdr);
+	payload_ptr = skb_network_header(skb) + udp_hdr_size;
+	/* payload_ptr = skb->data + udp_hdr_size; */
+	BUG_ON(payload_ptr != (skb->data + udp_hdr_size));
 
 	/* Different ways to determine the payload_len.  Think the
 	 * safest is to use the skb->len, as we really cannot trust
 	 * the contents of the packet.
-	  payload_len = ntohs(iph->tot_len)- hdr_size;
+	  payload_len = ntohs(iph->tot_len)- udp_hdr_size;
 	  payload_len = ulen - sizeof(struct udphdr);
 	*/
-	payload_len = skb->len - hdr_size;
+	payload_len = skb->len - udp_hdr_size;
 
 /* Not sure if we need to clone packets
 	if (skb_shared(skb))
@@ -1192,21 +1215,30 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 		msg_dbg(RX_STATUS, "skb(0x%p) NOT cloned", skb);
 */
 
-	if (is_mpeg2ts_packet(payload_ptr, payload_len)) {
-		msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
-
-		if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
-			/* ! --drop-detect */
-			/* Don't perform drop detection, just match mpeg2ts */
-			res = true;
+	format = info->flags & XT_MPEG2TS_FORMAT;
+	if (format == XT_MPEG2TS_FORMAT_AUTO || format == XT_MPEG2TS_FORMAT_RTP) {
+		rtp_hdr_size = get_rtp_header_length(payload_ptr, payload_len);
+		if (!rtp_hdr_size) {
+			if (format == XT_MPEG2TS_FORMAT_RTP)
+				return false;
 		} else {
-			skips =	dissect_mpeg2ts(payload_ptr, payload_len,
-						skb, uh, info);
+			payload_ptr += rtp_hdr_size;
+			payload_len -= rtp_hdr_size;
 		}
-	} else {
-		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
-			"(pkt from:%pI4 to:%pI4)", &saddr, &daddr);
+	}
+	if (!is_mpeg2ts_packet(payload_ptr, payload_len)) {
 		return false;
+	}
+
+	msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
+
+	if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
+		/* ! --drop-detect */
+		/* Don't perform drop detection, just match mpeg2ts */
+		res = true;
+	} else {
+		skips =	dissect_mpeg2ts(payload_ptr, payload_len,
+					skb, uh, info);
 	}
 
 	if (info->flags & XT_MPEG2TS_MATCH_DROP)
@@ -1232,8 +1264,8 @@ static struct xt_match mpeg2ts_mt_reg __read_mostly = {
 
 static void *mpeg2ts_seq_start(struct seq_file *s, loff_t *pos)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
+	struct inode *inode = s->private;
+	struct xt_rule_mpeg2ts_conn_htable *htable = PDE_DATA(inode);
 	unsigned int *bucket;
 
 	if (*pos >= htable->cfg.size)
@@ -1252,8 +1284,8 @@ static void *mpeg2ts_seq_start(struct seq_file *s, loff_t *pos)
 
 static void *mpeg2ts_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
+	struct inode *inode = s->private;
+	struct xt_rule_mpeg2ts_conn_htable *htable = PDE_DATA(inode);
 	unsigned int *bucket = v;
 
 	if (v == SEQ_START_TOKEN) {
@@ -1312,8 +1344,8 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 
 static int mpeg2ts_seq_show(struct seq_file *s, void *v)
 {
-	struct proc_dir_entry *pde = s->private;
-	struct xt_rule_mpeg2ts_conn_htable *htable = pde->data;
+	struct inode *inode = s->private;
+	struct xt_rule_mpeg2ts_conn_htable *htable = PDE_DATA(inode);
 	unsigned int *bucket = v;
 	struct mpeg2ts_stream *stream;
 	struct timespec delta;
@@ -1392,7 +1424,7 @@ static int mpeg2ts_proc_open(struct inode *inode, struct file *file)
 
 	if (!ret) {
 		struct seq_file *sf = file->private_data;
-		sf->private = PDE(inode);
+		sf->private = inode;
 	}
 	return ret;
 }

@@ -32,9 +32,13 @@ enum {
 	XT_MPEG2TS_MAX_STREAMS = 1 << 1,
 	XT_MPEG2TS_PARAM_NAME  = 1 << 2,
 	XT_MPEG2TS_MATCH_DROP  = 1 << 3,
-	/*Future:*/
-	XT_MPEG2TS_RECORD_COUNTERS = 1 << 4,
+	XT_MPEG2TS_RECORD_COUNTERS = 1 << 4, /* Future */
+	XT_MPEG2TS_FORMAT      = 3 << 5,
+	XT_MPEG2TS_FORMAT_AUTO = 0 << 5,
+	XT_MPEG2TS_FORMAT_RTP  = 1 << 5,
+	XT_MPEG2TS_FORMAT_RAW  = 2 << 5,
 };
+
 
 /* Details of this hash structure is hidden in kernel space xt_mpeg2ts.c */
 struct xt_rule_mpeg2ts_conn_htable;
