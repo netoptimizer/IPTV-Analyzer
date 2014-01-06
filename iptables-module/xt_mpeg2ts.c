@@ -51,6 +51,22 @@ MODULE_ALIAS("ipt_mpeg2ts");
 #  define HLIST_NODE_POS
 #endif
 
+/* Compatibility with kernels before 3.10, specifically before
+ *   commit 59d8053f1 (proc: Move non-public stuff from linux/proc_fs.h
+ *   to fs/proc/internal.h)
+ */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
+#  define PDE_DATA(x) (PDE(x)->data)
+void proc_remove(struct proc_dir_entry *pde)
+{
+	/* can't use remove_proc_subtree() here, it only exists since 3.9
+	 * and we only want to remove a single entry anyway
+	 */
+	if (pde)
+		remove_proc_entry(pde->name, pde->parent);
+}
+#endif
+
 /* Proc related */
 static struct proc_dir_entry *mpeg2ts_procdir;
 static const struct file_operations dl_file_ops;
