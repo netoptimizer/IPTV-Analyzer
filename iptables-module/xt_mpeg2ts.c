@@ -4,7 +4,7 @@
  * This module analyses the contents of MPEG2 Transport Stream (TS)
  * packets, and can detect TS/CC packet drops.
  *
- * Copyright (C) Jesper Dangaard Brouer <netoptimizer@brouer.com>, 2009-2013
+ * Copyright (C) Jesper Dangaard Brouer <netoptimizer@brouer.com>, 2009-2014
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License; either
@@ -34,7 +34,7 @@
 #include "xt_mpeg2ts.h"
 #include "compat_xtables.h"
 
-MODULE_AUTHOR("Jesper Dangaard Brouer <jdb@comx.dk>");
+MODULE_AUTHOR("Jesper Dangaard Brouer <netoptimizer@brouer.com>");
 MODULE_DESCRIPTION("Detecting packet drops in MPEG2 Transport Streams (TS)");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(XT_MODULE_VERSION);
@@ -744,7 +744,7 @@ mpeg2ts_stream_free(struct rcu_head *head)
 	/* Debugging check */
 	if (unlikely(!stream))
 		printk(KERN_CRIT PFX
-		       "Free BUG: Stream ptr is NULL (tell:jdb@comx.dk)\n");
+		       "Free BUG: Stream ptr is NULL (tell:author)\n");
 
 	/* Deallocate the PID list */
 	spin_lock_bh(&stream->lock);
@@ -758,7 +758,7 @@ mpeg2ts_stream_free(struct rcu_head *head)
 		/* If this can occur, we should schedule something
 		 * that can clean up */
 		printk(KERN_CRIT PFX
-		       "Free BUG: Stream still in use! (tell:jdb@comx.dk)\n");
+		       "Free BUG: Stream still in use! (tell:author)\n");
 	}
 }
 
@@ -806,7 +806,7 @@ conn_htable_destroy(struct xt_rule_mpeg2ts_conn_htable *ht)
 
 	if (ht->count != 0)
 		printk(KERN_CRIT PFX
-		       "Free BUG: ht->count != 0 (tell:jdb@comx.dk)\n");
+		       "Free BUG: ht->count != 0 (tell:author)\n");
 
 	kfree(ht);
 }

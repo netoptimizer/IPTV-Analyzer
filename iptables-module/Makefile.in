@@ -3,7 +3,7 @@
 # Makefile for iptables MPEG2 TS kernel module
 #          and iptables userspace shared library.
 #
-# Author: Jesper Dangaard Brouer <jdb@comx.dk>
+# Author: Jesper Dangaard Brouer <netoptimizer@brouer.com>
 #
 
 # Configure substitution variables
