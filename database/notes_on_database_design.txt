@@ -615,6 +615,12 @@ Indexes
   create index idx_mcast on log_event(multicast_dst);
 
 
+Ola Gustafsson (cof.gustafsson(at)gmail.com) recommends using these
+indexes instead:
+
+ create index idx_logevent_rtime on log_event(probe_id,record_time);
+ create index idx_logevent_mchannel on log_event(multicast_dst,record_time);
+
 
 NOTES:
 ~~~~~~
