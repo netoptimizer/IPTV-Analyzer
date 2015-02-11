@@ -14,6 +14,7 @@
  */
 
 #include <linux/ip.h>
+#include <linux/ipv6.h>
 #include <linux/udp.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
@@ -40,6 +41,7 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION(XT_MODULE_VERSION);
 MODULE_ALIAS("ipt_mp2t");
 MODULE_ALIAS("ipt_mpeg2ts");
+MODULE_ALIAS("ip6t_mpeg2ts");
 
 /* COMPAT trick: Kernel >= 3.8.0
  *   commit b67bfe0d42: hlist: drop the node parameter from iterators
@@ -271,8 +273,9 @@ struct pid_data_t {
 
 /* Data to match a stream / connection */
 struct mpeg2ts_stream_match { /* Like xt_hashlimit: dsthash_dst */
-	__be32 dst_addr; /* MC addr first */
-	__be32 src_addr;
+	int version;
+	union nf_inet_addr dst_addr; /* MC addr first */
+	union nf_inet_addr src_addr;
 	__be16 dst_port;
 	__be16 src_port;
 };
@@ -1001,16 +1004,14 @@ dissect_tsp(const unsigned char *payload_ptr, uint16_t payload_len,
 static int
 dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 		const struct sk_buff *skb, const struct udphdr *uh,
-		const struct xt_mpeg2ts_mtinfo *info)
+		const struct xt_mpeg2ts_mtinfo *info, struct mpeg2ts_stream_match *match)
 {
 	uint16_t offset = 0;
 	int skips  = 0;
 	int skips_total = 0;
 	int discontinuity = 0;
-	const struct iphdr *iph = ip_hdr(skb);
 
 	struct mpeg2ts_stream     *stream; /* "Connection" */
-	struct mpeg2ts_stream_match match;
 
 	struct xt_rule_mpeg2ts_conn_htable *hinfo;
 	hinfo = info->hinfo;
@@ -1018,27 +1019,30 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 	/** Lookup stream data structures **/
 
 	/* Fill in the match struct */
-	memset(&match, 0, sizeof(match)); /* Worried about struct padding */
-	match.src_addr = iph->saddr;
-	match.dst_addr = iph->daddr;
-	match.src_port = uh->source;
-	match.dst_port = uh->dest;
+	match->src_port = uh->source;
+	match->dst_port = uh->dest;
 
 	/* spin_lock_bh(&hinfo->lock); // Replaced by RCU */
 	rcu_read_lock_bh();
 
-	stream = mpeg2ts_stream_find(hinfo, &match);
+	stream = mpeg2ts_stream_find(hinfo, match);
 	if (!stream) {
-		stream = mpeg2ts_stream_alloc_init(hinfo, &match);
+		stream = mpeg2ts_stream_alloc_init(hinfo, match);
 		if (!stream) {
 			/* spin_unlock_bh(&hinfo->lock); // Replaced by RCU */
 			rcu_read_unlock_bh();
 			return 0;
 		}
 		/* msg_info(RX_STATUS, */
-		printk(KERN_INFO
-		       "Rule:%u New stream (%pI4 -> %pI4)\n",
-		       hinfo->id, &iph->saddr, &iph->daddr);
+		if (match->version == 4) {
+			printk(KERN_INFO
+				   "Rule:%u New IPv%d stream (%pI4 -> %pI4)\n",
+				   hinfo->id, match->version, &match->src_addr, &match->dst_addr);
+		} else {
+			printk(KERN_INFO
+				   "Rule:%u New IPv%d stream (" NIP6_FMT " -> " NIP6_FMT ")\n",
+				   hinfo->id, match->version, NIP6(match->src_addr.in6), NIP6(match->dst_addr.in6));
+		}
 	}
 
 	/** Process payload **/
@@ -1083,11 +1087,19 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 
 	/* Place print statement after the unlock section */
 	if (discontinuity > 0) {
-		msg_notice(RX_STATUS,
-			   "Detected discontinuity "
-			   "%pI4 -> %pI4 (CCerr:%d skips:%d)",
-			   &ip_hdr(skb)->saddr, &ip_hdr(skb)->daddr,
-			   discontinuity, skips_total);
+		if (match->version == 4) {
+			msg_notice(RX_STATUS,
+				   "Detected discontinuity "
+				   "%pI4 -> %pI4 (CCerr:%d skips:%d)",
+				   &match->src_addr, &match->dst_addr,
+				   discontinuity, skips_total);
+		} else {
+			msg_notice(RX_STATUS,
+				   "Detected discontinuity "
+				   NIP6_FMT " -> " NIP6_FMT " (CCerr:%d skips:%d)",
+				   NIP6(match->src_addr.in6), NIP6(match->dst_addr.in6),
+				   discontinuity, skips_total);
+		}
 	}
 
 	return skips_total;
@@ -1123,7 +1135,7 @@ is_mpeg2ts_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 
 
 static bool
-xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
+xt_mpeg2ts_match4(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct xt_mpeg2ts_mtinfo *info = par->matchinfo;
 	const struct iphdr *iph = ip_hdr(skb);
@@ -1149,6 +1161,11 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	if (!pskb_may_pull((struct sk_buff *)skb, sizeof(struct udphdr)))
 		return false;
 	*/
+	struct mpeg2ts_stream_match match;
+	memset(&match, 0, sizeof(match)); /* Worried about struct padding */
+	match.version = 4;
+	match.src_addr = (union nf_inet_addr)iph->saddr;
+	match.dst_addr = (union nf_inet_addr)iph->daddr;
 
 	saddr = iph->saddr;
 	daddr = iph->daddr;
@@ -1217,7 +1234,7 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 			res = true;
 		} else {
 			skips =	dissect_mpeg2ts(payload_ptr, payload_len,
-						skb, uh, info);
+						skb, uh, info, &match);
 		}
 	} else {
 		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
@@ -1231,16 +1248,144 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	return res;
 }
 
-static struct xt_match mpeg2ts_mt_reg __read_mostly = {
-	.name       = "mpeg2ts",
-	.revision   = 0,
-	.family     = NFPROTO_IPV4,
-	.match      = xt_mpeg2ts_match,
-	.checkentry = xt_mpeg2ts_mt_check,
-	.destroy    = xt_mpeg2ts_mt_destroy,
-	.proto      = IPPROTO_UDP,
-	.matchsize  = sizeof(struct xt_mpeg2ts_mtinfo),
-	.me         = THIS_MODULE,
+
+static bool
+xt_mpeg2ts_match6(const struct sk_buff *skb, struct xt_action_param *par)
+{
+	const struct xt_mpeg2ts_mtinfo *info = par->matchinfo;
+	const struct ipv6hdr *iph = ipv6_hdr(skb);
+	const struct udphdr *uh;
+	struct udphdr _udph;
+	uint16_t ulen;
+	uint16_t hdr_size;
+	uint16_t payload_len;
+	const unsigned char *payload_ptr;
+
+	bool res = true;
+	int skips = 0;
+
+	/*
+	if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
+		msg_err(RX_ERR, "You told me to do nothing...?!");
+		return false;
+	}
+	*/
+
+	/*
+	if (!pskb_may_pull((struct sk_buff *)skb, sizeof(struct udphdr)))
+		return false;
+	*/
+	struct mpeg2ts_stream_match match;
+	memset(&match, 0, sizeof(match)); /* Worried about struct padding */
+	match.version = 6;
+	match.src_addr = (union nf_inet_addr)iph->saddr;
+	match.dst_addr = (union nf_inet_addr)iph->daddr;
+
+	/* Must not be a fragment. */
+	if (par->fragoff != 0) {
+		msg_warn(RX_ERR, "Skip cannot handle fragments "
+			 "(pkt from:" NIP6_FMT " to:" NIP6_FMT ") len:%u datalen:%u",
+			 NIP6(match.src_addr.in6), NIP6(match.dst_addr.in6), skb->len,
+			 skb->data_len);
+		return false;
+	}
+
+	/* We need to walk through the payload data, and I don't want
+	 * to handle fragmented SKBs, the SKB has to be linearized */
+	if (skb_is_nonlinear(skb)) {
+		if (skb_linearize((struct sk_buff *)skb) != 0) {
+			msg_err(RX_ERR, "SKB linearization failed"
+				"(pkt from:" NIP6_FMT " to:" NIP6_FMT ") len:%u datalen:%u",
+				NIP6(match.src_addr.in6), NIP6(match.dst_addr.in6), skb->len,
+				skb->data_len);
+			/* TODO: Should we just hotdrop it?
+			   *par->hotdrop = true;
+			*/
+			return false;
+		}
+	}
+
+	uh = skb_header_pointer(skb, par->thoff, sizeof(_udph), &_udph);
+	if (unlikely(uh == NULL)) {
+		/* Something is wrong, cannot even access the UDP
+		 * header, no choice but to drop. */
+		msg_err(RX_ERR, "Dropping evil UDP tinygram "
+			"(pkt from:" NIP6_FMT " to:" NIP6_FMT ")",
+			NIP6(match.src_addr.in6), NIP6(match.dst_addr.in6));
+		par->hotdrop = true;
+		return false;
+	}
+	ulen = ntohs(uh->len);
+
+	/* How much do we need to skip to access payload data */
+	hdr_size    = par->thoff + sizeof(struct udphdr);
+	payload_ptr = skb_network_header(skb) + hdr_size;
+	/* payload_ptr = skb->data + hdr_size; */
+	BUG_ON(payload_ptr != (skb->data + hdr_size));
+
+	/* Different ways to determine the payload_len.  Think the
+	 * safest is to use the skb->len, as we really cannot trust
+	 * the contents of the packet.
+	  payload_len = ntohs(iph->tot_len)- hdr_size;
+	  payload_len = ulen - sizeof(struct udphdr);
+	*/
+	payload_len = skb->len - hdr_size;
+
+/* Not sure if we need to clone packets
+	if (skb_shared(skb))
+		msg_dbg(RX_STATUS, "skb(0x%p) shared", skb);
+
+	if (!skb_cloned(skb))
+		msg_dbg(RX_STATUS, "skb(0x%p) NOT cloned", skb);
+*/
+
+	if (is_mpeg2ts_packet(payload_ptr, payload_len)) {
+		msg_dbg(PKTDATA, "Jubii - its a MPEG2TS packet");
+
+		if (!(info->flags & XT_MPEG2TS_DETECT_DROP)) {
+			/* ! --drop-detect */
+			/* Don't perform drop detection, just match mpeg2ts */
+			res = true;
+		} else {
+			skips =	dissect_mpeg2ts(payload_ptr, payload_len,
+						skb, uh, info, &match);
+		}
+	} else {
+		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
+			"(pkt from:" NIP6_FMT " to:" NIP6_FMT ")",
+			NIP6(match->src_addr.in6), NIP6(match->dst_addr.in6));
+		return false;
+	}
+
+	if (info->flags & XT_MPEG2TS_MATCH_DROP)
+		res = !!(skips); /* Convert to a bool */
+
+	return res;
+}
+
+static struct xt_match mpeg2ts_mt_reg[] __read_mostly = {
+	{
+		.name       = "mpeg2ts",
+		.revision   = 0,
+		.family     = NFPROTO_IPV4,
+		.match      = xt_mpeg2ts_match4,
+		.checkentry = xt_mpeg2ts_mt_check,
+		.destroy    = xt_mpeg2ts_mt_destroy,
+		.proto      = IPPROTO_UDP,
+		.matchsize  = sizeof(struct xt_mpeg2ts_mtinfo),
+		.me         = THIS_MODULE,
+	},
+	{
+		.name       = "mpeg2ts",
+		.revision   = 0,
+		.family     = NFPROTO_IPV6,
+		.match      = xt_mpeg2ts_match6,
+		.checkentry = xt_mpeg2ts_mt_check,
+		.destroy    = xt_mpeg2ts_mt_destroy,
+		.proto      = IPPROTO_UDP,
+		.matchsize  = sizeof(struct xt_mpeg2ts_mtinfo),
+		.me         = THIS_MODULE,
+	},
 };
 
 
@@ -1306,20 +1451,37 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 		return 0;
 	}
 
-	res = seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
-			    "pids:%d skips:%llu discontinuity:%llu "
-			    "payload_bytes:%llu packets:%llu\n",
-			 bucket,
-			 &stream->match.dst_addr,
-			 &stream->match.src_addr,
-			 ntohs(stream->match.dst_port),
-			 ntohs(stream->match.src_port),
-			 stream->pid_list_len,
-			 stream->skips,
-			 stream->discontinuity,
-			 stream->payload_bytes,
-			 stream->packets
-		);
+	if (stream->match.version == 4) {
+		res = seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
+					"pids:%d skips:%llu discontinuity:%llu "
+					"payload_bytes:%llu packets:%llu\n",
+				 bucket,
+				 &stream->match.dst_addr.ip,
+				 &stream->match.src_addr,
+				 ntohs(stream->match.dst_port),
+				 ntohs(stream->match.src_port),
+				 stream->pid_list_len,
+				 stream->skips,
+				 stream->discontinuity,
+				 stream->payload_bytes,
+				 stream->packets
+			);
+	} else {
+		res = seq_printf(s, "bucket:%d dst:" NIP6_FMT " src:" NIP6_FMT " dport:%u sport:%u "
+					"pids:%d skips:%llu discontinuity:%llu "
+					"payload_bytes:%llu packets:%llu\n",
+				 bucket,
+				 NIP6(stream->match.dst_addr.in6),
+				 NIP6(stream->match.src_addr.in6),
+				 ntohs(stream->match.dst_port),
+				 ntohs(stream->match.src_port),
+				 stream->pid_list_len,
+				 stream->skips,
+				 stream->discontinuity,
+				 stream->payload_bytes,
+				 stream->packets
+			);
+	}
 
 	atomic_dec(&stream->use);
 
@@ -1439,7 +1601,7 @@ static int __init mpeg2ts_mt_init(void)
 	msg_dbg(DRV, "Message level (msg_level): 0x%X", msg_level);
 
 	/* Register the mpeg2ts matches */
-	err = xt_register_match(&mpeg2ts_mt_reg);
+	err = xt_register_matches(mpeg2ts_mt_reg, ARRAY_SIZE(mpeg2ts_mt_reg));
 	if (err) {
 		msg_err(DRV, "unable to register matches");
 		return err;
@@ -1451,7 +1613,7 @@ static int __init mpeg2ts_mt_init(void)
 	if (!mpeg2ts_procdir) {
 		msg_err(DRV, "unable to create proc dir entry");
 		/* In case of error unregister the mpeg2ts match */
-		xt_unregister_match(&mpeg2ts_mt_reg);
+		xt_unregister_matches(mpeg2ts_mt_reg, ARRAY_SIZE(mpeg2ts_mt_reg));
 		err = -ENOMEM;
 	}
 #endif
@@ -1465,7 +1627,7 @@ static void __exit mpeg2ts_mt_exit(void)
 
 	remove_proc_entry(XT_MODULE_NAME, init_net.proc_net);
 
-	xt_unregister_match(&mpeg2ts_mt_reg);
+	xt_unregister_matches(mpeg2ts_mt_reg, ARRAY_SIZE(mpeg2ts_mt_reg));
 
 	/* Its important to wait for all call_rcu_bh() callbacks to
 	 * finish before this module is deallocated as the code
