@@ -29,6 +29,9 @@ An iptables rules that matches all MPEG2 TS traffic.
 Notice how its necessary to add '-p udp' as the match module only
 accepts UDP traffic.
 
+Similarily for IPv6, we use ip6tables:
+
+  ip6tables -t mangle -I PREROUTING -p udp -m mpeg2ts
 
 == Proc file containing stats ==
 
