@@ -25,7 +25,7 @@ function Epoch(name,mode,targetelement,multiselect) {
 		self.displayYear = self.displayYearInitial;
 		self.displayMonth = self.displayMonthInitial;
 		self.minDate = new Date(2006,0,1);
-		self.maxDate = new Date(2012,11,31);
+		self.maxDate = new Date();
 		self.startDay = 0; // the day the week will 'start' on: 0(Sun) to 6(Sat)
 		self.showWeeks = true; //whether the week numbers will be shown
 		self.selCurMonthOnly = true; //allow user to only select dates in the currently displayed month
