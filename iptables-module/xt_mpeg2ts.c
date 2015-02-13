@@ -1040,8 +1040,8 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 				   hinfo->id, match->version, &match->src_addr, &match->dst_addr);
 		} else {
 			printk(KERN_INFO
-				   "Rule:%u New IPv%d stream (" NIP6_FMT " -> " NIP6_FMT ")\n",
-				   hinfo->id, match->version, NIP6(match->src_addr.in6), NIP6(match->dst_addr.in6));
+				   "Rule:%u New IPv%d stream (%pI6c -> %pI6c)\n",
+				   hinfo->id, match->version, &match->src_addr, &match->dst_addr);
 		}
 	}
 
@@ -1096,8 +1096,8 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 		} else {
 			msg_notice(RX_STATUS,
 				   "Detected discontinuity "
-				   NIP6_FMT " -> " NIP6_FMT " (CCerr:%d skips:%d)",
-				   NIP6(match->src_addr.in6), NIP6(match->dst_addr.in6),
+				   "%pI6c -> %pI6c (CCerr:%d skips:%d)",
+				   &match->src_addr, &match->dst_addr,
 				   discontinuity, skips_total);
 		}
 	}
@@ -1173,8 +1173,8 @@ xt_mpeg2ts_match4(const struct sk_buff *skb, struct xt_action_param *par)
 	/* Must not be a fragment. */
 	if (par->fragoff != 0) {
 		msg_warn(RX_ERR, "Skip cannot handle fragments "
-			 "(pkt from:%pI4 to:%pI4) len:%u datalen:%u"
-			 , &saddr, &daddr, skb->len, skb->data_len);
+			 "(pkt from:%pI4 to:%pI4) len:%u datalen:%u",
+			 &saddr, &daddr, skb->len, skb->data_len);
 		return false;
 	}
 
@@ -1284,8 +1284,8 @@ xt_mpeg2ts_match6(const struct sk_buff *skb, struct xt_action_param *par)
 	/* Must not be a fragment. */
 	if (par->fragoff != 0) {
 		msg_warn(RX_ERR, "Skip cannot handle fragments "
-			 "(pkt from:" NIP6_FMT " to:" NIP6_FMT ") len:%u datalen:%u",
-			 NIP6(match.src_addr.in6), NIP6(match.dst_addr.in6), skb->len,
+			 "(pkt from:%pI6c to:%pI6c) len:%u datalen:%u",
+			 &match.src_addr, &match.dst_addr, skb->len,
 			 skb->data_len);
 		return false;
 	}
@@ -1295,8 +1295,8 @@ xt_mpeg2ts_match6(const struct sk_buff *skb, struct xt_action_param *par)
 	if (skb_is_nonlinear(skb)) {
 		if (skb_linearize((struct sk_buff *)skb) != 0) {
 			msg_err(RX_ERR, "SKB linearization failed"
-				"(pkt from:" NIP6_FMT " to:" NIP6_FMT ") len:%u datalen:%u",
-				NIP6(match.src_addr.in6), NIP6(match.dst_addr.in6), skb->len,
+				"(pkt from:%pI6c to:%pI6c) len:%u datalen:%u",
+				&match.src_addr, &match.dst_addr, skb->len,
 				skb->data_len);
 			/* TODO: Should we just hotdrop it?
 			   *par->hotdrop = true;
@@ -1310,8 +1310,8 @@ xt_mpeg2ts_match6(const struct sk_buff *skb, struct xt_action_param *par)
 		/* Something is wrong, cannot even access the UDP
 		 * header, no choice but to drop. */
 		msg_err(RX_ERR, "Dropping evil UDP tinygram "
-			"(pkt from:" NIP6_FMT " to:" NIP6_FMT ")",
-			NIP6(match.src_addr.in6), NIP6(match.dst_addr.in6));
+			"(pkt from:%pI6c to:%pI6c)",
+			&match.src_addr, &match.dst_addr);
 		par->hotdrop = true;
 		return false;
 	}
@@ -1352,8 +1352,8 @@ xt_mpeg2ts_match6(const struct sk_buff *skb, struct xt_action_param *par)
 		}
 	} else {
 		msg_dbg(PKTDATA, "Not a MPEG2 TS packet "
-			"(pkt from:" NIP6_FMT " to:" NIP6_FMT ")",
-			NIP6(match->src_addr.in6), NIP6(match->dst_addr.in6));
+			"(pkt from:%pI6c to:%pI6c)",
+			&match.src_addr, &match.dst_addr);
 		return false;
 	}
 
@@ -1456,7 +1456,7 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 					"pids:%d skips:%llu discontinuity:%llu "
 					"payload_bytes:%llu packets:%llu\n",
 				 bucket,
-				 &stream->match.dst_addr.ip,
+				 &stream->match.dst_addr,
 				 &stream->match.src_addr,
 				 ntohs(stream->match.dst_port),
 				 ntohs(stream->match.src_port),
@@ -1467,12 +1467,12 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 				 stream->packets
 			);
 	} else {
-		res = seq_printf(s, "bucket:%d dst:" NIP6_FMT " src:" NIP6_FMT " dport:%u sport:%u "
+		res = seq_printf(s, "bucket:%d dst:%pI6c src:%pI6c dport:%u sport:%u "
 					"pids:%d skips:%llu discontinuity:%llu "
 					"payload_bytes:%llu packets:%llu\n",
 				 bucket,
-				 NIP6(stream->match.dst_addr.in6),
-				 NIP6(stream->match.src_addr.in6),
+				 &stream->match.dst_addr,
+				 &stream->match.src_addr,
 				 ntohs(stream->match.dst_port),
 				 ntohs(stream->match.src_port),
 				 stream->pid_list_len,
