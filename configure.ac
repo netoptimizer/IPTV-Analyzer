@@ -1,7 +1,7 @@
 #
 # Notice: The VERSION is defined/controlled by AC_INIT
 #
-AC_INIT([iptv-analyzer], [0.9.3], [netoptimizer@brouer.com], [], [www.iptv-analyzer.org])
+AC_INIT([iptv-analyzer], [0.9.4], [netoptimizer@brouer.com], [], [www.iptv-analyzer.org])
 #AC_INIT(package,        version, [bug-report], [tarname], [url])
 #
 AC_CONFIG_HEADERS([config.h])

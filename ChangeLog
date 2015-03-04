@@ -1,6 +1,15 @@
 
 recent changes
 
+2015-03-04  Jesper Dangaard Brouer <netoptimizer@brouer.com>
+
+	* Version 0.9.4.
+
+	It has been quite some time since the last release.
+
+	This release primarily contains adjustments to adapt for changing
+	kernel APIs over time.  Did a small labtest of kernel 3.18.6.
+
 2011-12-02  Jesper Dangaard Brouer <hawk@comx.dk>
 
 	* Version 0.9.3.
