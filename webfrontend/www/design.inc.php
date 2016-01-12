@@ -29,12 +29,12 @@ function doHeader($title="", $options=FALSE) {
       <meta name="description" content="tvprobe webfrontend" />
       <meta name="publisher"   content="ComX Networks A/S" />
 
-      <link rel="stylesheet" type="text/css" href="<?=$incdir?>css/motorola.css">
+      <link rel="stylesheet" type="text/css" href="<?php echo $incdir; ?>css/motorola.css">
 <?php
        if ($include_javascript == TRUE) {
 ?>
       <script
-	 src="<?=$incdir?>functions.js" type="text/javascript" language='javascript'>
+	 src="<?php echo $incdir; ?>functions.js" type="text/javascript" language='javascript'>
       </script>
 <?php
        }
@@ -44,10 +44,10 @@ function doHeader($title="", $options=FALSE) {
 ?>
       <!--Epoch's styles-->
       <link rel="stylesheet" type="text/css"
-	    href="<?=$incdir?>js/epoch_v202_en/epoch_styles.css" />
+	    href="<?php echo $incdir; ?>js/epoch_v202_en/epoch_styles.css" />
 
       <!--Epoch's Code-->
-      <script type="text/javascript" src="<?=$incdir?>js/epoch_v202_en/epoch_classes.js">
+      <script type="text/javascript" src="<?php echo $incdir; ?>js/epoch_v202_en/epoch_classes.js">
       </script>
 
       <script type="text/javascript">
