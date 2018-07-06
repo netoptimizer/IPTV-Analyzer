@@ -463,7 +463,7 @@ struct xt_match *xtnu_request_find_match(unsigned int af, const char *name,
 	return match;
 }
 EXPORT_SYMBOL_GPL(xtnu_request_find_match);
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0)
 int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
 {
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
@@ -476,7 +476,7 @@ int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
 #endif
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
-
+#endif
 int xtnu_skb_make_writable(struct sk_buff **pskb, unsigned int len)
 {
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)

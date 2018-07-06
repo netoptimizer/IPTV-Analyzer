@@ -99,7 +99,8 @@ static const struct file_operations dl_file_ops;
 #endif
 
 static int debug  = -1;
-static int msg_level;
+//static int msg_level;
+static int msg_level = MPEG2TS_MSG_DEFAULT;
 module_param(debug, int, 0);
 module_param(msg_level, int, 0664);
 MODULE_PARM_DESC(debug, "Set low N bits of message level");
@@ -1299,14 +1300,15 @@ static void mpeg2ts_seq_stop(struct seq_file *s, void *v)
 static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 				 struct seq_file *s, unsigned int bucket)
 {
-	int res;
+	//int res;
 
 	if (!atomic_inc_not_zero(&stream->use)) {
 		/* If "use" is zero, then we about to be free'd */
 		return 0;
 	}
 
-	res = seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
+	//res =
+	seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
 			    "pids:%d skips:%llu discontinuity:%llu "
 			    "payload_bytes:%llu packets:%llu\n",
 			 bucket,
@@ -1323,7 +1325,8 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 
 	atomic_dec(&stream->use);
 
-	return res;
+	//return res;
+	return seq_has_overflowed(s);
 }
 
 static int mpeg2ts_seq_show(struct seq_file *s, void *v)
@@ -1434,7 +1437,8 @@ static int __init mpeg2ts_mt_init(void)
 	 */
 	INIT_LIST_HEAD(&conn_htables);
 
-	msg_level = netif_msg_init(debug, MPEG2TS_MSG_DEFAULT);
+	//msg_level = netif_msg_init(debug, MPEG2TS_MSG_DEFAULT);
+	msg_level = netif_msg_init(debug, msg_level);
 	msg_info(DRV, "Loading: %s", version);
 	msg_dbg(DRV, "Message level (msg_level): 0x%X", msg_level);
 
