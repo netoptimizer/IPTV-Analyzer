@@ -299,6 +299,7 @@ struct mpeg2ts_stream { /* Like xt_hashlimit: dsthash_ent */
 	 */
 	uint64_t packets ____cacheline_aligned;
 	uint64_t payload_bytes;
+	uint64_t null_bytes;
 
 	/* Per stream total skips and discontinuity */
 	/* TODO: Explain difference between skips and discontinuity */
@@ -975,6 +976,11 @@ dissect_tsp(const unsigned char *payload_ptr, uint16_t payload_len,
 	msg_dbg(PKTDATA, "TS header:0x%X pid:%d cc:%d afc:%u",
 		header, pid, cc_curr, afc);
 
+	/* TS packet counters */
+	if (unlikely(pid == 8191)) {
+		stream->null_bytes += payload_len;
+	}
+
 	/* Adaption Field Control header */
 	if (unlikely(afc == 2)) {
 		/* An 'adaptation field only' packet will have the
@@ -1056,7 +1062,7 @@ dissect_mpeg2ts(const unsigned char *payload_ptr, uint16_t payload_len,
 
 	while ((payload_len - offset) >= MP2T_PACKET_SIZE) {
 
-		skips = dissect_tsp(payload_ptr, payload_len, skb, stream);
+		skips = dissect_tsp(payload_ptr, MP2T_PACKET_SIZE, skb, stream);
 
 		if (skips > 0)
 			discontinuity++;
@@ -1308,7 +1314,8 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 
 	res = seq_printf(s, "bucket:%d dst:%pI4 src:%pI4 dport:%u sport:%u "
 			    "pids:%d skips:%llu discontinuity:%llu "
-			    "payload_bytes:%llu packets:%llu\n",
+			    "payload_bytes:%llu packets:%llu "
+			    "null_bytes:%llu\n",
 			 bucket,
 			 &stream->match.dst_addr,
 			 &stream->match.src_addr,
@@ -1318,7 +1325,8 @@ static int mpeg2ts_seq_show_real(struct mpeg2ts_stream *stream,
 			 stream->skips,
 			 stream->discontinuity,
 			 stream->payload_bytes,
-			 stream->packets
+			 stream->packets,
+			 stream->null_bytes
 		);
 
 	atomic_dec(&stream->use);
